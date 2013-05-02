@@ -1,0 +1,11 @@
+.project
+.metadata
+bin/**
+tmp/**
+tmp**/*
+.settings/
+.loadpath
+*.launch
+
+# Adapted by:
+# https://raw.github.com/github/gitignore/master/Global/Eclipse.gitignore
