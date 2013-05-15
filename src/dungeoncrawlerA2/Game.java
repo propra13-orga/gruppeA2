@@ -13,7 +13,7 @@ import javax.swing.JPanel;
 public class Game extends JPanel{
 	
 	// Background color
-	Color backgroundColor = Color.black;
+	private Color backgroundColor = Color.black;
 	
 	public Game(){
 		setBackground(backgroundColor);

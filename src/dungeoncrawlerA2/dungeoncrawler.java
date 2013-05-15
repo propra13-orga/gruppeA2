@@ -8,8 +8,8 @@ import javax.swing.JFrame;
 public class dungeoncrawler extends JFrame {
 
 	// window Size -> not resizable
-	int windowSizeX = 800;	
-	int windowSizeY = 600;
+	private int windowSizeX = 800;	
+	private int windowSizeY = 600;
 	
 	public dungeoncrawler(){
 		
