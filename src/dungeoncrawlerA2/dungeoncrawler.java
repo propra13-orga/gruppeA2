@@ -2,22 +2,22 @@ package dungeoncrawlerA2;
 
 import javax.swing.JFrame;
 
-// Main class
-// Menue, Start Game, Exit
+// Hauptklasse
+// Menü, Start Game, Exit
 
 public class dungeoncrawler extends JFrame {
 
-	// window Size -> not resizable
+	// Fenstergröße
 	private int windowSizeX = 800;	
 	private int windowSizeY = 600;
 	
 	public dungeoncrawler(){
 		
-		// create Frame (Main window)
+		// definiere Hauptfenster
 		setTitle("Dungeon");
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setSize(windowSizeX, windowSizeY);
-		setLocationRelativeTo(null); // Window to center of screen
+		setLocationRelativeTo(null); // Fenster in Mitte des Bildschirms setzen
 		setResizable(false);
 		
 		/*
@@ -26,10 +26,10 @@ public class dungeoncrawler extends JFrame {
 		Wenn game beendet, zerstöre game und add(menuepanel)
 		 */
 		
-		// start Game
+		// Spiel starten
 		Game g = new Game();
-		add(g);
-		setVisible(true); // set Visible
+		add(g); // Panel "Game" zum JFrame hinzufügen
+		setVisible(true); // Sichtbar machen!
 		
 	
 	}
