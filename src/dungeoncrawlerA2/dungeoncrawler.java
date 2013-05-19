@@ -5,12 +5,14 @@ import javax.swing.JFrame;
 // Hauptklasse
 // Menü, Start Game, Exit
 
+// dungeoncrawler: Hauptklasse
 public class dungeoncrawler extends JFrame {
 
 	// Fenstergröße
 	private int windowSizeX = 800;	
 	private int windowSizeY = 600;
 	
+	// Konstruktor
 	public dungeoncrawler(){
 		
 		// definiere Hauptfenster

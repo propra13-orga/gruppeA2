@@ -5,6 +5,9 @@ import java.awt.event.KeyEvent;
 
 import javax.swing.ImageIcon;
 
+// Evtl später auch GameElement
+
+// Player: Spielfigur
 public class Player{
 	/*
 	 * WICHTIG: Bilddateien müssen in den Ordner bin/dungeoncrawlerA2 kopiert werden
@@ -29,21 +32,21 @@ public class Player{
 	
 	// generelle Bewegung - speziell: siehe "KeyEvent Methoden"
 	public void move(){
-		x += dx;
-		y += dy;
+		this.x += dx;
+		this.y += dy;
 	}
 	
 	// get Methoden
 	public int getX(){
-		return x;
+		return this.x;
 	}
 	
 	public int getY(){
-		return y;
+		return this.y;
 	}
 	
 	public Image getImage(){
-		return image;
+		return this.image;
 	}
 	
 	// set Methoden
