@@ -23,8 +23,12 @@ import javax.swing.Timer;
 public class Game extends JPanel implements ActionListener{
 	
 	private Timer timer;	// Timer für ActionEvent
-	private Player player;	// Spielfigur
 	private boolean ingame; // Wert für Gameloop
+	private int room; // aktueller Raum des Sungeons
+	
+	private Player player;	// Spielfigur
+	private int playerWidth; // Ausmaße der Spielfigur - werden aus Bilddatei entnommen
+	private int playerHeight;
 	
 	private ArrayList walls = new ArrayList();
 	private ArrayList opponents = new ArrayList();
@@ -42,12 +46,19 @@ public class Game extends JPanel implements ActionListener{
 	private int heightInBlocks = 15;
 	private int blockSize = 40;
 	
-	// leveldata später füllen mit loadLevel(filename)
-	// leveldata vor Verwendung überprüfen - checkLeveldata()
+	// leveldata, enemydata, exitdata später füllen durch loadLevel(filename)
+	// leveldata, enemydata, exitdata vor Verwendung überprüfen - checkLeveldata()
+	
+	private String [] enemydata = {
+			" " +
+			" " +
+			" "};
+	// Exits von Raum [] zu Raum [] - exitdata[r][h] - r=Raumnummer, h=0,1,2,3 (Norden,Osten,Süden,Westen), Inhalt: Zielraum oder -1(kein Exit)
+	private int[][] exitdata = new int[][]{{1,-1,-1,-1},{-1,2,0,-1},{-1,-1,-1,1}};
 	// W1: Wall Type 1
 	// G1: Ground Type 1
-	private String [] leveldata = {
-			"W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 G1 W1 W1 W1 " +
+ 	private String [] leveldata = {
+			"W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 G1 G1 W1 W1 " +
 			"W1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
 			"W1 G1 G1 W1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
 			"W1 G1 G1 W1 G1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 " +
@@ -63,37 +74,37 @@ public class Game extends JPanel implements ActionListener{
 			"W1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
 			"W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 ",
 			
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 ",
+			"W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 " +
+			"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
+			"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
+			"W1 G1 G1 G1 W1 W1 W1 G1 G1 G1 G1 G1 G1 W1 W1 W1 G1 G1 G1 W1 " +
+			"W1 G1 G1 G1 W1 G1 W1 G1 G1 G1 G1 G1 G1 W1 G1 W1 G1 G1 G1 W1 " +
+			"W1 G1 G1 G1 W1 W1 W1 G1 G1 G1 G1 G1 G1 W1 W1 W1 G1 G1 G1 W1 " +
+			"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
+			"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
+			"W1 G1 G1 G1 G1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 G1 G1 G1 G1 W1 " +
+			"W1 G1 G1 G1 G1 G1 W1 W1 W1 W1 W1 W1 W1 W1 G1 G1 G1 G1 G1 G1 " +
+			"W1 G1 G1 G1 G1 G1 G1 W1 W1 W1 W1 W1 W1 G1 G1 G1 G1 G1 G1 G1 " +
+			"W1 G1 G1 G1 G1 G1 G1 G1 W1 W1 W1 W1 G1 G1 G1 G1 G1 G1 G1 W1 " +
+			"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
+			"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
+			"W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 G1 G1 W1 W1 ",
 			
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 "
+			"W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 " +
+			"W1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
+			"W1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
+			"W1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 W1 " +
+			"W1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 W1 G1 G1 G1 G1 " +
+			"W1 G1 G1 G1 G1 W1 G1 G1 G1 G1 W1 W1 W1 W1 W1 W1 W1 G1 G1 G1 " +
+			"W1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 W1 W1 G1 G1 G1 G1 " +
+			"W1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 W1 " +
+			"W1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
+			"G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
+			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
+			"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 W1 W1 G1 G1 G1 G1 G1 W1 " +
+			"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
+			"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
+			"W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 "
 	};
 	
 	// Konstruktor
@@ -108,9 +119,12 @@ public class Game extends JPanel implements ActionListener{
 		
 		ingame = true;
 		
-		initRoom(0); // ersten Raum aufbauen
+		room = 0;
+		initRoom(room); // ersten Raum aufbauen
 		
 		player = new Player(startX, startY); // setze neue Spielfigur an Stelle x,y
+		playerWidth = player.getImage().getWidth(this); // Ausmaße der Spielfigur ermitteln
+		playerHeight = player.getImage().getHeight(this);
 		
 		timer = new Timer(1000/fps, this); // Timer nach fps einstellen
 		timer.start();
@@ -122,6 +136,9 @@ public class Game extends JPanel implements ActionListener{
 		
 		Wall wall;
 		Ground ground;
+		
+		walls.clear();
+		grounds.clear();
 		
 		// Auslesen aus leveldata
 		for(int i=0; i<leveldata[roomnumber].length(); i+=3){
@@ -163,6 +180,42 @@ public class Game extends JPanel implements ActionListener{
 		}
 	}
 	
+	public void checkRoom(){
+		int x = player.getX();
+		int y = player.getY();
+		int newX = x; // Position des Spielers nach Raumwechsel
+		int newY = y;
+		int nextRoom = -1;
+		
+		if(y<0){
+			// Norden
+			nextRoom = exitdata[room][0];
+			newY = windowSizeY;
+		}
+		else if(x>windowSizeX){
+			// Osten
+			nextRoom = exitdata[room][1];
+			newX = 0;
+		}
+		else if(y>windowSizeY){
+			// Süden
+			nextRoom = exitdata[room][2];
+			newY = 0;
+		}
+		else if(x<0){
+			// Westen
+			nextRoom = exitdata[room][3];
+			newX = windowSizeX;
+		}
+		
+		if(nextRoom != -1){
+			this.room = nextRoom;
+			initRoom(room);
+			player.setX(newX);
+			player.setY(newY);
+		}
+	}
+	
 	// Paint Methode - zeichnet Bildschirm
 	public void paint(Graphics g){
 		super.paint(g);
@@ -185,8 +238,7 @@ public class Game extends JPanel implements ActionListener{
 		 * */
 		
 		player.move();	// bewege Spielfigur
-		
-		// if leftscreen -> initRoom(int Roomnumber, int setX, inst setY)
+		checkRoom();
 		
 		repaint();	// zeichne Bildschirm neu - erneuter Aufruf von paint()
 	}
