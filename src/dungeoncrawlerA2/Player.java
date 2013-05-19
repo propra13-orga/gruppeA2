@@ -2,6 +2,7 @@ package dungeoncrawlerA2;
 
 import java.awt.Image;
 import java.awt.event.KeyEvent;
+import java.awt.Rectangle;
 
 import javax.swing.ImageIcon;
 
@@ -20,20 +21,33 @@ public class Player{
 	private int dy;
 	private int x;
 	private int y;
+	private int goBackX;
+	private int goBackY;
+	private int width;
+    private int height;
 	private Image image;
 	
 	// Konstruktor
 	public Player(int x, int y){
 		ImageIcon ii = new ImageIcon(this.getClass().getResource(player));
 		image = ii.getImage();
+		width = image.getWidth(null);
+        height = image.getHeight(null);
 		this.x = x;
 		this.y = y;
 	}
 	
 	// generelle Bewegung - speziell: siehe "KeyEvent Methoden"
 	public void move(){
+		goBackX = x;
+		goBackY = y;
 		this.x += dx;
 		this.y += dy;
+	}
+	
+	public void resetMovement(){
+		this.x = goBackX;
+		this.y = goBackY;
 	}
 	
 	// get Methoden
@@ -47,6 +61,11 @@ public class Player{
 	
 	public Image getImage(){
 		return this.image;
+	}
+	
+	public Rectangle getBounds(){
+		// Kollisionserkennung
+		return new Rectangle(x, y, width, height); 
 	}
 	
 	// set Methoden

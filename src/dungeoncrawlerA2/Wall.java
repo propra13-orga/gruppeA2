@@ -2,10 +2,13 @@ package dungeoncrawlerA2;
 
 import java.awt.Image;
 import javax.swing.ImageIcon;
+import java.awt.Rectangle;
 
 public class Wall extends GameElement{
 
 	 private Image image;
+	 private int width;
+	 private int height;
 	 
 	 private String path; // Bilddateipfad
 	 
@@ -20,6 +23,13 @@ public class Wall extends GameElement{
 		 
 	     ImageIcon ii = new ImageIcon(this.getClass().getResource(path));
 	     image = ii.getImage();
+	     width = image.getWidth(null);
+	     height = image.getHeight(null);
 	     this.setImage(image);
 	 }
+	 
+	 public Rectangle getBounds(){
+			// Kollisionserkennung
+			return new Rectangle(this.getX(), this.getY(), width, height); 
+		}
 }

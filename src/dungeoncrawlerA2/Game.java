@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.Rectangle;
 
 import java.util.ArrayList;
 
@@ -27,8 +28,6 @@ public class Game extends JPanel implements ActionListener{
 	private int room; // aktueller Raum des Sungeons
 	
 	private Player player;	// Spielfigur
-	private int playerWidth; // Ausmaße der Spielfigur - werden aus Bilddatei entnommen
-	private int playerHeight;
 	
 	private ArrayList walls = new ArrayList();
 	private ArrayList opponents = new ArrayList();
@@ -49,12 +48,15 @@ public class Game extends JPanel implements ActionListener{
 	// leveldata, enemydata, exitdata später füllen durch loadLevel(filename)
 	// leveldata, enemydata, exitdata vor Verwendung überprüfen - checkLeveldata()
 	
+	// Aufbau pro Zeile: "AnzahlGegner : GegnerTyp(E/T,Nr) - posX posY : ..."
 	private String [] enemydata = {
-			" " +
-			" " +
-			" "};
+			"0 " +
+			"2 : E1 - 400 400 : E1 - 200 400" +
+			"1 : E1 - 20 380"};
+	
 	// Exits von Raum [] zu Raum [] - exitdata[r][h] - r=Raumnummer, h=0,1,2,3 (Norden,Osten,Süden,Westen), Inhalt: Zielraum oder -1(kein Exit)
 	private int[][] exitdata = new int[][]{{1,-1,-1,-1},{-1,2,0,-1},{-1,-1,-1,1}};
+	
 	// W1: Wall Type 1
 	// G1: Ground Type 1
  	private String [] leveldata = {
@@ -123,13 +125,12 @@ public class Game extends JPanel implements ActionListener{
 		initRoom(room); // ersten Raum aufbauen
 		
 		player = new Player(startX, startY); // setze neue Spielfigur an Stelle x,y
-		playerWidth = player.getImage().getWidth(this); // Ausmaße der Spielfigur ermitteln
-		playerHeight = player.getImage().getHeight(this);
 		
 		timer = new Timer(1000/fps, this); // Timer nach fps einstellen
 		timer.start();
 	}
 	
+	// Raum erstellen
 	public void initRoom(int roomnumber){
 		int x = 0;
 		int y = 0;
@@ -168,18 +169,20 @@ public class Game extends JPanel implements ActionListener{
 		
 	}
 	
+	// Raum zeichnen
 	public void buildRoom(Graphics g){
 		ArrayList room = new ArrayList();
 		room.addAll(walls);
 		room.addAll(grounds);
 		
 		for(int i=0; i<room.size(); i++){
-			
+			// Element holen und zeichnen
 			GameElement element = (GameElement)room.get(i);
 			g.drawImage(element.getImage(),element.getX(),element.getY(), this);
 		}
 	}
 	
+	// Prüfen ob Raum gewechselt
 	public void checkRoom(){
 		int x = player.getX();
 		int y = player.getY();
@@ -216,9 +219,26 @@ public class Game extends JPanel implements ActionListener{
 		}
 	}
 	
+	public void checkCollision(){
+		Rectangle r_player = player.getBounds();
+		
+		for(int i=0;i<walls.size(); i++){
+			Wall w = (Wall)walls.get(i);
+			Rectangle r_wall = w.getBounds();
+			
+			if(r_player.intersects(r_wall)){
+				player.resetMovement();
+			}
+		}
+	}
+	
 	// Paint Methode - zeichnet Bildschirm
 	public void paint(Graphics g){
 		super.paint(g);
+		
+		/*
+		 * Später hier Gameloop einfügen und Zeichnen von ingame abhängig machen
+		 * */
 		
 		// zeichne Raum
 		buildRoom(g);
@@ -233,11 +253,8 @@ public class Game extends JPanel implements ActionListener{
 	// actionPerformed - wird vom Timer abhängig aufgerufen
 	public void actionPerformed(ActionEvent e){
 		
-		/*
-		 * Später hier Gameloop einfügen und Rest von ingame abhängig machen
-		 * */
-		
 		player.move();	// bewege Spielfigur
+		checkCollision();
 		checkRoom();
 		
 		repaint();	// zeichne Bildschirm neu - erneuter Aufruf von paint()
