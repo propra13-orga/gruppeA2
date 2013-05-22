@@ -16,6 +16,7 @@ public class Ground extends GameElement{
 		 
 		 type -= 48; // Von char in int
 		 if(type==1) path =  "ground_01.png";
+		 if(type==2) path =  "ground_02.png";
 		 // Hier später mehr Optionen
 		 
 	     ImageIcon ii = new ImageIcon(this.getClass().getResource(path));

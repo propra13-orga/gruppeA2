@@ -14,26 +14,26 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 
 import javax.swing.JPanel;
+import javax.swing.JButton;
 import javax.swing.Timer;
 
-// Game: Paint (Spielfeld), initiate, detect collisions, gameloop
-/*
-	Weitere Klassen: Wall, Opponent
-	in Game: starten, zeichnen, kollisionen erkennen
- */
-
-// Game: Spielfeld und Spielsteuerung
+// Game: Menü, Spielfeld und Spielsteuerung
 public class Game extends JPanel implements ActionListener{
+	
+	private JButton b1;
+	private JButton b2;
+	private int buttonPosX;
+	private int buttonPosY;
 	
 	private Timer timer;	// Timer für ActionEvent
 	private boolean ingame; // Wert für Gameloop
 	private boolean won; // für Abfrage ob gewonnen
+	private boolean firstStart; // ist erster Start? - Menüdarstellung
 	private int room; // aktueller Raum des Sungeons
 	
 	private Player player;	// Spielfigur
 	
 	private ArrayList walls = new ArrayList();
-	private ArrayList opponents = new ArrayList();
 	private ArrayList grounds = new ArrayList();
 	private ArrayList enemys = new ArrayList();
 	
@@ -114,19 +114,64 @@ public class Game extends JPanel implements ActionListener{
 	// Konstruktor
 	public Game(){
 		
+		setLayout(null); // um Buttons beliebig zu positionieren
+		
 		addKeyListener(new TAdapter());
 		setFocusable(true);
 		setBackground(backgroundColor);
 		setDoubleBuffered(true); 
+		firstStart=true;	
 		
 		timer = new Timer(1000/fps, this); // Timer nach fps einstellen
 		
-		// Starte Spiel
-		initGame();
+		// Menü vorbereiten
+		b1 = new JButton("Start Game");
+		b2 = new JButton("Exit");
+		initMenu();
 		
 	}
 	
+	public void initMenu(){
+		// Zeichne Menüelemente
+		// Lege Standartpositionen für Buttons fest
+		buttonPosX = windowSizeX/2-100;
+		buttonPosY = windowSizeY/2-40;
+		// bestimme Position und Größe
+		b1.setBounds(buttonPosX,buttonPosY,200,30);
+		b2.setBounds(buttonPosX,buttonPosY+40,200,30);
+		// benenne Aktionen
+		b1.setActionCommand("start");
+		b2.setActionCommand("end");
+		// ActionListener hinzufügen
+		b1.addActionListener(this);
+		b2.addActionListener(this);
+		// füge Buttons zum Panel hinzu
+		add(b1);
+		add(b2);
+	}
+	
+	// Rückkehr zum Menü und Anzeige von Spielergebnis (Game Over oder You Win)
+	public void paintMessage(String msg, Graphics g){
+		// Mache Buttons wieder sichtbar
+		b1.setVisible(true);
+		b2.setVisible(true);
+		
+		Font small = new Font("Arial", Font.BOLD, 20);
+		FontMetrics metr = this.getFontMetrics(small);
+		
+		g.setColor(Color.white);
+		g.setFont(small);
+		g.drawString(msg, (windowSizeX - metr.stringWidth(msg))/2, 80);
+		
+	}
+	
+	// Startet Spiel
 	public void initGame(){
+		// Buttons ausblenden
+		b1.setVisible(false);
+		b2.setVisible(false);
+		
+		firstStart=false;
 		ingame = true;
 		won = false;
 		
@@ -250,19 +295,23 @@ public class Game extends JPanel implements ActionListener{
 		}
 		
 		if(nextRoom >= 0){
+			// bei Raumwechsel neuen Raum laden und neue Koordinaten bestimmen
 			this.room = nextRoom;
 			initRoom(room);
 			player.setX(newX);
 			player.setY(newY);
 		}
 		else if(nextRoom == -2){
+			// wenn Ziel erreicht
 			won = true;
 			ingame = false;
+			timer.stop();
 		}
 	}
 	
 	// Kollision prüfen
 	public void checkCollision(){
+		// Spieler Ausmaße ermitteln
 		Rectangle r_player = player.getBounds();
 		
 		// Kollisionen mit Wand -> stehenbleiben
@@ -283,6 +332,7 @@ public class Game extends JPanel implements ActionListener{
 			if(r_player.intersects(r_enemy)){
 				// Spieler stirbt
 				ingame=false; // Spiel beenden
+				timer.stop();
 			}
 		}
 		
@@ -301,41 +351,48 @@ public class Game extends JPanel implements ActionListener{
 			g.drawImage(player.getImage(), player.getX(), player.getY(), this);
 		}
 		else{
-			// paintMenue(String Message) [Muss aus konstruktor aufgerufen werden] wenn menü gezeichnet am ende timer.stop()
+			// Nachricht (Game Over/You Win) und Rückkehr ins Menü vorbereiten 
 			String msg;
-
-			if(won) msg = "YOU WIN";
-			else msg = "GAME OVER";
-			Font small = new Font("Arial", Font.BOLD, 20);
-			FontMetrics metr = this.getFontMetrics(small);
 			
-			g.setColor(Color.white);
-			g.setFont(small);
-			g.drawString(msg, (windowSizeX - metr.stringWidth(msg))/2, windowSizeY/2);
+			if(won) msg = "YOU WIN";
+			else if(firstStart) msg = " ";	// Für ersten Start leere Nachricht
+			else msg = "GAME OVER";
+			
+			paintMessage(msg,g);
 		}
 		
 		Toolkit.getDefaultToolkit().sync();
 		g.dispose();
 	}
 	
-	// actionPerformed - wird vom Timer abhängig aufgerufen
+	// actionPerformed 
 	public void actionPerformed(ActionEvent e){
 		
-		player.move();	// bewege Spielfigur
-		checkCollision();
-		checkRoom();
-		
+		if(ingame){
+			// im Spiel - wird vom Timer abhängig aufgerufen
+			player.move();	// bewege Spielfigur
+			checkCollision();	// prüfe Kollision
+			checkRoom();	// prüfe ob Raum gewechselt oder Ziel erreicht
+		}
+		else{
+			// im Menü - Aufruf bei button
+			String action = e.getActionCommand();
+			if(action.equals("start")) initGame();	// Spiel Starten
+			else if(action.equals("end")) System.exit(0);	// Programm beenden
+		}
+
 		repaint();	// zeichne Bildschirm neu - erneuter Aufruf von paint()
+		
 	}
 	
 	// Steuerung - Weitergabe der Keycodes nach Unten
 	private class TAdapter extends KeyAdapter{
 		
 		public void keyReleased(KeyEvent e){
-			player.keyReleased(e);
+			if(ingame) player.keyReleased(e);
 		}
 		public void keyPressed(KeyEvent e){
-			player.keyPressed(e);
+			if(ingame) player.keyPressed(e);
 		}
 	}
 }
