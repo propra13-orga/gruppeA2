@@ -1,11 +1,14 @@
 package dungeoncrawlerA2;
 
 import java.awt.Image;
-import javax.swing.ImageIcon;
 import java.awt.Rectangle;
 
-public class Wall extends GameElement{
+import javax.swing.ImageIcon;
 
+public class Enemy extends GameElement{
+
+	private int collisionTollerance = 10; // Toleranz bei Kollision - Gegner muss richtig berührt werden, nicht nur angeschnitten
+	
 	private Image image;
 	private int width;
 	private int height;
@@ -13,12 +16,12 @@ public class Wall extends GameElement{
 	private String path; // Bilddateipfad
 	 
 	// Konstruktor
-	public Wall(int x, int y, int type) {
+	public Enemy(int x, int y, int type) {
 		 
 		super(x, y); // Aufruf GameElement
 		 
 		type -= 48; // Von char in int
-		if(type == 1) path =  "wall_01.png";
+		if(type==1) path =  "enemy_01.png";
 		// Hier später mehr Optionen
 		 
 	    ImageIcon ii = new ImageIcon(this.getClass().getResource(path));
@@ -30,6 +33,6 @@ public class Wall extends GameElement{
 	 
 	public Rectangle getBounds(){
 		// Kollisionserkennung
-		return new Rectangle(this.getX(), this.getY(), width, height); 
+		return new Rectangle(this.getX()+collisionTollerance/2, this.getY()+collisionTollerance/2, width - collisionTollerance, height - collisionTollerance); 
 	}
 }
