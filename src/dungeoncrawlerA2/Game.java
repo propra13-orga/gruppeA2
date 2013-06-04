@@ -10,8 +10,12 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.Rectangle;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 import javax.swing.JPanel;
 import javax.swing.JButton;
@@ -20,11 +24,13 @@ import javax.swing.Timer;
 // Game: Menü, Spielfeld und Spielsteuerung
 public class Game extends JPanel implements ActionListener{
 	
+	// Menüelemente
 	private JButton b1;
 	private JButton b2;
 	private int buttonPosX;
 	private int buttonPosY;
 	
+	// Hauptspielelemente
 	private Timer timer;	// Timer für ActionEvent
 	private boolean ingame; // Wert für Gameloop
 	private boolean won; // für Abfrage ob gewonnen
@@ -32,84 +38,32 @@ public class Game extends JPanel implements ActionListener{
 	private int room; // aktueller Raum des Sungeons
 	
 	private Player player;	// Spielfigur
+	private int startX, startY;	// Startwert Spielfigur 
 	
 	private ArrayList walls = new ArrayList();
 	private ArrayList grounds = new ArrayList();
 	private ArrayList enemys = new ArrayList();
 	
+	// Designelemente
 	private Color backgroundColor = Color.BLACK; // Hintergrundfarbe
-	private int startX = 50;	// Startwert Spielfigur - Später aus leveldata nehmen
-	private int startY = 50;
-	
 	private int fps = 100;	// Bildwiedrholrate - (evtl später runtersetzen?)
 	
 	private int windowSizeX = 800;	
 	private int windowSizeY = 600; // Angepasst auf 800x600 Bild, 40x40px Objekte
 	private int blockSize = 40;
 	
-	// leveldata, enemydata, exitdata später füllen durch loadLevel(filename)
-	// leveldata, enemydata, exitdata vor Verwendung überprüfen - checkLeveldata()
+	// Leveldatenelemente
+	private String levelpath = "leveldata/level01.txt";	// Dateipfad zu konkretem Level -> wird später aus anderer Hauptspieldatei(Enthält liste der Level in Reihenfolge) ausgelesen
 	
-	// Aufbau pro Zeile: "GegnerTyp(E/T,Nr) posX posY  ..."
-	private String [] enemydata = {
-			"",
-			"E1 03 12 E1 15 11 E1 17 07 ",
-			"E1 03 12 E1 03 07 E1 17 08 "};
-	
-	// Exits von Raum [] zu Raum [] - exitdata[r][h] - r=Raumnummer, h=0,1,2,3 (Norden,Osten,Süden,Westen), Inhalt: Zielraum oder -1(kein Exit), -2 SpielEnde
-	private int[][] exitdata = new int[][]{{1,-1,-1,-1},{-1,2,0,-1},{-1,-2,-1,1}};
-	
-	// W1: Wall Type 1
-	// G1: Ground Type 1
- 	private String [] leveldata = {
-			"W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 G1 G1 W1 W1 " +
-			"W1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 G1 W1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 G1 W1 G1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 " +
-			"W1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 G1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 G1 W1 W1 W1 W1 " +
-			"W1 G1 W1 W1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 W1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 W1 G1 G1 W1 W1 W1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 W1 G1 G1 G1 G1 W1 W1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 W1 G1 G1 G1 G1 G1 W1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 W1 W1 W1 W1 G1 G1 W1 G1 W1 W1 W1 W1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 ",
-			
-			"W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 " +
-			"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 G1 G1 W1 W1 W1 G1 G1 G1 G1 G1 G1 W1 W1 W1 G1 G1 G1 W1 " +
-			"W1 G1 G1 G1 W1 G1 W1 G1 G1 G1 G1 G1 G1 W1 G1 W1 G1 G1 G1 W1 " +
-			"W1 G1 G1 G1 W1 W1 W1 G1 G1 G1 G1 G1 G1 W1 W1 W1 G1 G1 G1 W1 " +
-			"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 G1 G1 G1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 G1 G1 G1 G1 W1 " +
-			"W1 G1 G1 G1 G1 G1 W1 W1 W1 W1 W1 W1 W1 W1 G1 G1 G1 G1 G1 G1 " +
-			"W1 G1 G1 G1 G1 G1 G1 W1 W1 W1 W1 W1 W1 G1 G1 G1 G1 G1 G1 G1 " +
-			"W1 G1 G1 G1 G1 G1 G1 G1 W1 W1 W1 W1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 G1 G1 W1 W1 ",
-			
-			"W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 " +
-			"W1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 W1 " +
-			"W1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 W1 G1 G1 G1 G1 " +
-			"W1 G1 G1 G1 G1 W1 G1 G1 G1 G1 W1 W1 W1 W1 W1 W1 W1 G1 G1 G1 " +
-			"W1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 W1 W1 G1 G1 G1 G1 " +
-			"W1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 W1 " +
-			"W1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 W1 W1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 " +
-			"W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 "
-	};
+	private String[] leveldata;
+	private String[] enemydata;
+	private String[] itemdata;
+	private String[] interactdata; // für Shops und besondere Interaktionen
+	private int[][] exitdata;
+	private String intro;
+	private String endBossLocation;
+	private String levelName;
+	private int levelNumber;
 	
 	// Konstruktor
 	public Game(){
@@ -166,11 +120,15 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Startet Spiel
-	public void initGame(){
+	public void initGame(String path){
 		// Buttons ausblenden
 		b1.setVisible(false);
 		b2.setVisible(false);
 		
+		// Lade Level
+		loadLevel(path);
+		
+		// Spielablaufparameter setzen
 		firstStart=false;
 		ingame = true;
 		won = false;
@@ -181,6 +139,166 @@ public class Game extends JPanel implements ActionListener{
 		player = new Player(startX, startY); // setze neue Spielfigur an Stelle x,y
 		
 		timer.start();
+	}
+	
+	public void loadLevel(String path){
+		boolean isReadingLevel = false;
+		boolean isReadingIntro = false;
+		int rooms = 0;
+		String line = null;
+		String request = null;
+		String data1, data2;
+		int z1, z2, r, count, count2;
+		
+		try {
+			BufferedReader in = new BufferedReader(new FileReader(path));
+			
+			// Hilfsvariablen auf 0 setzen
+			r = count = count2 = 0;
+			
+			// Zeile einlesen
+			while ((line = in.readLine()) != null) {
+				// Counter auf 0 setzen
+				z1 = z2 = 0;
+				request=" ";
+				
+				StringTokenizer tokens = new StringTokenizer(line);
+				
+				// GET REQUEST
+				if(line.length()>0) request = tokens.nextToken(); // Save Request
+				
+				// Requests analysieren
+				
+				// Generelle Levelaten einlesen
+				// Levelnummer einlesen
+				if(request.equals("#NR")){
+					data1 = tokens.nextToken();
+					z1 = data1.charAt(0)-48;	// von char nach int -> -48
+					z2 = data1.charAt(1)-48;
+					levelNumber = 10*z1+z2;
+				}
+				
+				// Levelname einlesen
+				if(request.equals("#TITLE")){
+					if(tokens.hasMoreTokens()) {
+						levelName = tokens.nextToken();
+						while(tokens.hasMoreTokens()) levelName+=" "+tokens.nextToken();
+					}
+				}
+				
+				// Startwerte Spielfigur einlesens
+				if(request.equals("#START")){
+					data1 = tokens.nextToken();
+					data2 = tokens.nextToken();
+					z1 = data1.charAt(0)-48; // hole 100er
+					z2 = data1.charAt(1)-48; // hole 10er
+					startX = (data1.charAt(2)-48) + 100*z1 + 10*z2;	//bilde x koordinate
+					z1 = data2.charAt(0)-48; // hole 100er
+					z2 = data2.charAt(1)-48; // hole 10er
+					startY = (data2.charAt(2)-48) + 100*z1 + 10*z2;	//bilde y koordinate
+				}
+				
+				// Intro einlesen
+				if(isReadingIntro){
+					if(request.equals("#END")) isReadingIntro = false;
+					else 
+						if(count2 == 0){
+							intro = line;
+							count2++;
+						}
+						else intro += line;
+				}
+				if(request.equals("#INTRO")){
+					isReadingIntro = true;
+				}
+				
+				// Endgegnerdaten einlesen
+				if(request.equals("#FINAL")){
+					endBossLocation = tokens.nextToken()+" ";
+					for(int i = 0; i<3; i++) endBossLocation += tokens.nextToken() +" ";
+				}
+				
+				// Anzahl Räume auslesen
+				if(request.equals("#ROOMS")){
+					data1 = tokens.nextToken();
+					z1 = data1.charAt(0);	// Hole Zehner
+					z2 = data1.charAt(1);	// Hole Einser
+					rooms = 10*(z1-48)+(z2-48); // Hole Anzahl Räume
+					
+					// Erstelle Arrays 
+					leveldata = new String[rooms];
+					enemydata = new String[rooms];
+					exitdata = new int[rooms][4];
+					itemdata = new String[rooms];
+					interactdata = new String[rooms];
+				}
+				
+				// Spezielle leveldaten einlesen (pro Raum)
+				// Raumwechsel feststellen
+				if(request.equals("#NEWROOM")){
+					count = 0;
+					
+					data1 = tokens.nextToken();
+					z1 = data1.charAt(0);	// Hole Zehner
+					z2 = data1.charAt(1);	// Hole Einser
+					r = 10*(z1-48)+(z2-48); // Hole Anzahl Räume
+				}
+				
+				// Raumaufbau auslesen
+				if(isReadingLevel){
+					if(count==0) leveldata[r]=line;
+					else leveldata[r]+=line;
+					count++;
+					if(count==15) isReadingLevel = false;
+				}
+				if(request.equals("#LEVEL")){
+					isReadingLevel = true;
+				}
+				
+				// Feinde auslesen
+				if(request.equals("#ENEMY")){
+					if(tokens.hasMoreTokens()) enemydata[r]=tokens.nextToken()+" "; // hole ersten
+					else enemydata[r]="";
+					while(tokens.hasMoreTokens()) enemydata[r]+=tokens.nextToken()+" "; // hole Rest
+				}
+				
+				// Items auslesen
+				if(request.equals("#ITEM")){
+					if(tokens.hasMoreTokens()) itemdata[r]=tokens.nextToken()+" "; // hole ersten
+					else itemdata[r]="";
+					while(tokens.hasMoreTokens()) itemdata[r]+=tokens.nextToken()+" "; // hole Rest
+				}
+				// Interaktive Elemente auslesen - zB Shops
+				if(request.equals("#INTERACT")){
+					if(tokens.hasMoreTokens()) interactdata[r]=tokens.nextToken()+" "; // hole ersten
+					else interactdata[r]="";
+					while(tokens.hasMoreTokens()) interactdata[r]+=tokens.nextToken()+" "; // hole Rest
+				}
+				
+				// Ausgänge einlesen
+				if(request.equals("#EXIT")){
+					for(int i = 0; i<4; i++){
+						data1 = tokens.nextToken();
+						z1 = data1.charAt(0);
+						z2 = data1.charAt(1);
+						if(z1=='-'){
+							exitdata[r][i]=-(z2-48); // negative Ausgänge (kein Ausgane / Endausgang) auslesen
+						}
+						else{
+							exitdata[r][i]=(z1-48)*10+(z2-48);
+						}
+					}
+				}
+				
+			}
+			
+			// BufferedReader schließen
+			in.close();
+		} 
+		catch (IOException e) {
+			System.out.println("Datei nicht gefunden, oder fehlerhaft.");
+		}
+		
 	}
 	
 	// Raum erstellen
@@ -377,7 +495,7 @@ public class Game extends JPanel implements ActionListener{
 		else{
 			// im Menü - Aufruf bei button
 			String action = e.getActionCommand();
-			if(action.equals("start")) initGame();	// Spiel Starten
+			if(action.equals("start")) initGame(levelpath);	// Spiel Starten - Später: vorher aktuelles/gewähltes Level in levelpath laden!
 			else if(action.equals("end")) System.exit(0);	// Programm beenden
 		}
 
