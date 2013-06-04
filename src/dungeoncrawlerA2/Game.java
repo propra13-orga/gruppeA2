@@ -40,9 +40,9 @@ public class Game extends JPanel implements ActionListener{
 	private Player player;	// Spielfigur
 	private int startX, startY;	// Startwert Spielfigur 
 	
-	private ArrayList walls = new ArrayList();
-	private ArrayList grounds = new ArrayList();
-	private ArrayList enemys = new ArrayList();
+	private ArrayList<Wall> walls = new ArrayList<Wall>();
+	private ArrayList<Ground> grounds = new ArrayList<Ground>();
+	private ArrayList<Enemy> enemys = new ArrayList<Enemy>();
 	
 	// Designelemente
 	private Color backgroundColor = Color.BLACK; // Hintergrundfarbe
@@ -60,6 +60,7 @@ public class Game extends JPanel implements ActionListener{
 	private String[] itemdata;
 	private String[] interactdata; // für Shops und besondere Interaktionen
 	private int[][] exitdata;
+	
 	private String intro;
 	private String endBossLocation;
 	private String levelName;
@@ -369,7 +370,7 @@ public class Game extends JPanel implements ActionListener{
 	
 	// Raum zeichnen
 	public void buildRoom(Graphics g){
-		ArrayList room = new ArrayList();
+		ArrayList<GameElement> room = new ArrayList<GameElement>();
 		// Raumelemente einfügen
 		room.addAll(walls);
 		room.addAll(grounds);
