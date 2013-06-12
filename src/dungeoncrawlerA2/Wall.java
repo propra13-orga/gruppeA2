@@ -18,7 +18,7 @@ public class Wall extends GameElement{
 		super(x, y); // Aufruf GameElement
 		 
 		type -= 48; // Von char in int
-		if(type == 1) path =  "wall_01.png";
+		if(type == 1) path =  "images/wall_01.png";
 		// Hier später mehr Optionen
 		 
 	    ImageIcon ii = new ImageIcon(this.getClass().getResource(path));

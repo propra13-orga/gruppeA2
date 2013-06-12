@@ -13,6 +13,8 @@ import java.awt.Rectangle;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import java.util.ArrayList;
 import java.util.StringTokenizer;
@@ -68,7 +70,6 @@ public class Game extends JPanel implements ActionListener{
 	
 	// Konstruktor
 	public Game(){
-		
 		setLayout(null); // um Buttons beliebig zu positionieren
 		
 		addKeyListener(new TAdapter());
@@ -152,11 +153,13 @@ public class Game extends JPanel implements ActionListener{
 		int z1, z2, r, count, count2;
 		
 		try {
-			BufferedReader in = new BufferedReader(new FileReader(path));
+			// Reader und Stream vorbereiten -> Jar fähig
+			InputStream is = getClass().getResourceAsStream(path);
+			InputStreamReader reader = new InputStreamReader(is);
+			BufferedReader in = new BufferedReader(reader);
 			
 			// Hilfsvariablen auf 0 setzen
 			r = count = count2 = 0;
-			
 			// Zeile einlesen
 			while ((line = in.readLine()) != null) {
 				// Counter auf 0 setzen

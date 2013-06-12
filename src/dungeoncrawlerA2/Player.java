@@ -10,11 +10,8 @@ import javax.swing.ImageIcon;
 
 // Player: Spielfigur
 public class Player{
-	/*
-	 * WICHTIG: Bilddateien müssen in den Ordner bin/dungeoncrawlerA2 kopiert werden
-	 * evtl. gegen Ende try/catch Block zur Fehlervermeidung
-	 * */
-	private String player = "player.png";	// Pfad zum Bild - Spielfigur
+	
+	private String player = "images/player.png";	// Pfad zum Bild - Spielfigur
 	private int speed = 2;	// Geschwindigkeit der Spielfigur
 	
 	private int dx;

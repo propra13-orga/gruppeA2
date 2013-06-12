@@ -21,7 +21,7 @@ public class Enemy extends GameElement{
 		super(x, y); // Aufruf GameElement
 		 
 		type -= 48; // Von char in int
-		if(type==1) path =  "enemy_01.png";
+		if(type==1) path =  "images/enemy_01.png";
 		// Hier später mehr Optionen
 		 
 	    ImageIcon ii = new ImageIcon(this.getClass().getResource(path));
