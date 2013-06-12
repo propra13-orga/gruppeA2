@@ -14,22 +14,31 @@ public class Player{
 	private String player = "images/player.png";	// Pfad zum Bild - Spielfigur
 	private int speed = 2;	// Geschwindigkeit der Spielfigur
 	
-	private int dx;
+	private int dx;	// Veränderung der Koordinaten für Bewegung
 	private int dy;
 	private int x;
-	private int y;
-	private int goBackX;
+	private int y;	
+	private int goBackX; // Rücksprungwerte bei Kollision
 	private int goBackY;
 	private int width;
     private int height;
+    private int live;	// aktuelle Lebenspunkte
+    private int startLive; // Lebenspunkte zu Beginn - für komplettes Auffüllen
 	private Image image;
 	
 	// Konstruktor
-	public Player(int x, int y){
+	public Player(int x, int y, int live){
+		// Bild laden plus Informationen
 		ImageIcon ii = new ImageIcon(this.getClass().getResource(player));
 		image = ii.getImage();
 		width = image.getWidth(null);
         height = image.getHeight(null);
+        
+        // Lebenspunkte ermitteln
+        startLive = live;
+        this.live = startLive;
+        
+        // Startkoordinate setzen
 		this.x = x;
 		this.y = y;
 	}
@@ -48,12 +57,24 @@ public class Player{
 	}
 	
 	// get Methoden
+	public int getWidth(){
+		return width;
+	}
+	
+	public int getHeight(){
+		return height;
+	}
+	
 	public int getX(){
 		return this.x;
 	}
 	
 	public int getY(){
 		return this.y;
+	}
+	
+	public int getLive(){
+		return live;
 	}
 	
 	public Image getImage(){
@@ -72,6 +93,11 @@ public class Player{
 	
 	public void setY(int y){
 		this.y = y;
+	}
+	
+	public void setLive(int changeLive){
+		// ändert Anzahl der Lebenspunkte
+		this.live += changeLive;
 	}
 	
 	// KeyEvent Methoden - von oben weitergereicht

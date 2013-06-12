@@ -14,6 +14,8 @@ public class Enemy extends GameElement{
 	private int height;
 	 
 	private String path; // Bilddateipfad
+	
+	private int damage; // Schadenspunkte
 	 
 	// Konstruktor
 	public Enemy(int x, int y, int type) {
@@ -21,8 +23,11 @@ public class Enemy extends GameElement{
 		super(x, y); // Aufruf GameElement
 		 
 		type -= 48; // Von char in int
-		if(type==1) path =  "images/enemy_01.png";
-		// Hier später mehr Optionen
+		if(type==1){
+			// Ratte
+			path =  "images/enemy_01.png";
+			damage = 1;
+		} 
 		 
 	    ImageIcon ii = new ImageIcon(this.getClass().getResource(path));
 	    image = ii.getImage();
@@ -31,8 +36,15 @@ public class Enemy extends GameElement{
 	    this.setImage(image);
 	}
 	 
+	// get Methoden
+	public int getDamage(){
+		return damage;
+	}
+	
 	public Rectangle getBounds(){
 		// Kollisionserkennung
 		return new Rectangle(this.getX()+collisionTollerance/2, this.getY()+collisionTollerance/2, width - collisionTollerance, height - collisionTollerance); 
 	}
+	
+
 }

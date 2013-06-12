@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -19,6 +20,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
+import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.JButton;
 import javax.swing.Timer;
@@ -41,6 +43,8 @@ public class Game extends JPanel implements ActionListener{
 	
 	private Player player;	// Spielfigur
 	private int startX, startY;	// Startwert Spielfigur 
+	private int startLive; // Lebenspunkte zu beginn des Levels
+	private int tollerance = 40; // Schadenstolleranz
 	
 	private ArrayList<Wall> walls = new ArrayList<Wall>();
 	private ArrayList<Ground> grounds = new ArrayList<Ground>();
@@ -51,8 +55,20 @@ public class Game extends JPanel implements ActionListener{
 	private int fps = 100;	// Bildwiedrholrate - (evtl später runtersetzen?)
 	
 	private int windowSizeX = 800;	
-	private int windowSizeY = 600; // Angepasst auf 800x600 Bild, 40x40px Objekte
+	private int windowSizeY = 560; // Angepasst auf 800x600 Bild, 40x40px Objekte, Ststusleiste abgezogen
 	private int blockSize = 40;
+	
+	// Statusleiste
+	private int statusBarX = 5;	// Koordinaten Statusleiste (in px)
+	private int statusBarY = 562;
+	private int statusBarSpace = 2; // Standartraum zwischen Elementen in Statusleiste
+	
+	private String statusBarLivePath = "images/live_01.png";
+	private String statusBarBackgroundPath = "images/statusBar.png";
+	
+	private Image statusBarBackground;
+	private Image statusBarLiveImage;
+	private int statusBarLiveImageWidth, statusBarLiveImageHeight; // Größe der Lebenspunkte in Statusleiste
 	
 	// Leveldatenelemente
 	private String levelpath = "leveldata/level01.txt";	// Dateipfad zu konkretem Level -> wird später aus anderer Hauptspieldatei(Enthält liste der Level in Reihenfolge) ausgelesen
@@ -67,6 +83,10 @@ public class Game extends JPanel implements ActionListener{
 	private String endBossLocation;
 	private String levelName;
 	private int levelNumber;
+	
+	// Zustandsvariablen & Zeitabhängige Events;
+	private boolean playerCanGetDamage; 
+	private int tolleranceTime; // Tolleranzzeit um bei Gegnerkontakt nicht alle Leben zu verlieren
 	
 	// Konstruktor
 	public Game(){
@@ -138,7 +158,20 @@ public class Game extends JPanel implements ActionListener{
 		room = 0;
 		initRoom(room); // ersten Raum aufbauen
 		
-		player = new Player(startX, startY); // setze neue Spielfigur an Stelle x,y
+		player = new Player(startX, startY, startLive); // setze neue Spielfigur an Stelle x,y
+		playerCanGetDamage = true;
+		tolleranceTime = 0;
+		
+		// Statusleiste vorbereiten
+		ImageIcon ii;
+		
+		ii = new ImageIcon(this.getClass().getResource(statusBarBackgroundPath));	// Bild - Hintergrund Statusleiste
+		statusBarBackground = ii.getImage();
+		
+		ii = new ImageIcon(this.getClass().getResource(statusBarLivePath)); // Bild Lebenspunkte
+		statusBarLiveImage = ii.getImage();
+		statusBarLiveImageWidth = statusBarLiveImage.getWidth(null);
+		statusBarLiveImageHeight = statusBarLiveImage.getHeight(null);
 		
 		timer.start();
 	}
@@ -200,6 +233,12 @@ public class Game extends JPanel implements ActionListener{
 					z1 = data2.charAt(0)-48; // hole 100er
 					z2 = data2.charAt(1)-48; // hole 10er
 					startY = (data2.charAt(2)-48) + 100*z1 + 10*z2;	//bilde y koordinate
+	
+					// Lebenspunkte einlesen
+					data1 = tokens.nextToken();
+					z1 = data1.charAt(0)-48; // hole 10er
+					z2 = data1.charAt(1)-48; // hole 1er
+					startLive = 10*z1+z2;
 				}
 				
 				// Intro einlesen
@@ -253,7 +292,7 @@ public class Game extends JPanel implements ActionListener{
 					if(count==0) leveldata[r]=line;
 					else leveldata[r]+=line;
 					count++;
-					if(count==15) isReadingLevel = false;
+					if(count==14) isReadingLevel = false;
 				}
 				if(request.equals("#LEVEL")){
 					isReadingLevel = true;
@@ -391,29 +430,32 @@ public class Game extends JPanel implements ActionListener{
 	public void checkRoom(){
 		int x = player.getX();
 		int y = player.getY();
+		int pw = player.getWidth();
+		int ph = player.getHeight();
+		
 		int newX = x; // Position des Spielers nach Raumwechsel
 		int newY = y;
 		int nextRoom = -1;
 		
-		if(y<0){
+		if(y<0-ph/2){
 			// Norden
 			nextRoom = exitdata[room][0];
-			newY = windowSizeY;
+			newY = windowSizeY-ph/2;
 		}
-		else if(x>windowSizeX){
+		else if(x>windowSizeX-pw/2){
 			// Osten
 			nextRoom = exitdata[room][1];
-			newX = 0;
+			newX = 0-pw/2;
 		}
-		else if(y>windowSizeY){
+		else if(y>windowSizeY-ph/2){
 			// Süden
 			nextRoom = exitdata[room][2];
-			newY = 0;
+			newY = 0-ph/2;
 		}
-		else if(x<0){
+		else if(x<0-pw/2){
 			// Westen
 			nextRoom = exitdata[room][3];
-			newX = windowSizeX;
+			newX = windowSizeX-pw/2;
 		}
 		
 		if(nextRoom >= 0){
@@ -433,6 +475,7 @@ public class Game extends JPanel implements ActionListener{
 	
 	// Kollision prüfen
 	public void checkCollision(){
+		
 		// Spieler Ausmaße ermitteln
 		Rectangle r_player = player.getBounds();
 		
@@ -446,15 +489,20 @@ public class Game extends JPanel implements ActionListener{
 			}
 		}
 		
-		// Kollisionen mit Gegner -> Spiel vorbei
+		// Kollisionen mit Gegner -> Lebenspunkte weg
 		for(int j=0;j<enemys.size(); j++){
 			Enemy e = (Enemy)enemys.get(j);
 			Rectangle r_enemy = e.getBounds();
 			
 			if(r_player.intersects(r_enemy)){
-				// Spieler stirbt
-				ingame=false; // Spiel beenden
-				timer.stop();
+				// Leben reduzieren
+				if(playerCanGetDamage){
+					player.setLive(-e.getDamage()); 
+					playerCanGetDamage = false;
+					tolleranceTime = tollerance; // Tolleranzwert
+				}
+				player.resetMovement();
+				System.out.println(player.getLive());
 			}
 		}
 		
@@ -471,6 +519,9 @@ public class Game extends JPanel implements ActionListener{
 			
 			// zeichne Spielfigur
 			g.drawImage(player.getImage(), player.getX(), player.getY(), this);
+			
+			// zeichne Statusleiste
+			paintStatusBar(g);
 		}
 		else{
 			// Nachricht (Game Over/You Win) und Rückkehr ins Menü vorbereiten 
@@ -487,14 +538,37 @@ public class Game extends JPanel implements ActionListener{
 		g.dispose();
 	}
 	
+	// Statusleiste zeichnen
+	public void paintStatusBar(Graphics g){
+		// Statusleiste zeichnen - Hintergrund
+		g.drawImage(statusBarBackground, 0, windowSizeY, this);
+		
+		// Lebenspunkte ermitteln + Darstellen
+		int l = player.getLive();
+		for(int i = 0; i<l; i++){
+			g.drawImage(statusBarLiveImage, statusBarX+i*(statusBarLiveImageWidth+statusBarSpace), statusBarY, this);
+		}
+		
+	}
+	
 	// actionPerformed 
 	public void actionPerformed(ActionEvent e){
-		
 		if(ingame){
 			// im Spiel - wird vom Timer abhängig aufgerufen
-			player.move();	// bewege Spielfigur
-			checkCollision();	// prüfe Kollision
-			checkRoom();	// prüfe ob Raum gewechselt oder Ziel erreicht
+			if(player.getLive() <= 0){ // prüfe ob Spieler noch im Spiel oder Lebenspunkte 0
+				// Spieler stirbt, Spiel beenden
+				ingame = false;
+				timer.stop();
+			}
+			else{
+				// Prüfe ob Spielfigur Schaden erleiden kann
+				if(tolleranceTime>0) tolleranceTime--;
+				else playerCanGetDamage = true;
+				player.move();	// bewege Spielfigur
+				checkCollision();	// prüfe Kollision
+				checkRoom();	// prüfe ob Raum gewechselt oder Ziel erreicht
+			}
+			
 		}
 		else{
 			// im Menü - Aufruf bei button
