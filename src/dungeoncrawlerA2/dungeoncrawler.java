@@ -22,12 +22,6 @@ public class dungeoncrawler extends JFrame {
 		setLocationRelativeTo(null); // Fenster in Mitte des Bildschirms setzen
 		setResizable(false);
 		
-		/*
-		Später hier Menü erstellen und erst bei Klick auf Button Spiel starten, Menü ausblenden 
-		Reihenfolge: remove(menuepanel), add(new Game())
-		Wenn game beendet, zerstöre game und add(menuepanel)
-		 */
-		
 		// Spiel starten
 		Game g = new Game();
 		add(g); // Panel "Game" zum JFrame hinzufügen

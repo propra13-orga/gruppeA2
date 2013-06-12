@@ -176,6 +176,7 @@ public class Game extends JPanel implements ActionListener{
 		timer.start();
 	}
 	
+	// Lädt Level aus Textdatei
 	public void loadLevel(String path){
 		boolean isReadingLevel = false;
 		boolean isReadingIntro = false;
@@ -475,6 +476,8 @@ public class Game extends JPanel implements ActionListener{
 	
 	// Kollision prüfen
 	public void checkCollision(){
+		Rectangle r_enemy;
+		Rectangle r_wall;
 		
 		// Spieler Ausmaße ermitteln
 		Rectangle r_player = player.getBounds();
@@ -482,7 +485,7 @@ public class Game extends JPanel implements ActionListener{
 		// Kollisionen mit Wand -> stehenbleiben
 		for(int i=0;i<walls.size(); i++){
 			Wall w = (Wall)walls.get(i);
-			Rectangle r_wall = w.getBounds();
+			r_wall = w.getBounds();
 			
 			if(r_player.intersects(r_wall)){
 				player.resetMovement();
@@ -492,7 +495,7 @@ public class Game extends JPanel implements ActionListener{
 		// Kollisionen mit Gegner -> Lebenspunkte weg
 		for(int j=0;j<enemys.size(); j++){
 			Enemy e = (Enemy)enemys.get(j);
-			Rectangle r_enemy = e.getBounds();
+			r_enemy = e.getBounds();
 			
 			if(r_player.intersects(r_enemy)){
 				// Leben reduzieren
@@ -504,6 +507,24 @@ public class Game extends JPanel implements ActionListener{
 				player.resetMovement();
 				System.out.println(player.getLive());
 			}
+		}
+		// TODO: Verhindern, dass Gegner aus einem Raum flüchten können
+		// Kollisionen Gegner mit Wand oder Spieler
+		for(int k = 0; k<enemys.size(); k++){
+			// Hole Gegner
+			Enemy e = (Enemy)enemys.get(k);
+			r_enemy = e.getBounds();
+			
+			for(int l = 0; l<walls.size(); l++){
+				// Hole Wand
+				Wall w = (Wall)walls.get(l);
+				r_wall = w.getBounds();
+				if(r_enemy.intersects(r_wall) || r_enemy.intersects(r_player)){
+					e.resetMovement();
+					e.setDirectionOfMovement(1);
+				}
+			}
+			
 		}
 		
 	}
@@ -565,6 +586,13 @@ public class Game extends JPanel implements ActionListener{
 				if(tolleranceTime>0) tolleranceTime--;
 				else playerCanGetDamage = true;
 				player.move();	// bewege Spielfigur
+				
+				// Bewege Gegner
+				for(int j=0;j<enemys.size(); j++){
+					Enemy en = (Enemy)enemys.get(j);
+					en.move();
+				}
+				
 				checkCollision();	// prüfe Kollision
 				checkRoom();	// prüfe ob Raum gewechselt oder Ziel erreicht
 			}
