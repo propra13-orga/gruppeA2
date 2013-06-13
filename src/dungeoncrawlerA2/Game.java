@@ -49,6 +49,7 @@ public class Game extends JPanel implements ActionListener{
 	private ArrayList<Wall> walls = new ArrayList<Wall>();
 	private ArrayList<Ground> grounds = new ArrayList<Ground>();
 	private ArrayList<Enemy> enemys = new ArrayList<Enemy>();
+	private ArrayList<Item> items = new ArrayList<Item>();
 	
 	// Designelemente
 	private Color backgroundColor = Color.BLACK; // Hintergrundfarbe
@@ -62,13 +63,18 @@ public class Game extends JPanel implements ActionListener{
 	private int statusBarX = 5;	// Koordinaten Statusleiste (in px)
 	private int statusBarY = 562;
 	private int statusBarSpace = 2; // Standartraum zwischen Elementen in Statusleiste
+	private int statusBarLiveContainer = 270;
 	
 	private String statusBarLivePath = "images/live_01.png";
 	private String statusBarBackgroundPath = "images/statusBar.png";
+	private String statusBarMoneyPath = "images/money_01.png";
 	
 	private Image statusBarBackground;
+	private Image statusBarMoneyImage;
 	private Image statusBarLiveImage;
+	
 	private int statusBarLiveImageWidth, statusBarLiveImageHeight; // Größe der Lebenspunkte in Statusleiste
+	
 	
 	// Leveldatenelemente
 	private String levelpath = "leveldata/level01.txt";	// Dateipfad zu konkretem Level -> wird später aus anderer Hauptspieldatei(Enthält liste der Level in Reihenfolge) ausgelesen
@@ -167,6 +173,9 @@ public class Game extends JPanel implements ActionListener{
 		
 		ii = new ImageIcon(this.getClass().getResource(statusBarBackgroundPath));	// Bild - Hintergrund Statusleiste
 		statusBarBackground = ii.getImage();
+		
+		ii = new ImageIcon(this.getClass().getResource(statusBarMoneyPath)); // Bild Geld
+		statusBarMoneyImage = ii.getImage();
 		
 		ii = new ImageIcon(this.getClass().getResource(statusBarLivePath)); // Bild Lebenspunkte
 		statusBarLiveImage = ii.getImage();
@@ -353,6 +362,7 @@ public class Game extends JPanel implements ActionListener{
 		Wall wall;
 		Ground ground;
 		Enemy enemy;
+		Item item;
 		
 		char element;
 		char type;
@@ -360,6 +370,7 @@ public class Game extends JPanel implements ActionListener{
 		walls.clear();
 		grounds.clear();
 		enemys.clear();
+		items.clear();
 		
 		// Raum auslesen aus leveldata
 		for(int i=0; i<leveldata[roomnumber].length(); i+=3){
@@ -409,6 +420,33 @@ public class Game extends JPanel implements ActionListener{
 			}
 		}
 		
+		// Items auslesen aus Itemdata
+		for(int k=0;k<itemdata[roomnumber].length(); k+=11){
+			// Itemtyp
+			element = itemdata[roomnumber].charAt(k);
+			type = itemdata[roomnumber].charAt(k+1);
+			
+			// Koordinaten in px auslesen
+			int x100 = itemdata[roomnumber].charAt(k+3)-48;
+			int x010 = itemdata[roomnumber].charAt(k+4)-48;
+			int x001 = itemdata[roomnumber].charAt(k+5)-48;
+			int itemX = 100*x100+10*x010+x001;
+
+			int y100 = itemdata[roomnumber].charAt(k+7)-48;
+			int y010 = itemdata[roomnumber].charAt(k+8)-48;
+			int y001 = itemdata[roomnumber].charAt(k+9)-48;
+			int itemY = 100*y100+10*y010+y001;
+			
+			// Itemtyp ermitteln (I -> 0 -> Standartitems, J ->1 -> Waffen)
+			if(element == 'J') type += 10;
+			
+			// Item erstellen und in Liste einfügen
+			item = new Item(itemX, itemY, type);
+			items.add(item);
+			
+		}		
+				
+		
 	}
 	
 	// Raum zeichnen
@@ -417,7 +455,9 @@ public class Game extends JPanel implements ActionListener{
 		// Raumelemente einfügen
 		room.addAll(walls);
 		room.addAll(grounds);
-		// Gegner einfügen - wichtig: Erst Raum, dann andere Objekte
+		// Items einfügen - wichtig: nach Raum
+		room.addAll(items);
+		// Gegner einfügen - wichtig: Erst Raum und Items, dann andere Objekte
 		room.addAll(enemys);
 		
 		for(int i=0; i<room.size(); i++){
@@ -478,6 +518,7 @@ public class Game extends JPanel implements ActionListener{
 	public void checkCollision(){
 		Rectangle r_enemy;
 		Rectangle r_wall;
+		Rectangle r_item;
 		
 		// Spieler Ausmaße ermitteln
 		Rectangle r_player = player.getBounds();
@@ -527,6 +568,19 @@ public class Game extends JPanel implements ActionListener{
 			
 		}
 		
+		// Kollisionen Spieler mit Item
+		for(int m=0;m<items.size(); m++){
+			Item it = (Item)items.get(m);
+			r_item = it.getBounds();
+			
+			if(r_player.intersects(r_item)){
+				if(it.getItemType().equals("money") && it.isVisible()){
+					player.setMoney(it.getAmount());
+					it.setVisible(false);
+				}
+			}
+		}
+		
 	}
 	
 	// Paint Methode - zeichnet Bildschirm
@@ -564,11 +618,29 @@ public class Game extends JPanel implements ActionListener{
 		// Statusleiste zeichnen - Hintergrund
 		g.drawImage(statusBarBackground, 0, windowSizeY, this);
 		
+		// TODO Lebenspunkte maximal in Container platz
 		// Lebenspunkte ermitteln + Darstellen
 		int l = player.getLive();
 		for(int i = 0; i<l; i++){
 			g.drawImage(statusBarLiveImage, statusBarX+i*(statusBarLiveImageWidth+statusBarSpace), statusBarY, this);
 		}
+		
+		// Geld ermitteln und darstellen
+		int m = player.getMoney();
+		
+		String mon = "x ";	// Anzahl Geld in String umwandeln
+		if(m<10) mon+="00"+m;
+		else if(m<100) mon+="0"+m;
+		else mon+=m;
+		
+		g.drawImage(statusBarMoneyImage, statusBarX+statusBarLiveContainer, statusBarY+2, this); // Bild zeichnen
+		
+		Font small = new Font("Arial", Font.ITALIC, 12);
+		FontMetrics metr = this.getFontMetrics(small);
+		
+		g.setColor(Color.white);
+		g.setFont(small);
+		g.drawString(mon, (statusBarX+statusBarLiveContainer+statusBarMoneyImage.getWidth(null)+4), statusBarY + statusBarMoneyImage.getWidth(null)/2+4); // Zeichne String
 		
 	}
 	
@@ -576,6 +648,13 @@ public class Game extends JPanel implements ActionListener{
 	public void actionPerformed(ActionEvent e){
 		if(ingame){
 			// im Spiel - wird vom Timer abhängig aufgerufen
+			
+			// prüfe ob Item sichtbar sonst entfernen
+			for(int i = 0; i<items.size(); i++){
+				Item it = (Item)items.get(i);
+				if(it.isVisible()==false) items.remove(i);
+			}
+			
 			if(player.getLive() <= 0){ // prüfe ob Spieler noch im Spiel oder Lebenspunkte 0
 				// Spieler stirbt, Spiel beenden
 				ingame = false;

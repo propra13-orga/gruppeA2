@@ -20,11 +20,15 @@ public class Player{
 	private int y;	
 	private int goBackX; // Rücksprungwerte bei Kollision
 	private int goBackY;
+	
 	private int width;
     private int height;
-    private int live;	// aktuelle Lebenspunkte
-    private int startLive; // Lebenspunkte zu Beginn - für komplettes Auffüllen
 	private Image image;
+
+	private int live;	// aktuelle Lebenspunkte
+	private int startLive; // Lebenspunkte zu Beginn - für komplettes Auffüllen
+	
+	private int money;
 	
 	// Konstruktor
 	public Player(int x, int y, int live){
@@ -37,6 +41,9 @@ public class Player{
         // Lebenspunkte ermitteln
         startLive = live;
         this.live = startLive;
+        
+        // Geld auf 0 setzen
+        this.money = 0;
         
         // Startkoordinate setzen
 		this.x = x;
@@ -58,11 +65,11 @@ public class Player{
 	
 	// get Methoden
 	public int getWidth(){
-		return width;
+		return this.width;
 	}
 	
 	public int getHeight(){
-		return height;
+		return this.height;
 	}
 	
 	public int getX(){
@@ -74,7 +81,11 @@ public class Player{
 	}
 	
 	public int getLive(){
-		return live;
+		return this.live;
+	}
+	
+	public int getMoney(){
+		return this.money;
 	}
 	
 	public Image getImage(){
@@ -98,6 +109,12 @@ public class Player{
 	public void setLive(int changeLive){
 		// ändert Anzahl der Lebenspunkte
 		this.live += changeLive;
+	}
+	
+	public void setMoney(int changeMoney){
+		// ändert Anzahl der Lebenspunkte
+		this.money += changeMoney;
+		if(this.money>999) this.money=999; // bestimme maximale Anzahl an Geld
 	}
 	
 	// KeyEvent Methoden - von oben weitergereicht
