@@ -40,7 +40,8 @@ public class Player{
         
         // Lebenspunkte ermitteln
         startLive = live;
-        this.live = startLive;
+        this.live = 0;
+        this.setLive(startLive);
         
         // Geld auf 0 setzen
         this.money = 0;
@@ -109,6 +110,7 @@ public class Player{
 	public void setLive(int changeLive){
 		// ändert Anzahl der Lebenspunkte
 		this.live += changeLive;
+		if(this.live>24) this.live=24; // bestimme maximale Anzahl an leben
 	}
 	
 	public void setMoney(int changeMoney){

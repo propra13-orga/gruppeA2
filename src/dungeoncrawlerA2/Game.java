@@ -549,7 +549,7 @@ public class Game extends JPanel implements ActionListener{
 				System.out.println(player.getLive());
 			}
 		}
-		// TODO: Verhindern, dass Gegner aus einem Raum flüchten können
+		
 		// Kollisionen Gegner mit Wand oder Spieler
 		for(int k = 0; k<enemys.size(); k++){
 			// Hole Gegner
@@ -565,6 +565,9 @@ public class Game extends JPanel implements ActionListener{
 					e.setDirectionOfMovement(1);
 				}
 			}
+			
+			// verhindern dass Gegner Raum verlässt --> umdrehen wenn Bildschirm verlassen
+			if(e.getX()<0 || e.getX()>windowSizeX-e.getImage().getWidth(null) || e.getY()<0 || e.getY()>windowSizeY-e.getImage().getHeight(null)) e.setDirectionOfMovement(2);
 			
 		}
 		
@@ -618,11 +621,11 @@ public class Game extends JPanel implements ActionListener{
 		// Statusleiste zeichnen - Hintergrund
 		g.drawImage(statusBarBackground, 0, windowSizeY, this);
 		
-		// TODO Lebenspunkte maximal in Container platz
 		// Lebenspunkte ermitteln + Darstellen
 		int l = player.getLive();
 		for(int i = 0; i<l; i++){
-			g.drawImage(statusBarLiveImage, statusBarX+i*(statusBarLiveImageWidth+statusBarSpace), statusBarY, this);
+			if(i<12) g.drawImage(statusBarLiveImage, statusBarX+i*(statusBarLiveImageWidth+statusBarSpace), statusBarY, this);
+			else g.drawImage(statusBarLiveImage, statusBarX+(i-12)*(statusBarLiveImageWidth+statusBarSpace), statusBarY+statusBarLiveImage.getHeight(null), this);
 		}
 		
 		// Geld ermitteln und darstellen
@@ -636,7 +639,6 @@ public class Game extends JPanel implements ActionListener{
 		g.drawImage(statusBarMoneyImage, statusBarX+statusBarLiveContainer, statusBarY+2, this); // Bild zeichnen
 		
 		Font small = new Font("Arial", Font.ITALIC, 12);
-		FontMetrics metr = this.getFontMetrics(small);
 		
 		g.setColor(Color.white);
 		g.setFont(small);
