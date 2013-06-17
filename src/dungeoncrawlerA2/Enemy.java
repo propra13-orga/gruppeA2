@@ -20,6 +20,8 @@ public class Enemy extends GameElement{
 	private int steps;
 	private int randomNumber;
 	
+	private boolean visible;
+	
 	 
 	private String path; // Bilddateipfad
 	
@@ -44,6 +46,8 @@ public class Enemy extends GameElement{
 		
 		this.dx = 0;
 		this.dy = 0;
+		
+		this.visible=true;
 		 
 	    ImageIcon ii = new ImageIcon(this.getClass().getResource(path));
 	    image = ii.getImage();
@@ -108,8 +112,21 @@ public class Enemy extends GameElement{
 		this.dir = this.dir%4;
 		
 	}
-	 
+	
+	public void setVisible(boolean visible){
+		this.visible = visible;
+	}
+	
 	// get Methoden
+	
+	public int getDirectionOfMovement(){
+		return this.dir;
+	}
+	
+	public boolean isVisible(){
+		return visible;
+	}
+	 
 	public int getDamage(){
 		return damage;
 	}

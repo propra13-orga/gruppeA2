@@ -13,6 +13,7 @@ public class Item extends GameElement{
 	private String ItemType;
 	private int amount; // Anzahl an Geld, Munition, Magie, Waffen ... pro Item
 	private boolean visible;
+	private boolean ItemHasMissiles;
 	
 	public Item(int x, int y, int type){
 		
@@ -21,10 +22,20 @@ public class Item extends GameElement{
 		type -= 48;
 		
 		if(type == 1){
+			// Geld
 			path = "images/money_01.png";
 			ItemType = "money";
 			amount=1;
+			ItemHasMissiles = false;
 		}
+		else if(type == 11){
+			// Plasmagun
+			path = "images/w_plasmagun_01.png";
+			ItemType = "plasmagun";
+			amount=30; // Hier für Munition
+			ItemHasMissiles = true;
+		}
+		
 		
 		visible = true;
 		
@@ -41,9 +52,22 @@ public class Item extends GameElement{
 		this.visible = visible;
 	}
 	
+	public void setAmount(int amount){
+		this.amount = amount;
+	}
+	
+	public void addToAmount(int addAmount){
+		this.amount += addAmount;
+		if(this.amount <= 0) this.amount = 0;
+	}
+	
 	// get Methoden
 	public boolean isVisible(){
 		return visible;
+	}
+	
+	public boolean hasMissiles(){
+		return ItemHasMissiles;
 	}
 	
 	public String getItemType(){

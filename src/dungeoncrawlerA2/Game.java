@@ -44,12 +44,13 @@ public class Game extends JPanel implements ActionListener{
 	private Player player;	// Spielfigur
 	private int startX, startY;	// Startwert Spielfigur 
 	private int startLive; // Lebenspunkte zu beginn des Levels
-	private int tollerance = 40; // Schadenstolleranz
+	private int tollerance = 60; // Schadenstolleranz
 	
 	private ArrayList<Wall> walls = new ArrayList<Wall>();
 	private ArrayList<Ground> grounds = new ArrayList<Ground>();
 	private ArrayList<Enemy> enemys = new ArrayList<Enemy>();
 	private ArrayList<Item> items = new ArrayList<Item>();
+	private ArrayList<Missile> missiles = new ArrayList<Missile>();
 	
 	// Designelemente
 	private Color backgroundColor = Color.BLACK; // Hintergrundfarbe
@@ -74,6 +75,7 @@ public class Game extends JPanel implements ActionListener{
 	private Image statusBarLiveImage;
 	
 	private int statusBarLiveImageWidth, statusBarLiveImageHeight; // Größe der Lebenspunkte in Statusleiste
+	private int itemBoxSize = 30;
 	
 	
 	// Leveldatenelemente
@@ -93,6 +95,9 @@ public class Game extends JPanel implements ActionListener{
 	// Zustandsvariablen & Zeitabhängige Events;
 	private boolean playerCanGetDamage; 
 	private int tolleranceTime; // Tolleranzzeit um bei Gegnerkontakt nicht alle Leben zu verlieren
+	private Item playerActiveItem;
+	private Image activeItemImage;
+	private int ammunition = 0;
 	
 	// Konstruktor
 	public Game(){
@@ -371,6 +376,7 @@ public class Game extends JPanel implements ActionListener{
 		grounds.clear();
 		enemys.clear();
 		items.clear();
+		missiles.clear();
 		
 		// Raum auslesen aus leveldata
 		for(int i=0; i<leveldata[roomnumber].length(); i+=3){
@@ -459,6 +465,9 @@ public class Game extends JPanel implements ActionListener{
 		room.addAll(items);
 		// Gegner einfügen - wichtig: Erst Raum und Items, dann andere Objekte
 		room.addAll(enemys);
+
+		missiles = player.getMissiles();
+		room.addAll(missiles);
 		
 		for(int i=0; i<room.size(); i++){
 			// Element holen und zeichnen
@@ -519,17 +528,25 @@ public class Game extends JPanel implements ActionListener{
 		Rectangle r_enemy;
 		Rectangle r_wall;
 		Rectangle r_item;
+		Rectangle r_missile;
 		
 		// Spieler Ausmaße ermitteln
 		Rectangle r_player = player.getBounds();
 		
-		// Kollisionen mit Wand -> stehenbleiben
+		// Kollisionen mit Wand -> stehenbleiben || Missile remove
 		for(int i=0;i<walls.size(); i++){
 			Wall w = (Wall)walls.get(i);
 			r_wall = w.getBounds();
 			
 			if(r_player.intersects(r_wall)){
 				player.resetMovement();
+			}
+			
+			// Kollision mit Missile
+			for(int n = 0; n<missiles.size(); n++){
+				Missile ms = (Missile)missiles.get(n);
+				r_missile = ms.getReducedBounds();
+				if(r_wall.intersects(r_missile)) ms.setVisible(false);
 			}
 		}
 		
@@ -545,8 +562,22 @@ public class Game extends JPanel implements ActionListener{
 					playerCanGetDamage = false;
 					tolleranceTime = tollerance; // Tolleranzwert
 				}
+				// Gegner dreht um
+				e.resetMovement();
+				if(player.getDir()!=e.getDirectionOfMovement()) e.setDirectionOfMovement(2); // HIER
+				// Spieler bleibt stehen
 				player.resetMovement();
 				System.out.println(player.getLive());
+			}
+			
+			// Kollision mit Missile
+			for(int n = 0; n<missiles.size(); n++){
+				Missile ms = (Missile)missiles.get(n);
+				r_missile = ms.getBounds();
+				if(r_enemy.intersects(r_missile)){
+					ms.setVisible(false);
+					e.setVisible(false); // Hier später Schaden verteilen
+				}
 			}
 		}
 		
@@ -560,7 +591,7 @@ public class Game extends JPanel implements ActionListener{
 				// Hole Wand
 				Wall w = (Wall)walls.get(l);
 				r_wall = w.getBounds();
-				if(r_enemy.intersects(r_wall) || r_enemy.intersects(r_player)){
+				if(r_enemy.intersects(r_wall)){
 					e.resetMovement();
 					e.setDirectionOfMovement(1);
 				}
@@ -577,8 +608,19 @@ public class Game extends JPanel implements ActionListener{
 			r_item = it.getBounds();
 			
 			if(r_player.intersects(r_item)){
-				if(it.getItemType().equals("money") && it.isVisible()){
-					player.setMoney(it.getAmount());
+				// prüfe ob Item auswählbar
+				if(it.isVisible()){
+					
+					if(it.getItemType().equals("money")){
+						// Geld zu Spieler hinzufügen
+						player.setMoney(it.getAmount());
+					}
+					else{
+						// Waffen und nutzbare Items zu Spieler hinzufügen
+						player.addItem(it);
+						System.out.println(it.getItemType() + " added to Player.");
+					}
+					// item zum Entfernen vorbereiten
 					it.setVisible(false);
 				}
 			}
@@ -636,13 +678,41 @@ public class Game extends JPanel implements ActionListener{
 		else if(m<100) mon+="0"+m;
 		else mon+=m;
 		
-		g.drawImage(statusBarMoneyImage, statusBarX+statusBarLiveContainer, statusBarY+2, this); // Bild zeichnen
+		g.drawImage(statusBarMoneyImage, statusBarX+statusBarLiveContainer, statusBarY+2, this); // Bild Geld zeichnen
 		
 		Font small = new Font("Arial", Font.ITALIC, 12);
+		FontMetrics metr = this.getFontMetrics(small);
+		
+		int barX = statusBarX+statusBarLiveContainer+statusBarMoneyImage.getWidth(null)+4; // momentane X Position auf Leiste
 		
 		g.setColor(Color.white);
 		g.setFont(small);
-		g.drawString(mon, (statusBarX+statusBarLiveContainer+statusBarMoneyImage.getWidth(null)+4), statusBarY + statusBarMoneyImage.getWidth(null)/2+4); // Zeichne String
+		g.drawString(mon, barX, statusBarY + statusBarMoneyImage.getWidth(null)/2+4); // Zeichne String
+		
+		barX += metr.stringWidth(mon) + 25;
+		
+		// Item darstellen
+		g.drawRoundRect(barX, statusBarY+2, itemBoxSize, itemBoxSize, 5, 5); // Kasten für Item
+		g.fillRoundRect(barX, statusBarY+2, itemBoxSize, itemBoxSize, 5, 5);
+		barX+=3;
+		
+		playerActiveItem = player.getActiveItem();
+		if(playerActiveItem != null){
+			// Item Bild und Anzahl Munition holen
+			activeItemImage = playerActiveItem.getImage();
+			ammunition = playerActiveItem.getAmount();
+			
+			g.drawImage(activeItemImage,barX, statusBarY+3, this); // Bild zeichnen
+			
+			String amm = "x ";
+			if(ammunition <10) amm += "0";
+			amm+=ammunition;
+			
+			if(playerActiveItem.hasMissiles()) g.drawString(amm, barX+itemBoxSize+2, statusBarY + itemBoxSize-5); // Zeichne String - Anzahl Munition
+			
+		}
+		
+		
 		
 	}
 	
@@ -671,7 +741,15 @@ public class Game extends JPanel implements ActionListener{
 				// Bewege Gegner
 				for(int j=0;j<enemys.size(); j++){
 					Enemy en = (Enemy)enemys.get(j);
+					if(en.isVisible() == false) enemys.remove(j); // entfernen falls weg
 					en.move();
+				}
+				
+				// Bewege Geschosse
+				for(int k=0;k<missiles.size(); k++){
+					Missile m = (Missile)missiles.get(k);
+					if(m.isVisible() == false) missiles.remove(k); // entfernen falls weg
+					m.move();
 				}
 				
 				checkCollision();	// prüfe Kollision
