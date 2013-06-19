@@ -13,6 +13,9 @@ public class Checkpoint extends GameElement{
 	private boolean active;
 	 
 	private String path; // Bilddateipfad
+	private String pathList[] = {"images/checkpoint_inactive.png","images/checkpoint_active.png"};
+	
+	private ImageIcon ii;
 	 
 	// Konstruktor
 	public Checkpoint(int x, int y, int type) {
@@ -20,19 +23,32 @@ public class Checkpoint extends GameElement{
 		super(x, y); // Aufruf GameElement
 		 
 		type -= 48; // Von char in int
-		if(type == 0) path =  "images/checkpoint_inactive.png";
-		else if(type == 1) path =  "images/checkpoint_active.png";
-		// Hier später mehr Optionen
-		 
-	    ImageIcon ii = new ImageIcon(this.getClass().getResource(path));
+		if(type == 0){
+			this.setActive(false);
+		}
+		else if(type == 1){
+			 this.setActive(true);
+		}
+	}
+	
+	public void setActive(boolean active){
+		this.active = active;
+		if(active) this.path = pathList[1];
+		else this.path = pathList[0];
+		// neues Bild laden
+		ii = new ImageIcon(this.getClass().getResource(path));
 	    image = ii.getImage();
 	    width = image.getWidth(null);
 	    height = image.getHeight(null);
 	    this.setImage(image);
 	}
+	
+	public boolean getActive(){
+		return this.active;
+	}
 	 
 	public Rectangle getBounds(){
 		// Kollisionserkennung
-		return new Rectangle(this.getX(), this.getY(), width, height); 
+		return new Rectangle(this.getX()+4, this.getY()+4, width-8, height-8); 
 	}
 }

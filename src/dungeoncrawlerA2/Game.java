@@ -45,6 +45,8 @@ public class Game extends JPanel implements ActionListener{
 	private int startX, startY;	// Startwert Spielfigur 
 	private int startLive; // Lebenspunkte zu beginn des Levels
 	private int tollerance = 60; // Schadenstolleranz
+	private int startLeftTry = 3;
+	private int leftTry;
 	
 	private ArrayList<Wall> walls = new ArrayList<Wall>();
 	private ArrayList<Ground> grounds = new ArrayList<Ground>();
@@ -52,6 +54,8 @@ public class Game extends JPanel implements ActionListener{
 	private ArrayList<Item> items = new ArrayList<Item>();
 	private ArrayList<Missile> missiles = new ArrayList<Missile>();
 	private ArrayList<Checkpoint> checkpoints = new ArrayList<Checkpoint>();
+	
+	private int activeCheckpointRoom, activeCheckpointX, activeCheckpointY, activeCheckpointLevel;
 	
 	// Designelemente
 	private Color backgroundColor = Color.BLACK; // Hintergrundfarbe
@@ -105,8 +109,10 @@ public class Game extends JPanel implements ActionListener{
 	
 	// Konstruktor
 	public Game(){
-		
+		// Setze kurzspeicherelemente auf 0, bzw inaktiv
 		level = 0;
+		activeCheckpointLevel = activeCheckpointRoom = activeCheckpointX = activeCheckpointY = -1;
+		leftTry = startLeftTry;
 		
 		setLayout(null); // um Buttons beliebig zu positionieren
 		
@@ -119,7 +125,7 @@ public class Game extends JPanel implements ActionListener{
 		timer = new Timer(1000/fps, this); // Timer nach fps einstellen
 		
 		// Menü vorbereiten
-		b1 = new JButton("Start Game");
+		b1 = new JButton("Start");
 		b2 = new JButton("Exit");
 		initMenu();
 		
@@ -173,7 +179,23 @@ public class Game extends JPanel implements ActionListener{
 		ingame = true;
 		won = false;
 		
-		room = 0;
+		// Starte Abfrage ob Start von Checkpoint
+		if(leftTry<0){
+			activeCheckpointLevel = activeCheckpointX = activeCheckpointY = activeCheckpointRoom = -1;
+			leftTry = startLeftTry;
+			level=0;
+		}
+		
+		if(activeCheckpointX!=-1 && activeCheckpointY!=-1 && activeCheckpointRoom!=-1 && activeCheckpointLevel == level){
+			// Wenn cp aktiviert
+			room = activeCheckpointRoom;
+			startX = activeCheckpointX;
+			startY = activeCheckpointY;
+		}
+		else{
+			room = 0;
+		}
+		
 		initRoom(room); // ersten Raum aufbauen
 		
 		player = new Player(startX, startY, startLive); // setze neue Spielfigur an Stelle x,y
@@ -460,7 +482,7 @@ public class Game extends JPanel implements ActionListener{
 			
 		}		
 		
-		// Interaktive Elemente auslesen 
+		// Interaktive Elemente auslesen - Checkpoints, Shop, NPC
 		for(int l = 0; l<interactdata[roomnumber].length(); l+=11){
 			// Typ
 			element = interactdata[roomnumber].charAt(l);
@@ -480,7 +502,14 @@ public class Game extends JPanel implements ActionListener{
 			// Element erstellen und in Liste einfügen
 			if(element == 'C'){
 				// Checkpoint
-				Checkpoint cp = new Checkpoint(interX, interY, type);
+				Checkpoint cp;
+				// prüfe ob CP schon aktiv
+				if(activeCheckpointRoom == roomnumber && activeCheckpointX == interX && activeCheckpointY == interY){
+					cp = new Checkpoint(interX, interY, type+1);
+				}
+				else{
+					cp = new Checkpoint(interX, interY, type);
+				}
 				checkpoints.add(cp);
 			}
 		}
@@ -551,7 +580,8 @@ public class Game extends JPanel implements ActionListener{
 		}
 		else if(nextRoom == -2){
 			// wenn Ziel erreicht
-			if(level!=levelpath.length-1) level++; // Erhöhe Level um 1
+			level++; // Erhöhe Level um 1
+			System.out.println("Gehe zu Level "+level);
 			won = true;
 			ingame = false;
 			timer.stop();
@@ -564,6 +594,7 @@ public class Game extends JPanel implements ActionListener{
 		Rectangle r_wall;
 		Rectangle r_item;
 		Rectangle r_missile;
+		Rectangle r_checkpoint;
 		
 		// Spieler Ausmaße ermitteln
 		Rectangle r_player = player.getBounds();
@@ -637,6 +668,23 @@ public class Game extends JPanel implements ActionListener{
 			
 		}
 		
+		// Kollisionen Spieler mit Checkpoint
+		for(int o = 0; o<checkpoints.size(); o++){
+			Checkpoint cp = (Checkpoint)checkpoints.get(o);
+			r_checkpoint = cp.getBounds();
+			boolean active = cp.getActive();
+			if(active == false){
+				if(r_player.intersects(r_checkpoint)){
+					cp.setActive(true);
+					activeCheckpointX = cp.getX();
+					activeCheckpointY = cp.getY();
+					activeCheckpointRoom = this.room;
+					activeCheckpointLevel = this.level;
+					System.out.println("Checkpoint aktiviert in Raum "+activeCheckpointRoom+" mit Koordinaten "+activeCheckpointX + " "+ activeCheckpointY);
+				}
+			}
+		}
+		
 		// Kollisionen Spieler mit Item
 		for(int m=0;m<items.size(); m++){
 			Item it = (Item)items.get(m);
@@ -690,9 +738,12 @@ public class Game extends JPanel implements ActionListener{
 			// Nachricht (Game Over/You Win) und Rückkehr ins Menü vorbereiten 
 			String msg;
 			
-			if(won) msg = "Level "+level+" abgeschlossen.";
+			if(won){
+				msg = "Level "+level+" abgeschlossen.";
+			}
 			else if(firstStart) msg = " ";	// Für ersten Start leere Nachricht
-			else msg = "GAME OVER";
+			else if(leftTry<0) msg = "GAME OVER";
+			else msg = "Verloren! Noch "+(leftTry+1)+" Versuche über.";
 			
 			paintMessage(msg,g);
 		}
@@ -755,6 +806,10 @@ public class Game extends JPanel implements ActionListener{
 			
 		}
 		
+		// Anzahl versuche 
+		String tr = "Life left: "+leftTry;
+		g.drawString(tr, barX+4*itemBoxSize, statusBarY + itemBoxSize-5);
+		
 		// Mana ermitteln und darstellen
 		int mana = player.getMana();
 		g.setColor(Color.GREEN);
@@ -778,6 +833,7 @@ public class Game extends JPanel implements ActionListener{
 			if(player.getLive() <= 0){ // prüfe ob Spieler noch im Spiel oder Lebenspunkte 0
 				// Spieler stirbt, Spiel beenden
 				ingame = false;
+				leftTry--;
 				timer.stop();
 			}
 			else{
@@ -820,7 +876,10 @@ public class Game extends JPanel implements ActionListener{
 		else{
 			// im Menü - Aufruf bei button
 			String action = e.getActionCommand();
-			if(action.equals("start")) initGame(levelpath[level]);	// Spiel Starten - Später: vorher aktuelles/gewähltes Level in levelpath laden!
+			if(action.equals("start")){
+				if(level>=levelpath.length) level--; 
+				initGame(levelpath[level]);	// Spiel Starten - Später: vorher aktuelles/gewähltes Level in levelpath laden!
+			}
 			else if(action.equals("end")) System.exit(0);	// Programm beenden
 		}
 
