@@ -31,6 +31,11 @@ public class Player{
 	private int startLive; // Lebenspunkte zu Beginn - für komplettes Auffüllen
 	
 	private int money;
+	private int mana;
+	private int startMana = 1000;
+	
+	private String magicType = "immortality";
+	private boolean immortal;
 	
 	private ArrayList<Item> itemList = new ArrayList<Item>();
 	private Item activeItem;
@@ -53,8 +58,10 @@ public class Player{
         
         // Geld auf 0 setzen
         this.money = 0;
+        this.mana = 0;
         
         // Items und sonstige Werte setzen
+        this.immortal = false;
         this.activeItem = null;
         
         // Startkoordinate setzen
@@ -88,6 +95,15 @@ public class Player{
 	public void resetMovement(){
 		this.x = goBackX;
 		this.y = goBackY;
+	}
+	
+	public void useMagic(){
+		if(magicType.equals("immortality")){
+			if(isImmortal()) this.setImmortal(false);
+			else{
+				if(this.mana>0) this.setImmortal(true);
+			}
+		}
 	}
 	
 	public void fire(){
@@ -181,6 +197,10 @@ public class Player{
 		return this.money;
 	}
 	
+	public int getMana(){
+		return this.mana;
+	}
+	
 	public Image getImage(){
 		return this.image;
 	}
@@ -190,7 +210,15 @@ public class Player{
 		return new Rectangle(x, y, width, height); 
 	}
 	
+	public boolean isImmortal(){
+		return this.immortal;
+	}
+	
 	// set Methoden
+	public void setImmortal(boolean mort){
+		this.immortal = mort;
+	}
+	
 	public void setX(int x){
 		this.x = x;
 	}
@@ -209,6 +237,17 @@ public class Player{
 		// ändert Anzahl der Lebenspunkte
 		this.money += changeMoney;
 		if(this.money>999) this.money=999; // bestimme maximale Anzahl an Geld
+	}
+	
+	public void resetMana(){
+		// ändert Anzahl Mana
+		this.mana = startMana;
+	}
+	
+	public void removeMana(int rem){
+		this.mana -= rem;
+		if(this.mana<0) this.mana = 0;
+		else if(this.mana > startMana) this.mana = startMana;
 	}
 	
 	// KeyEvent Methoden - von oben weitergereicht
@@ -234,6 +273,9 @@ public class Player{
 		}
 		if(key == KeyEvent.VK_SPACE){
 			fire();
+		}
+		if(key == KeyEvent.VK_CONTROL){
+			useMagic();
 		}
 	}
 	

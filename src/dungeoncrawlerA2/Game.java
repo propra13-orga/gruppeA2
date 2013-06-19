@@ -51,6 +51,7 @@ public class Game extends JPanel implements ActionListener{
 	private ArrayList<Enemy> enemys = new ArrayList<Enemy>();
 	private ArrayList<Item> items = new ArrayList<Item>();
 	private ArrayList<Missile> missiles = new ArrayList<Missile>();
+	private ArrayList<Checkpoint> checkpoints = new ArrayList<Checkpoint>();
 	
 	// Designelemente
 	private Color backgroundColor = Color.BLACK; // Hintergrundfarbe
@@ -77,9 +78,12 @@ public class Game extends JPanel implements ActionListener{
 	private int statusBarLiveImageWidth, statusBarLiveImageHeight; // Größe der Lebenspunkte in Statusleiste
 	private int itemBoxSize = 30;
 	
+	private int manaBoxHeight = 20;
+	
 	
 	// Leveldatenelemente
-	private String levelpath = "leveldata/level01.txt";	// Dateipfad zu konkretem Level -> wird später aus anderer Hauptspieldatei(Enthält liste der Level in Reihenfolge) ausgelesen
+	private String[] levelpath = {"leveldata/level01.txt","leveldata/level02.txt","leveldata/level03.txt"};	
+	private int level;
 	
 	private String[] leveldata;
 	private String[] enemydata;
@@ -101,6 +105,9 @@ public class Game extends JPanel implements ActionListener{
 	
 	// Konstruktor
 	public Game(){
+		
+		level = 0;
+		
 		setLayout(null); // um Buttons beliebig zu positionieren
 		
 		addKeyListener(new TAdapter());
@@ -377,6 +384,7 @@ public class Game extends JPanel implements ActionListener{
 		enemys.clear();
 		items.clear();
 		missiles.clear();
+		checkpoints.clear();
 		
 		// Raum auslesen aus leveldata
 		for(int i=0; i<leveldata[roomnumber].length(); i+=3){
@@ -451,6 +459,31 @@ public class Game extends JPanel implements ActionListener{
 			items.add(item);
 			
 		}		
+		
+		// Interaktive Elemente auslesen 
+		for(int l = 0; l<interactdata[roomnumber].length(); l+=11){
+			// Typ
+			element = interactdata[roomnumber].charAt(l);
+			type = interactdata[roomnumber].charAt(l+1);
+						
+			// Koordinaten in px auslesen
+			int x100 = interactdata[roomnumber].charAt(l+3)-48;
+			int x010 = interactdata[roomnumber].charAt(l+4)-48;
+			int x001 = interactdata[roomnumber].charAt(l+5)-48;
+			int interX = 100*x100+10*x010+x001;
+
+			int y100 = interactdata[roomnumber].charAt(l+7)-48;
+			int y010 = interactdata[roomnumber].charAt(l+8)-48;
+			int y001 = interactdata[roomnumber].charAt(l+9)-48;
+			int interY = 100*y100+10*y010+y001;
+						
+			// Element erstellen und in Liste einfügen
+			if(element == 'C'){
+				// Checkpoint
+				Checkpoint cp = new Checkpoint(interX, interY, type);
+				checkpoints.add(cp);
+			}
+		}
 				
 		
 	}
@@ -461,6 +494,7 @@ public class Game extends JPanel implements ActionListener{
 		// Raumelemente einfügen
 		room.addAll(walls);
 		room.addAll(grounds);
+		room.addAll(checkpoints);
 		// Items einfügen - wichtig: nach Raum
 		room.addAll(items);
 		// Gegner einfügen - wichtig: Erst Raum und Items, dann andere Objekte
@@ -517,6 +551,7 @@ public class Game extends JPanel implements ActionListener{
 		}
 		else if(nextRoom == -2){
 			// wenn Ziel erreicht
+			if(level!=levelpath.length-1) level++; // Erhöhe Level um 1
 			won = true;
 			ingame = false;
 			timer.stop();
@@ -550,14 +585,14 @@ public class Game extends JPanel implements ActionListener{
 			}
 		}
 		
-		// Kollisionen mit Gegner -> Lebenspunkte weg
+		// Kollisionen mit Gegner -> Lebenspunkte weg || Missile remove
 		for(int j=0;j<enemys.size(); j++){
 			Enemy e = (Enemy)enemys.get(j);
 			r_enemy = e.getBounds();
 			
 			if(r_player.intersects(r_enemy)){
 				// Leben reduzieren
-				if(playerCanGetDamage){
+				if(playerCanGetDamage && player.isImmortal()==false){
 					player.setLive(-e.getDamage()); 
 					playerCanGetDamage = false;
 					tolleranceTime = tollerance; // Tolleranzwert
@@ -615,6 +650,14 @@ public class Game extends JPanel implements ActionListener{
 						// Geld zu Spieler hinzufügen
 						player.setMoney(it.getAmount());
 					}
+					else if(it.getItemType().equals("mana")){
+						// Mana zu Spieler hinzufügen
+						player.resetMana();
+					}
+					else if(it.getItemType().equals("health")){
+						// Gesundheit herstellen
+						player.setLive(3); 
+					}
 					else{
 						// Waffen und nutzbare Items zu Spieler hinzufügen
 						player.addItem(it);
@@ -647,7 +690,7 @@ public class Game extends JPanel implements ActionListener{
 			// Nachricht (Game Over/You Win) und Rückkehr ins Menü vorbereiten 
 			String msg;
 			
-			if(won) msg = "YOU WIN";
+			if(won) msg = "Level "+level+" abgeschlossen.";
 			else if(firstStart) msg = " ";	// Für ersten Start leere Nachricht
 			else msg = "GAME OVER";
 			
@@ -712,8 +755,13 @@ public class Game extends JPanel implements ActionListener{
 			
 		}
 		
+		// Mana ermitteln und darstellen
+		int mana = player.getMana();
+		g.setColor(Color.GREEN);
+		g.drawRoundRect(windowSizeX-statusBarLiveContainer/2 - statusBarX*2, statusBarY+2, statusBarLiveContainer/2, manaBoxHeight, 5, 5);
+		g.fillRoundRect(windowSizeX-statusBarLiveContainer/2 - statusBarX*2, statusBarY+2, mana*statusBarLiveContainer/2000, manaBoxHeight, 5, 5);
 		
-		
+	
 	}
 	
 	// actionPerformed 
@@ -736,6 +784,18 @@ public class Game extends JPanel implements ActionListener{
 				// Prüfe ob Spielfigur Schaden erleiden kann
 				if(tolleranceTime>0) tolleranceTime--;
 				else playerCanGetDamage = true;
+				
+				// Mana für Unverwundbarkeit (Zauber0) abziehen
+				int man = player.getMana();
+				if(man > 0){
+					if(player.isImmortal()){
+						player.removeMana(2);
+					}
+				}
+				else{
+					if(player.isImmortal()) player.setImmortal(false);
+				}
+				
 				player.move();	// bewege Spielfigur
 				
 				// Bewege Gegner
@@ -760,7 +820,7 @@ public class Game extends JPanel implements ActionListener{
 		else{
 			// im Menü - Aufruf bei button
 			String action = e.getActionCommand();
-			if(action.equals("start")) initGame(levelpath);	// Spiel Starten - Später: vorher aktuelles/gewähltes Level in levelpath laden!
+			if(action.equals("start")) initGame(levelpath[level]);	// Spiel Starten - Später: vorher aktuelles/gewähltes Level in levelpath laden!
 			else if(action.equals("end")) System.exit(0);	// Programm beenden
 		}
 
@@ -779,4 +839,3 @@ public class Game extends JPanel implements ActionListener{
 		}
 	}
 }
-

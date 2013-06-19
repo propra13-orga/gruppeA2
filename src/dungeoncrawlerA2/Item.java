@@ -28,6 +28,20 @@ public class Item extends GameElement{
 			amount=1;
 			ItemHasMissiles = false;
 		}
+		else if(type == 2){
+			// Mana
+			path = "images/mana_01.png";
+			ItemType = "mana";
+			amount=100;
+			ItemHasMissiles = false;
+		}
+		else if(type == 3){
+			// Health
+			path = "images/healthpack_01.png";
+			ItemType = "health";
+			amount=100;
+			ItemHasMissiles = false;
+		}
 		else if(type == 11){
 			// Plasmagun
 			path = "images/w_plasmagun_01.png";
