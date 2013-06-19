@@ -48,6 +48,7 @@ public class Game extends JPanel implements ActionListener{
 	private int startLeftTry = 3;
 	private int leftTry;
 	
+	private ArrayList<Door> doors = new ArrayList<Door>();
 	private ArrayList<Wall> walls = new ArrayList<Wall>();
 	private ArrayList<Ground> grounds = new ArrayList<Ground>();
 	private ArrayList<Enemy> enemys = new ArrayList<Enemy>();
@@ -95,6 +96,7 @@ public class Game extends JPanel implements ActionListener{
 	private String[] itemdata;
 	private String[] interactdata; // für Shops und besondere Interaktionen
 	private int[][] exitdata;
+	private String[] doordata;
 	
 	private String intro;
 	private String levelName;
@@ -330,6 +332,7 @@ public class Game extends JPanel implements ActionListener{
 					exitdata = new int[rooms][4];
 					itemdata = new String[rooms];
 					interactdata = new String[rooms];
+					doordata = new String[rooms];
 				}
 				
 				// Spezielle leveldaten einlesen (pro Raum)
@@ -374,6 +377,14 @@ public class Game extends JPanel implements ActionListener{
 					while(tokens.hasMoreTokens()) interactdata[r]+=tokens.nextToken()+" "; // hole Rest
 				}
 				
+				// Türen einlesen
+				if(request.equals("#DOOR")){
+					if(tokens.hasMoreTokens()) doordata[r]=tokens.nextToken()+" "; // hole ersten
+					else doordata[r]="";
+					while(tokens.hasMoreTokens()) doordata[r]+=tokens.nextToken()+" "; // hole Rest
+					
+				}
+				
 				// Ausgänge einlesen
 				if(request.equals("#EXIT")){
 					for(int i = 0; i<4; i++){
@@ -409,10 +420,12 @@ public class Game extends JPanel implements ActionListener{
 		Ground ground;
 		Enemy enemy;
 		Item item;
+		Door door;
 		
 		char element;
 		char type;
 		
+		doors.clear();
 		walls.clear();
 		grounds.clear();
 		enemys.clear();
@@ -462,6 +475,34 @@ public class Game extends JPanel implements ActionListener{
 				x=0;
 				y+=blockSize;
 			}
+		}
+		
+		// Türen auslesen aus doordata
+		// #DOOR D1 08 00 c D1 09 00 c D1 10 00 c D1 11 00 c 
+		
+		for(int d=0;d<doordata[roomnumber].length(); d+=11){
+			element = doordata[roomnumber].charAt(d);
+			type = doordata[roomnumber].charAt(d+1);
+				
+			// Position der Tür aus String filtern und in Pixel umwandeln
+			int x10 = doordata[roomnumber].charAt(d+3)-48;
+			int x01 = doordata[roomnumber].charAt(d+4)-48;
+			int doorX = (10*x10 + x01)*blockSize;
+						
+			int y10 = doordata[roomnumber].charAt(d+6)-48;
+			int y01 = doordata[roomnumber].charAt(d+7)-48;
+			int doorY = (10*y10 + y01)*blockSize;
+			
+			// Zustand Tür ermitteln und Tür erstellen
+			char zc = doordata[roomnumber].charAt(d+9);
+			if(zc == 'c'){
+				door = new Door(doorX, doorY, type, false);
+			}
+			else{
+				door = new Door(doorX, doorY, type, true);
+			}
+			doors.add(door);
+			
 		}
 		
 		// Gegner auslesen aus enemydata
@@ -553,6 +594,7 @@ public class Game extends JPanel implements ActionListener{
 		// Raumelemente einfügen
 		room.addAll(walls);
 		room.addAll(grounds);
+		room.addAll(doors);
 		room.addAll(checkpoints);
 		// Items einfügen - wichtig: nach Raum
 		room.addAll(items);
@@ -623,6 +665,7 @@ public class Game extends JPanel implements ActionListener{
 	public void checkCollision(){
 		Rectangle r_enemy;
 		Rectangle r_wall;
+		Rectangle r_door;
 		Rectangle r_item;
 		Rectangle r_missile;
 		Rectangle r_checkpoint;
@@ -630,6 +673,45 @@ public class Game extends JPanel implements ActionListener{
 		
 		// Spieler Ausmaße ermitteln
 		Rectangle r_player = player.getBounds();
+		
+		// Kollision mit Tür
+		for(int a=0; a<doors.size(); a++){
+			Door dr = (Door)doors.get(a);
+			r_door = dr.getBounds();
+			boolean open = dr.getOpen();
+			
+			if(open==false){
+				// Player - Tür
+				if(r_player.intersects(r_door)) player.resetMovement();
+				 
+				// Gegner - Tür
+				for(int b = 0; b<enemys.size(); b++){
+					Enemy en = (Enemy)enemys.get(b);
+					r_enemy = en.getBounds();
+					if(r_enemy.intersects(r_door)){
+						en.resetMovement();
+						en.setDirectionOfMovement(1);
+					}
+				}
+				
+				// Missile - Tür
+				for(int c = 0; c<missiles.size(); c++){
+					Missile ms = (Missile)missiles.get(c);
+					r_missile = ms.getBounds();
+					if(r_missile.intersects(r_door)) ms.setVisible(false);
+				}
+				
+				// Endboss - Tür
+				if(room==endBossRoom && finalEnemy!=null){
+					r_finalEnemy = finalEnemy.getBounds();
+					if(r_finalEnemy.intersects(r_door)){
+						finalEnemy.resetMovement();
+						finalEnemy.setDirectionOfMovement(2);
+					}
+				}
+			}
+			
+		}
 		
 		// eventuelle Kollision mit Endgegner
 		if(room==endBossRoom && finalEnemy!=null){
@@ -790,6 +872,7 @@ public class Game extends JPanel implements ActionListener{
 		
 	}
 	
+	// Zeichne Bildschirm
 	// Paint Methode - zeichnet Bildschirm
 	public void paint(Graphics g){
 		super.paint(g);
@@ -822,6 +905,8 @@ public class Game extends JPanel implements ActionListener{
 		Toolkit.getDefaultToolkit().sync();
 		g.dispose();
 	}
+	
+	// Statusleiste zeichnen
 	
 	// Statusleiste zeichnen
 	public void paintStatusBar(Graphics g){
@@ -887,8 +972,9 @@ public class Game extends JPanel implements ActionListener{
 		g.drawRoundRect(windowSizeX-statusBarLiveContainer/2 - statusBarX*2, statusBarY+2, statusBarLiveContainer/2, manaBoxHeight, 5, 5);
 		g.fillRoundRect(windowSizeX-statusBarLiveContainer/2 - statusBarX*2, statusBarY+2, mana*statusBarLiveContainer/2000, manaBoxHeight, 5, 5);
 		
-	
 	}
+	
+	// Aktion -> Timer oder Button 
 	
 	// actionPerformed 
 	public void actionPerformed(ActionEvent e){
@@ -928,8 +1014,11 @@ public class Game extends JPanel implements ActionListener{
 					if(finalEnemy.getLive()<=0){
 						// Gegner besiegt
 						finalEnemy = null;
-						// Event zum Tür öffnen 
-						// door.setOpen(true);
+						
+						for(int a=0; a<doors.size(); a++){
+							Door dr = (Door)doors.get(a);
+							dr.setOpen(true);
+						}
 					}
 					else{
 						finalEnemy.move(player.getX(), player.getY());
@@ -970,6 +1059,7 @@ public class Game extends JPanel implements ActionListener{
 		repaint();	// zeichne Bildschirm neu - erneuter Aufruf von paint()
 		
 	}
+	
 	
 	// Steuerung - Weitergabe der Keycodes nach Unten
 	private class TAdapter extends KeyAdapter{
