@@ -54,6 +54,7 @@ public class Game extends JPanel implements ActionListener{
 	private ArrayList<Item> items = new ArrayList<Item>();
 	private ArrayList<Missile> missiles = new ArrayList<Missile>();
 	private ArrayList<Checkpoint> checkpoints = new ArrayList<Checkpoint>();
+	private FinalEnemy finalEnemy;
 	
 	private int activeCheckpointRoom, activeCheckpointX, activeCheckpointY, activeCheckpointLevel;
 	
@@ -96,9 +97,11 @@ public class Game extends JPanel implements ActionListener{
 	private int[][] exitdata;
 	
 	private String intro;
-	private String endBossLocation;
 	private String levelName;
 	private int levelNumber;
+	
+	private String endBossLocation;
+	private int endBossRoom;
 	
 	// Zustandsvariablen & Zeitabhängige Events;
 	private boolean playerCanGetDamage; 
@@ -171,8 +174,12 @@ public class Game extends JPanel implements ActionListener{
 		b1.setVisible(false);
 		b2.setVisible(false);
 		
+		endBossRoom = -1; // setze auf -1, falls kein Endgegner
 		// Lade Level
 		loadLevel(path);
+		
+		System.out.println("Endgegner: "+endBossLocation);
+		System.out.println("In Raum: "+endBossRoom);
 		
 		// Spielablaufparameter setzen
 		firstStart=false;
@@ -303,6 +310,11 @@ public class Game extends JPanel implements ActionListener{
 				if(request.equals("#FINAL")){
 					endBossLocation = tokens.nextToken()+" ";
 					for(int i = 0; i<3; i++) endBossLocation += tokens.nextToken() +" ";
+					// Raum vom Endgegner einlesen
+					int r10 = endBossLocation.charAt(3)-48;
+					int r01 = endBossLocation.charAt(4)-48;
+					endBossRoom = 10*r10+r01;
+					
 				}
 				
 				// Anzahl Räume auslesen
@@ -407,6 +419,24 @@ public class Game extends JPanel implements ActionListener{
 		items.clear();
 		missiles.clear();
 		checkpoints.clear();
+		finalEnemy = null;
+		
+		// Endgegner, falls vorhanden, auslesen
+		if(roomnumber == endBossRoom){
+			element = endBossLocation.charAt(0);
+			type = endBossLocation.charAt(1);
+			
+			// Koordinaten der Gegner aus String filtern und in Pixel umwandeln
+			int x10 = endBossLocation.charAt(6)-48;
+			int x01 = endBossLocation.charAt(7)-48;
+			int fEnemyX = (10*x10 + x01)*blockSize;
+						
+			int y10 = endBossLocation.charAt(9)-48;
+			int y01 = endBossLocation.charAt(10)-48;
+			int fEnemyY = (10*y10 + y01)*blockSize;
+			
+			finalEnemy = new FinalEnemy(fEnemyX, fEnemyY, type);
+		}
 		
 		// Raum auslesen aus leveldata
 		for(int i=0; i<leveldata[roomnumber].length(); i+=3){
@@ -528,6 +558,7 @@ public class Game extends JPanel implements ActionListener{
 		room.addAll(items);
 		// Gegner einfügen - wichtig: Erst Raum und Items, dann andere Objekte
 		room.addAll(enemys);
+		if(finalEnemy!=null) room.add(finalEnemy);
 
 		missiles = player.getMissiles();
 		room.addAll(missiles);
@@ -595,15 +626,56 @@ public class Game extends JPanel implements ActionListener{
 		Rectangle r_item;
 		Rectangle r_missile;
 		Rectangle r_checkpoint;
+		Rectangle r_finalEnemy;
 		
 		// Spieler Ausmaße ermitteln
 		Rectangle r_player = player.getBounds();
 		
-		// Kollisionen mit Wand -> stehenbleiben || Missile remove
+		// eventuelle Kollision mit Endgegner
+		if(room==endBossRoom && finalEnemy!=null){
+			r_finalEnemy = finalEnemy.getBounds();
+			
+			// Player mit endBoss
+			if(r_player.intersects(r_finalEnemy)){
+				// Stehenbleiben
+				player.resetMovement();
+				finalEnemy.resetMovement();
+				finalEnemy.setDirectionOfMovement(2);
+				// Leben reduzieren
+				if(playerCanGetDamage && player.isImmortal()==false){
+					player.setLive(-finalEnemy.getDamage()); // Hier Schadensfunktion aufrufen
+					playerCanGetDamage = false;
+					tolleranceTime = tollerance; // Tolleranzwert
+				}
+			}
+			
+			// Missile mit endBoss
+			for(int h=0; h<missiles.size(); h++){
+				Missile ms = (Missile)missiles.get(h);
+				r_missile = ms.getBounds();
+				if(r_missile.intersects(r_finalEnemy)){
+					// Missile trifft finalEnemy
+					finalEnemy.setLive(-ms.getDamage());
+					ms.setVisible(false);
+				}
+			}
+		}
+		
+		// Kollisionen mit Wand -> stehenbleiben || Missile remove || wenn Endboss da, richtung wechseln
 		for(int i=0;i<walls.size(); i++){
 			Wall w = (Wall)walls.get(i);
 			r_wall = w.getBounds();
 			
+			// Kollision mit Endgegner
+			if(room==endBossRoom && finalEnemy!=null){
+				r_finalEnemy = finalEnemy.getBounds();
+				if(r_finalEnemy.intersects(r_wall)){
+					finalEnemy.resetMovement();
+					finalEnemy.setDirectionOfMovement(2);
+				}
+			}
+			
+			// Kollision mit player
 			if(r_player.intersects(r_wall)){
 				player.resetMovement();
 			}
@@ -624,16 +696,15 @@ public class Game extends JPanel implements ActionListener{
 			if(r_player.intersects(r_enemy)){
 				// Leben reduzieren
 				if(playerCanGetDamage && player.isImmortal()==false){
-					player.setLive(-e.getDamage()); 
+					player.setLive(-e.getDamage()); // Hier Schadensfunktion aufrufen
 					playerCanGetDamage = false;
 					tolleranceTime = tollerance; // Tolleranzwert
 				}
 				// Gegner dreht um
 				e.resetMovement();
-				if(player.getDir()!=e.getDirectionOfMovement()) e.setDirectionOfMovement(2); // HIER
+				if(player.getDir()!=e.getDirectionOfMovement()) e.setDirectionOfMovement(2); 
 				// Spieler bleibt stehen
 				player.resetMovement();
-				System.out.println(player.getLive());
 			}
 			
 			// Kollision mit Missile
@@ -850,6 +921,19 @@ public class Game extends JPanel implements ActionListener{
 				}
 				else{
 					if(player.isImmortal()) player.setImmortal(false);
+				}
+				
+				// Endgegnerbehandlung
+				if(finalEnemy != null){
+					if(finalEnemy.getLive()<=0){
+						// Gegner besiegt
+						finalEnemy = null;
+						// Event zum Tür öffnen 
+						// door.setOpen(true);
+					}
+					else{
+						finalEnemy.move(player.getX(), player.getY());
+					}
 				}
 				
 				player.move();	// bewege Spielfigur

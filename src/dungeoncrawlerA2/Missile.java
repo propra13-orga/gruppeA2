@@ -27,7 +27,7 @@ public class Missile extends GameElement{
 		if(type.equals("plasmagun")){
 			path =  "images/m_plasma_01.png";
 			speed = 4;
-			damage = 2;
+			damage = 1;
 		}
 		// Richtung setzen
 		dx = dy = 0;

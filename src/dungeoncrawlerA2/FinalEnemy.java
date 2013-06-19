@@ -5,9 +5,11 @@ import java.awt.Rectangle;
 
 import javax.swing.ImageIcon;
 
-public class Enemy extends GameElement{
+public class FinalEnemy extends GameElement{
 
 	private int collisionTollerance = 10; // Toleranz bei Kollision - Gegner muss richtig berührt werden, nicht nur angeschnitten
+	private int saveTime = 25;
+	private int saveTimeCounter;
 	
 	private Image image;
 	private int width;
@@ -27,25 +29,45 @@ public class Enemy extends GameElement{
 	
 	private int damage; // Schadenspunkte
 	private int speed; // Geschwindigkeit
+	private int live;
 	
 	// Konstruktor
-	public Enemy(int x, int y, int type) {
+	public FinalEnemy(int x, int y, int type) {
 		 
 		super(x, y); // Aufruf GameElement
 		 
 		type -= 48; // Von char in int
 		this.type = type;
 		if(type==1){
-			// Ratte
-			path =  "images/enemy_01.png";
-			damage = 1; 
-			dir = 1;
+			// Erster Endgegner
+			path =  "images/final_enemy_01.png";
+			damage = 2; 
+			dir = 4;
 			speed = 1;
+			live = 5;
+		} 
+		else if(type==2){
+			// Zweiter Endgegner
+			path =  "images/final_enemy_02.png";
+			damage = 3; 
+			dir = 4;
+			speed = 2;
+			live = 7;
+		} 
+		else if(type==3){
+			// Dritter Endgegner
+			path =  "images/final_enemy_03.png";
+			damage = 3; 
+			dir = 4;
+			speed = 3;
+			live = 10;
 		} 
 		this.steps = 0;
 		
 		this.dx = 0;
 		this.dy = 0;
+		
+		this.saveTimeCounter = 0;
 		
 		this.visible=true;
 		 
@@ -56,9 +78,10 @@ public class Enemy extends GameElement{
 	    this.setImage(image);
 	}
 	
-	public void move(){
+	public void move(int playerX, int playerY){
+		if(saveTimeCounter > 0) saveTimeCounter--; 
 		// Richtung ermitteln
-		// 0 = up, 1 = right, 2 = down, 3 = left
+		// 0 = up, 1 = right, 2 = down, 3 = left, 4 = standStill
 		if(dir==0){
 			this.dx = 0;
 			this.dy = -speed;
@@ -75,6 +98,12 @@ public class Enemy extends GameElement{
 			this.dx = -speed;
 			this.dy = 0;
 		}
+		else if(dir==4){
+			this.dx = 0;
+			this.dy = 0;
+		}
+		
+		steps++;
 		
 		// Position vor Bewegung ermitteln
 		goBackX = this.getX();
@@ -83,21 +112,29 @@ public class Enemy extends GameElement{
 		// Erzeuge Zufallszahl für bewegung
 	    randomNumber = (int) (Math.random() * 10);
 		
-		// Bewegung erstellen
+	    int diffX = playerX - (goBackX-width/2); // Differenz ermitteln
+		int diffY = playerY - (goBackY-height/2);
+	
+	    // Bewegung erstellen
 		if(type==1){
-			// Ratte
-			steps++;
-			if(steps%(10*randomNumber+50) == 0){
-				this.setDirectionOfMovement(randomNumber); // Zufallswechsel
+			// erster Endgegner
+			if(steps>=60 && steps<300){
+				// 1. Stillstehen
+				// 2. Bewege auf Player zu
+				if(diffX<0 && saveTimeCounter<=0) dx = -speed; // x setzen
+				else dx = speed;
+				if(diffY<0 && saveTimeCounter<=0) dy = -speed; // y setzen
+				else dy = speed;
+				
 			}
-			if(steps > 480+2*randomNumber){
-				this.setDirectionOfMovement(3); // links herum
-				this.steps = 0;
+			else if(steps>=300){
+				// 3. Zufallsbewegung
+				if(steps>500) steps=0;
+				if(steps==300)this.setDirectionOfMovement(randomNumber);
 			}
-			
 		}
 		// Bewegen
-		this.setX(goBackX+dx);
+	    this.setX(goBackX+dx);
 		this.setY(goBackY+dy);
 	}
 	
@@ -111,14 +148,26 @@ public class Enemy extends GameElement{
 		// 0 = up, 1 = right, 2 = down, 3 = left
 		this.dir += d;
 		this.dir = this.dir%4;
-		
+	}
+	
+	public void setSave(){
+		// Zeit zum flüchten
+		this.saveTimeCounter = saveTime;
 	}
 	
 	public void setVisible(boolean visible){
 		this.visible = visible;
 	}
 	
+	public void setLive(int addLive){
+		this.live += addLive;
+	}
+	
 	// get Methoden
+	
+	public int getLive(){
+		return this.live;
+	}
 	
 	public int getDirectionOfMovement(){
 		return this.dir;
