@@ -44,7 +44,7 @@ public class FinalEnemy extends GameElement{
 			damage = 2; 
 			dir = 4;
 			speed = 1;
-			live = 5;
+			live = 15;
 		} 
 		else if(type==2){
 			// Zweiter Endgegner
@@ -52,7 +52,7 @@ public class FinalEnemy extends GameElement{
 			damage = 3; 
 			dir = 4;
 			speed = 2;
-			live = 7;
+			live = 30;
 		} 
 		else if(type==3){
 			// Dritter Endgegner
@@ -60,7 +60,7 @@ public class FinalEnemy extends GameElement{
 			damage = 3; 
 			dir = 4;
 			speed = 3;
-			live = 10;
+			live = 60;
 		} 
 		this.steps = 0;
 		
@@ -79,6 +79,9 @@ public class FinalEnemy extends GameElement{
 	}
 	
 	public void move(int playerX, int playerY){
+		
+		// TODO Bewegung verbessern, damit kein stehenbleiben
+		
 		if(saveTimeCounter > 0) saveTimeCounter--; 
 		// Richtung ermitteln
 		// 0 = up, 1 = right, 2 = down, 3 = left, 4 = standStill
@@ -129,7 +132,7 @@ public class FinalEnemy extends GameElement{
 			}
 			else if(steps>=300){
 				// 3. Zufallsbewegung
-				if(steps>500) steps=0;
+				if(steps>500) steps=60;
 				if(steps==300)this.setDirectionOfMovement(randomNumber);
 			}
 		}

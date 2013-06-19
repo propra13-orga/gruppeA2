@@ -55,8 +55,17 @@ public class Game extends JPanel implements ActionListener{
 	private ArrayList<Item> items = new ArrayList<Item>();
 	private ArrayList<Missile> missiles = new ArrayList<Missile>();
 	private ArrayList<Checkpoint> checkpoints = new ArrayList<Checkpoint>();
+	private ArrayList<NPC> npcs = new ArrayList<NPC>();
 	private FinalEnemy finalEnemy;
 	
+	private ArrayList<Item> shopItems = new ArrayList<Item>();
+	private String[] shopList = {"mana","health","plasmagun"};
+	private int[] shopPrice = {50, 50, 100};
+
+	private int shopX = 150;
+	private int shopY = 150;
+	private int chosenItem;
+
 	private int activeCheckpointRoom, activeCheckpointX, activeCheckpointY, activeCheckpointLevel;
 	
 	// Designelemente
@@ -112,6 +121,9 @@ public class Game extends JPanel implements ActionListener{
 	private Image activeItemImage;
 	private int ammunition = 0;
 	
+	private boolean inDialog;
+	private boolean inShop;
+	
 	// Konstruktor
 	public Game(){
 		// Setze kurzspeicherelemente auf 0, bzw inaktiv
@@ -136,6 +148,7 @@ public class Game extends JPanel implements ActionListener{
 		
 	}
 	
+	// Menü erstellen
 	public void initMenu(){
 		// Zeichne Menüelemente
 		// Lege Standartpositionen für Buttons fest
@@ -187,6 +200,7 @@ public class Game extends JPanel implements ActionListener{
 		firstStart=false;
 		ingame = true;
 		won = false;
+		inDialog = inShop = false;
 		
 		// Starte Abfrage ob Start von Checkpoint
 		if(leftTry<0){
@@ -421,12 +435,14 @@ public class Game extends JPanel implements ActionListener{
 		Enemy enemy;
 		Item item;
 		Door door;
+		NPC npc;
 		
 		char element;
 		char type;
 		
 		doors.clear();
 		walls.clear();
+		npcs.clear();
 		grounds.clear();
 		enemys.clear();
 		items.clear();
@@ -477,9 +493,7 @@ public class Game extends JPanel implements ActionListener{
 			}
 		}
 		
-		// Türen auslesen aus doordata
-		// #DOOR D1 08 00 c D1 09 00 c D1 10 00 c D1 11 00 c 
-		
+		// Türen auslesen aus doordata	
 		for(int d=0;d<doordata[roomnumber].length(); d+=11){
 			element = doordata[roomnumber].charAt(d);
 			type = doordata[roomnumber].charAt(d+1);
@@ -583,6 +597,17 @@ public class Game extends JPanel implements ActionListener{
 				}
 				checkpoints.add(cp);
 			}
+			else if(element == 'N'){
+				// NPC 
+				npc = new NPC(interX,interY,type);
+				npcs.add(npc);
+			}
+			else if(element == 'S'){
+				// Shop 
+				type+=10;
+				npc = new NPC(interX,interY,type);
+				npcs.add(npc);
+			}
 		}
 				
 		
@@ -598,6 +623,7 @@ public class Game extends JPanel implements ActionListener{
 		room.addAll(checkpoints);
 		// Items einfügen - wichtig: nach Raum
 		room.addAll(items);
+		room.addAll(npcs);
 		// Gegner einfügen - wichtig: Erst Raum und Items, dann andere Objekte
 		room.addAll(enemys);
 		if(finalEnemy!=null) room.add(finalEnemy);
@@ -670,9 +696,27 @@ public class Game extends JPanel implements ActionListener{
 		Rectangle r_missile;
 		Rectangle r_checkpoint;
 		Rectangle r_finalEnemy;
+		Rectangle r_npc;
 		
 		// Spieler Ausmaße ermitteln
 		Rectangle r_player = player.getBounds();
+		
+		// Kollision mit npc
+		for(int p = 0; p<npcs.size(); p++){
+			NPC n = (NPC)npcs.get(p);
+			r_npc = n.getBounds();
+			
+			if(r_npc.intersects(r_player)){
+				player.resetMovement();
+				if(n.isShop()){
+					// Shop
+					enterShop();
+				}
+				else{
+					// NPC -> Dialog
+				}
+			}
+		}
 		
 		// Kollision mit Tür
 		for(int a=0; a<doors.size(); a++){
@@ -872,7 +916,6 @@ public class Game extends JPanel implements ActionListener{
 		
 	}
 	
-	// Zeichne Bildschirm
 	// Paint Methode - zeichnet Bildschirm
 	public void paint(Graphics g){
 		super.paint(g);
@@ -887,6 +930,9 @@ public class Game extends JPanel implements ActionListener{
 			
 			// zeichne Statusleiste
 			paintStatusBar(g);
+			
+			// Prüfe ob in Shop und zeichne
+			if(inShop) paintShop(g);
 		}
 		else{
 			// Nachricht (Game Over/You Win) und Rückkehr ins Menü vorbereiten 
@@ -906,7 +952,47 @@ public class Game extends JPanel implements ActionListener{
 		g.dispose();
 	}
 	
-	// Statusleiste zeichnen
+	public void paintShop(Graphics g){
+		int shopSizeX = windowSizeX-2*shopX;
+		int shopSizeY = windowSizeY-2*shopY;
+		g.setColor(Color.BLACK);
+		g.fillRoundRect(shopX, shopY, shopSizeX , shopSizeY, 30, 30); // Kasten für Shop
+		
+		// Willkommenstext 
+		g.setColor(Color.WHITE);
+		
+		Font shop = new Font("Arial", Font.BOLD, 15);
+		FontMetrics metr = this.getFontMetrics(shop);
+		
+		String welcome = "Hallo, suche dir ein Item aus.";
+		int msgPos = shopX+shopSizeX/2-metr.stringWidth(welcome)/2;
+		g.drawString(welcome, msgPos, shopY+20); // Zeichne String
+		
+		Font price = new Font("Arial", Font.ITALIC, 10);
+		String itemPrice;
+		// Shopelemente erstellen und zeichnen
+		shopItems.clear();
+		Item it = null;
+		for(int i = 0; i<shopList.length; i++){
+			if(shopList[i].equals("mana")) it = new Item(0,0,2+48); 
+			else if(shopList[i].equals("health")) it = new Item(0,0,3+48);
+			else if(shopList[i].equals("plasmagun")) it = new Item(0,0,11+48); 
+			
+			if(it!=null){
+				 shopItems.add(it);
+				 Image itemI = it.getImage();
+				 g.drawImage(itemI,shopX+170+i*(this.itemBoxSize+30), shopY + 60, this);
+				 
+				 itemPrice = "" + shopPrice[i];
+				 
+				 g.drawString(itemPrice,shopX+170+i*(this.itemBoxSize+30), shopY+90+itemBoxSize); // Zeichne Preis
+				 
+				 if(i==chosenItem){
+					 g.drawRoundRect(shopX+170+i*(this.itemBoxSize+30)-10, shopY + 60-10, itemBoxSize+20, itemBoxSize+20, 10, 10);
+				 }
+			}
+		}
+	}
 	
 	// Statusleiste zeichnen
 	public void paintStatusBar(Graphics g){
@@ -974,75 +1060,84 @@ public class Game extends JPanel implements ActionListener{
 		
 	}
 	
-	// Aktion -> Timer oder Button 
+	public void enterShop(){
+		chosenItem = 0;
+		inShop = true;
+		player.hasEnteredShop();
+	}
 	
-	// actionPerformed 
+	// Aktion -> Timer oder Button 
 	public void actionPerformed(ActionEvent e){
 		if(ingame){
 			// im Spiel - wird vom Timer abhängig aufgerufen
 			
-			// prüfe ob Item sichtbar sonst entfernen
-			for(int i = 0; i<items.size(); i++){
-				Item it = (Item)items.get(i);
-				if(it.isVisible()==false) items.remove(i);
-			}
-			
-			if(player.getLive() <= 0){ // prüfe ob Spieler noch im Spiel oder Lebenspunkte 0
-				// Spieler stirbt, Spiel beenden
-				ingame = false;
-				leftTry--;
-				timer.stop();
+			if(inShop){
+				// Spiel "anhalten"
 			}
 			else{
-				// Prüfe ob Spielfigur Schaden erleiden kann
-				if(tolleranceTime>0) tolleranceTime--;
-				else playerCanGetDamage = true;
+				// prüfe ob Item sichtbar sonst entfernen
+				for(int i = 0; i<items.size(); i++){
+					Item it = (Item)items.get(i);
+					if(it.isVisible()==false) items.remove(i);
+				}
 				
-				// Mana für Unverwundbarkeit (Zauber0) abziehen
-				int man = player.getMana();
-				if(man > 0){
-					if(player.isImmortal()){
-						player.removeMana(2);
-					}
+				if(player.getLive() <= 0){ // prüfe ob Spieler noch im Spiel oder Lebenspunkte 0
+					// Spieler stirbt, Spiel beenden
+					ingame = false;
+					leftTry--;
+					timer.stop();
 				}
 				else{
-					if(player.isImmortal()) player.setImmortal(false);
-				}
-				
-				// Endgegnerbehandlung
-				if(finalEnemy != null){
-					if(finalEnemy.getLive()<=0){
-						// Gegner besiegt
-						finalEnemy = null;
-						
-						for(int a=0; a<doors.size(); a++){
-							Door dr = (Door)doors.get(a);
-							dr.setOpen(true);
+					// Prüfe ob Spielfigur Schaden erleiden kann
+					if(tolleranceTime>0) tolleranceTime--;
+					else playerCanGetDamage = true;
+					
+					// Mana für Unverwundbarkeit (Zauber0) abziehen
+					int man = player.getMana();
+					if(man > 0){
+						if(player.isImmortal()){
+							player.removeMana(2);
 						}
 					}
 					else{
-						finalEnemy.move(player.getX(), player.getY());
+						if(player.isImmortal()) player.setImmortal(false);
 					}
+					
+					// Endgegnerbehandlung
+					if(finalEnemy != null){
+						if(finalEnemy.getLive()<=0){
+							// Gegner besiegt
+							finalEnemy = null;
+							
+							for(int a=0; a<doors.size(); a++){
+								Door dr = (Door)doors.get(a);
+								dr.setOpen(true);
+							}
+						}
+						else{
+							finalEnemy.move(player.getX(), player.getY());
+						}
+					}
+					
+					player.move();	// bewege Spielfigur
+					
+					// Bewege Gegner
+					for(int j=0;j<enemys.size(); j++){
+						Enemy en = (Enemy)enemys.get(j);
+						if(en.isVisible() == false) enemys.remove(j); // entfernen falls weg
+						en.move();
+					}
+					
+					// Bewege Geschosse
+					for(int k=0;k<missiles.size(); k++){
+						Missile m = (Missile)missiles.get(k);
+						if(m.isVisible() == false) missiles.remove(k); // entfernen falls weg
+						m.move();
+					}
+					
+					checkCollision();	// prüfe Kollision
+					checkRoom();	// prüfe ob Raum gewechselt oder Ziel erreicht
 				}
-				
-				player.move();	// bewege Spielfigur
-				
-				// Bewege Gegner
-				for(int j=0;j<enemys.size(); j++){
-					Enemy en = (Enemy)enemys.get(j);
-					if(en.isVisible() == false) enemys.remove(j); // entfernen falls weg
-					en.move();
-				}
-				
-				// Bewege Geschosse
-				for(int k=0;k<missiles.size(); k++){
-					Missile m = (Missile)missiles.get(k);
-					if(m.isVisible() == false) missiles.remove(k); // entfernen falls weg
-					m.move();
-				}
-				
-				checkCollision();	// prüfe Kollision
-				checkRoom();	// prüfe ob Raum gewechselt oder Ziel erreicht
 			}
 			
 		}
@@ -1065,10 +1160,41 @@ public class Game extends JPanel implements ActionListener{
 	private class TAdapter extends KeyAdapter{
 		
 		public void keyReleased(KeyEvent e){
-			if(ingame) player.keyReleased(e);
+			if(ingame && inShop==false) player.keyReleased(e);
 		}
 		public void keyPressed(KeyEvent e){
-			if(ingame) player.keyPressed(e);
+			if(ingame && inShop==false) player.keyPressed(e);
+			else if(inShop){
+				if(e.getKeyCode()==KeyEvent.VK_RIGHT){
+					if(chosenItem < shopList.length-1) chosenItem++;
+				}
+				else if(e.getKeyCode()==KeyEvent.VK_LEFT){
+					if(chosenItem > 0) chosenItem--;
+				}
+				else if(e.getKeyCode()==KeyEvent.VK_ENTER||e.getKeyCode()==KeyEvent.VK_SPACE){
+					Item it = shopItems.get(chosenItem);
+					
+					// Prüfe ob genug Geld
+					if(player.getMoney()>=shopPrice[chosenItem]){
+						player.setMoney(-shopPrice[chosenItem]);
+						if(it.getItemType().equals("mana")){
+							// Mana zu Spieler hinzufügen
+							player.resetMana();
+						}
+						else if(it.getItemType().equals("health")){
+							// Gesundheit herstellen
+							player.setLive(3); 
+						}
+						else{
+							// Waffen und nutzbare Items zu Spieler hinzufügen
+							player.addItem(it);
+							System.out.println(it.getItemType() + " added to Player.");
+						}
+					}
+					
+					inShop=false;
+				}
+			}
 		}
 	}
 }

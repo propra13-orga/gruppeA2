@@ -227,6 +227,10 @@ public class Player{
 		this.y = y;
 	}
 	
+	public void hasEnteredShop(){
+		dx=dy=0;
+	}
+	
 	public void setLive(int changeLive){
 		// ändert Anzahl der Lebenspunkte
 		this.live += changeLive;
