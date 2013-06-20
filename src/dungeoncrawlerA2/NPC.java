@@ -11,6 +11,7 @@ public class NPC extends GameElement{
 	private int height;
 	
 	boolean shop;
+	boolean dialog;
 	 
 	private String path; // Bilddateipfad
 	
@@ -24,11 +25,13 @@ public class NPC extends GameElement{
 			// NPC - Dialog
 			 path =  "images/npc_01.png";
 			 shop = false;
+			 dialog = true;
 		}
 		else if(type == 11){
 			// SHOP
 			 path =  "images/shop_01.png";
 			 shop = true;
+			 dialog=false;
 		}
 		 
 	    ImageIcon ii = new ImageIcon(this.getClass().getResource(path));
@@ -40,6 +43,10 @@ public class NPC extends GameElement{
 	
 	public boolean isShop(){
 		return this.shop;
+	}
+	
+	public boolean hasDialog(){
+		return this.dialog;
 	}
 	 
 	public Rectangle getBounds(){

@@ -46,7 +46,7 @@ public class Item extends GameElement{
 			// Plasmagun
 			path = "images/w_plasmagun_01.png";
 			ItemType = "plasmagun";
-			amount=30; // Hier für Munition
+			amount=100; // Hier für Munition
 			ItemHasMissiles = true;
 		}
 		

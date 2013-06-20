@@ -30,6 +30,9 @@ public class Player{
 	private int live;	// aktuelle Lebenspunkte
 	private int startLive; // Lebenspunkte zu Beginn - für komplettes Auffüllen
 	
+	private int armour;
+	private int startArmour = 3;
+	
 	private int money;
 	private int mana;
 	private int startMana = 1000;
@@ -53,8 +56,8 @@ public class Player{
         
         // Lebenspunkte ermitteln
         startLive = live;
-        this.live = 0;
         this.setLive(startLive);
+        this.armour = startArmour;
         
         // Geld auf 0 setzen
         this.money = 0;
@@ -193,6 +196,10 @@ public class Player{
 		return this.live;
 	}
 	
+	public int getArmour(){
+		return this.armour;
+	}
+	
 	public int getMoney(){
 		return this.money;
 	}
@@ -227,14 +234,18 @@ public class Player{
 		this.y = y;
 	}
 	
-	public void hasEnteredShop(){
+	public void hasEnteredShopOrDialog(){
+		// damit Spieler stillsteht 
 		dx=dy=0;
 	}
 	
 	public void setLive(int changeLive){
-		// ändert Anzahl der Lebenspunkte
-		this.live += changeLive;
-		if(this.live>24) this.live=24; // bestimme maximale Anzahl an leben
+		// ändert Anzahl der Lebenspunkte || Rüstung 
+		// TODO später etl von außen getrennt
+		if(armour>0 && changeLive<=0) this.armour--;
+		else this.live += changeLive;
+		if(this.live>12) this.live=12; // bestimme maximale Anzahl an leben
+		
 	}
 	
 	public void setMoney(int changeMoney){

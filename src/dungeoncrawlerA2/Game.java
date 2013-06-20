@@ -85,10 +85,12 @@ public class Game extends JPanel implements ActionListener{
 	private String statusBarLivePath = "images/live_01.png";
 	private String statusBarBackgroundPath = "images/statusBar.png";
 	private String statusBarMoneyPath = "images/money_01.png";
+	private String statusBarArmourPath = "images/armour_01.png";
 	
 	private Image statusBarBackground;
 	private Image statusBarMoneyImage;
 	private Image statusBarLiveImage;
+	private Image statusBarArmourImage;
 	
 	private int statusBarLiveImageWidth, statusBarLiveImageHeight; // Größe der Lebenspunkte in Statusleiste
 	private int itemBoxSize = 30;
@@ -106,6 +108,7 @@ public class Game extends JPanel implements ActionListener{
 	private String[] interactdata; // für Shops und besondere Interaktionen
 	private int[][] exitdata;
 	private String[] doordata;
+	private String dialog = "Hallo, ich kann dir was erzählen.";
 	
 	private String intro;
 	private String levelName;
@@ -123,6 +126,8 @@ public class Game extends JPanel implements ActionListener{
 	
 	private boolean inDialog;
 	private boolean inShop;
+	
+	// TODO setFont hinzufügen und Schriftarten anpassen
 	
 	// Konstruktor
 	public Game(){
@@ -233,6 +238,9 @@ public class Game extends JPanel implements ActionListener{
 		
 		ii = new ImageIcon(this.getClass().getResource(statusBarMoneyPath)); // Bild Geld
 		statusBarMoneyImage = ii.getImage();
+		
+		ii = new ImageIcon(this.getClass().getResource(statusBarArmourPath)); // Bild Rüstung
+		statusBarArmourImage = ii.getImage();
 		
 		ii = new ImageIcon(this.getClass().getResource(statusBarLivePath)); // Bild Lebenspunkte
 		statusBarLiveImage = ii.getImage();
@@ -589,7 +597,7 @@ public class Game extends JPanel implements ActionListener{
 				// Checkpoint
 				Checkpoint cp;
 				// prüfe ob CP schon aktiv
-				if(activeCheckpointRoom == roomnumber && activeCheckpointX == interX && activeCheckpointY == interY){
+				if(activeCheckpointRoom == roomnumber && activeCheckpointX == interX && activeCheckpointY == interY && activeCheckpointLevel == level){
 					cp = new Checkpoint(interX, interY, type+1);
 				}
 				else{
@@ -626,10 +634,15 @@ public class Game extends JPanel implements ActionListener{
 		room.addAll(npcs);
 		// Gegner einfügen - wichtig: Erst Raum und Items, dann andere Objekte
 		room.addAll(enemys);
-		if(finalEnemy!=null) room.add(finalEnemy);
-
+		
 		missiles = player.getMissiles();
+		
+		if(finalEnemy!=null){
+			room.add(finalEnemy);
+			missiles.addAll(finalEnemy.getMissiles());
+		}
 		room.addAll(missiles);
+		
 		
 		for(int i=0; i<room.size(); i++){
 			// Element holen und zeichnen
@@ -689,6 +702,7 @@ public class Game extends JPanel implements ActionListener{
 	
 	// Kollision prüfen
 	public void checkCollision(){
+		// TODO Effizienter gestalten
 		Rectangle r_enemy;
 		Rectangle r_wall;
 		Rectangle r_door;
@@ -712,8 +726,9 @@ public class Game extends JPanel implements ActionListener{
 					// Shop
 					enterShop();
 				}
-				else{
-					// NPC -> Dialog
+				else if(n.hasDialog()){
+					// NPC+Dialog
+					enterDialog(dialog);
 				}
 			}
 		}
@@ -779,11 +794,21 @@ public class Game extends JPanel implements ActionListener{
 			for(int h=0; h<missiles.size(); h++){
 				Missile ms = (Missile)missiles.get(h);
 				r_missile = ms.getBounds();
-				if(r_missile.intersects(r_finalEnemy)){
-					// Missile trifft finalEnemy
-					finalEnemy.setLive(-ms.getDamage());
-					ms.setVisible(false);
+				if(ms.getFriendly()){
+					if(r_missile.intersects(r_finalEnemy)){
+						// Missile trifft finalEnemy
+						finalEnemy.setLive(-ms.getDamage());
+						ms.setVisible(false);
+					}
 				}
+				else{
+					if(r_missile.intersects(r_player)){
+						// Missile trifft Player
+						player.setLive(-ms.getDamage());
+						ms.setVisible(false);
+					}
+				}
+				
 			}
 		}
 		
@@ -933,6 +958,7 @@ public class Game extends JPanel implements ActionListener{
 			
 			// Prüfe ob in Shop und zeichne
 			if(inShop) paintShop(g);
+			if(inDialog) paintDialog(dialog, g);
 		}
 		else{
 			// Nachricht (Game Over/You Win) und Rückkehr ins Menü vorbereiten 
@@ -950,6 +976,27 @@ public class Game extends JPanel implements ActionListener{
 		
 		Toolkit.getDefaultToolkit().sync();
 		g.dispose();
+	}
+	
+	public void paintDialog(String dialog, Graphics g){
+		// Nachricht analysieren
+		Font dia = new Font("Arial", Font.BOLD, 15);
+		FontMetrics metr = this.getFontMetrics(dia);
+		
+		int length = metr.stringWidth(dialog);
+		
+		int dialogY = windowSizeY/2;
+		int dialogSizeY = 100;
+		int dialogX =  windowSizeX/2-250;
+		int dialogSizeX = 500;
+		
+		// Zeichnen
+		g.setColor(Color.BLACK);
+		g.fillRoundRect(dialogX, dialogY, dialogSizeX , dialogSizeY, 30, 30); // Kasten für Dialog
+		g.setColor(Color.WHITE);
+		g.drawString(dialog, dialogX+20, dialogY+20); // Zeichne String
+		
+		
 	}
 	
 	public void paintShop(Graphics g){
@@ -1002,8 +1049,13 @@ public class Game extends JPanel implements ActionListener{
 		// Lebenspunkte ermitteln + Darstellen
 		int l = player.getLive();
 		for(int i = 0; i<l; i++){
-			if(i<12) g.drawImage(statusBarLiveImage, statusBarX+i*(statusBarLiveImageWidth+statusBarSpace), statusBarY, this);
-			else g.drawImage(statusBarLiveImage, statusBarX+(i-12)*(statusBarLiveImageWidth+statusBarSpace), statusBarY+statusBarLiveImage.getHeight(null), this);
+			g.drawImage(statusBarLiveImage, statusBarX+i*(statusBarLiveImageWidth+statusBarSpace), statusBarY, this);
+		}
+		
+		// Lebenspunkte ermitteln + Darstellen
+		int a = player.getArmour();
+		for(int i = 0; i<a; i++){
+			g.drawImage(statusBarArmourImage, statusBarX+i*(statusBarLiveImageWidth+statusBarSpace), statusBarY+statusBarLiveImage.getHeight(null), this);
 		}
 		
 		// Geld ermitteln und darstellen
@@ -1063,7 +1115,12 @@ public class Game extends JPanel implements ActionListener{
 	public void enterShop(){
 		chosenItem = 0;
 		inShop = true;
-		player.hasEnteredShop();
+		player.hasEnteredShopOrDialog();
+	}
+	
+	public void enterDialog(String dialog){
+		inDialog = true;
+		player.hasEnteredShopOrDialog();
 	}
 	
 	// Aktion -> Timer oder Button 
@@ -1071,7 +1128,7 @@ public class Game extends JPanel implements ActionListener{
 		if(ingame){
 			// im Spiel - wird vom Timer abhängig aufgerufen
 			
-			if(inShop){
+			if(inShop||inDialog){
 				// Spiel "anhalten"
 			}
 			else{
@@ -1160,10 +1217,13 @@ public class Game extends JPanel implements ActionListener{
 	private class TAdapter extends KeyAdapter{
 		
 		public void keyReleased(KeyEvent e){
-			if(ingame && inShop==false) player.keyReleased(e);
+			if(ingame && inShop==false && inDialog==false) player.keyReleased(e);
 		}
 		public void keyPressed(KeyEvent e){
-			if(ingame && inShop==false) player.keyPressed(e);
+			if(ingame && inShop==false && inDialog==false) player.keyPressed(e);
+			else if(inDialog){
+				if(e.getKeyCode()==KeyEvent.VK_SPACE || e.getKeyCode()==KeyEvent.VK_ENTER) inDialog=false;
+			}
 			else if(inShop){
 				if(e.getKeyCode()==KeyEvent.VK_RIGHT){
 					if(chosenItem < shopList.length-1) chosenItem++;

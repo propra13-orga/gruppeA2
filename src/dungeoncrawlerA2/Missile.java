@@ -12,6 +12,7 @@ public class Missile extends GameElement{
 	
 	private int speed;
 	private int damage;
+	private boolean friendly;
 	
 	private int dx,dy;
 	 
@@ -28,6 +29,13 @@ public class Missile extends GameElement{
 			path =  "images/m_plasma_01.png";
 			speed = 4;
 			damage = 1;
+			friendly = true;
+		}
+		if(type.equals("FE3")){
+			path =  "images/m_plasma_01.png";
+			speed = 3;
+			damage = 1;
+			friendly = false;
 		}
 		// Richtung setzen
 		dx = dy = 0;
@@ -68,6 +76,10 @@ public class Missile extends GameElement{
 	
 	public int getDamage(){
 		return this.damage;
+	}
+	
+	public boolean getFriendly(){
+		return this.friendly;
 	}
 	
 	public Rectangle getBounds(){

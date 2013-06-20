@@ -2,6 +2,7 @@ package dungeoncrawlerA2;
 
 import java.awt.Image;
 import java.awt.Rectangle;
+import java.util.ArrayList;
 
 import javax.swing.ImageIcon;
 
@@ -24,6 +25,8 @@ public class FinalEnemy extends GameElement{
 	
 	private boolean visible;
 	
+	private ArrayList<Missile> missiles = new ArrayList<Missile>();
+	Missile m = null;
 	 
 	private String path; // Bilddateipfad
 	
@@ -50,17 +53,17 @@ public class FinalEnemy extends GameElement{
 			// Zweiter Endgegner
 			path =  "images/final_enemy_02.png";
 			damage = 3; 
-			dir = 4;
-			speed = 2;
+			dir = 2;
+			speed = 3;
 			live = 30;
 		} 
 		else if(type==3){
 			// Dritter Endgegner
 			path =  "images/final_enemy_03.png";
 			damage = 3; 
-			dir = 4;
-			speed = 3;
-			live = 60;
+			dir = 3;
+			speed = 4;
+			live = 50;
 		} 
 		this.steps = 0;
 		
@@ -136,6 +139,21 @@ public class FinalEnemy extends GameElement{
 				if(steps==300)this.setDirectionOfMovement(randomNumber);
 			}
 		}
+		else if(type==2){
+			// zweiter EG
+			if(steps%300==0) this.setDirectionOfMovement(randomNumber); 
+		}
+		else if(type==3){
+			// feuern
+			if(steps%200==0) this.setDirectionOfMovement(randomNumber); 
+			/*
+			if(steps==100){
+				m = new Missile(this.getX()+width/2, this.getY()+height, "FE3", 2);
+				missiles.add(m);
+				steps=0;
+			}
+			*/
+		}
 		// Bewegen
 	    this.setX(goBackX+dx);
 		this.setY(goBackY+dy);
@@ -167,6 +185,10 @@ public class FinalEnemy extends GameElement{
 	}
 	
 	// get Methoden
+	
+	public ArrayList<Missile> getMissiles(){
+		return missiles;
+	}
 	
 	public int getLive(){
 		return this.live;
