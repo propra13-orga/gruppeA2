@@ -146,13 +146,13 @@ public class FinalEnemy extends GameElement{
 		else if(type==3){
 			// feuern
 			if(steps%200==0) this.setDirectionOfMovement(randomNumber); 
-			/*
+			
 			if(steps==100){
 				m = new Missile(this.getX()+width/2, this.getY()+height, "FE3", 2);
 				missiles.add(m);
 				steps=0;
 			}
-			*/
+			
 		}
 		// Bewegen
 	    this.setX(goBackX+dx);

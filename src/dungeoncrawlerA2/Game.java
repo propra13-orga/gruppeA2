@@ -31,6 +31,8 @@ public class Game extends JPanel implements ActionListener{
 	// Menüelemente
 	private JButton b1;
 	private JButton b2;
+	private JButton b3; // Leveleditor
+	private JButton b4; // Multiplayer
 	private int buttonPosX;
 	private int buttonPosY;
 	
@@ -39,7 +41,7 @@ public class Game extends JPanel implements ActionListener{
 	private boolean ingame; // Wert für Gameloop
 	private boolean won; // für Abfrage ob gewonnen
 	private boolean firstStart; // ist erster Start? - Menüdarstellung
-	private int room; // aktueller Raum des Sungeons
+	private int room; // aktueller Raum des Dungeons
 	
 	private Player player;	// Spielfigur
 	private int startX, startY;	// Startwert Spielfigur 
@@ -149,6 +151,8 @@ public class Game extends JPanel implements ActionListener{
 		// Menü vorbereiten
 		b1 = new JButton("Start");
 		b2 = new JButton("Exit");
+		b3 = new JButton("Leveleditor");
+		b4 = new JButton("Multiplayer");
 		initMenu();
 		
 	}
@@ -161,16 +165,24 @@ public class Game extends JPanel implements ActionListener{
 		buttonPosY = windowSizeY/2-40;
 		// bestimme Position und Größe
 		b1.setBounds(buttonPosX,buttonPosY,200,30);
-		b2.setBounds(buttonPosX,buttonPosY+40,200,30);
+		b4.setBounds(buttonPosX,buttonPosY+40,200,30);
+		b3.setBounds(buttonPosX,buttonPosY+80,200,30);
+		b2.setBounds(buttonPosX,buttonPosY+120,200,30);
 		// benenne Aktionen
 		b1.setActionCommand("start");
 		b2.setActionCommand("end");
+		b3.setActionCommand("level");
+		b4.setActionCommand("multi");
 		// ActionListener hinzufügen
 		b1.addActionListener(this);
 		b2.addActionListener(this);
+		b3.addActionListener(this);
+		b4.addActionListener(this);
 		// füge Buttons zum Panel hinzu
 		add(b1);
 		add(b2);
+		add(b3);
+		add(b4);
 	}
 	
 	// Rückkehr zum Menü und Anzeige von Spielergebnis (Game Over oder You Win)
@@ -178,6 +190,8 @@ public class Game extends JPanel implements ActionListener{
 		// Mache Buttons wieder sichtbar
 		b1.setVisible(true);
 		b2.setVisible(true);
+		b3.setVisible(true);
+		b4.setVisible(true);
 		
 		Font small = new Font("Arial", Font.BOLD, 20);
 		FontMetrics metr = this.getFontMetrics(small);
@@ -193,6 +207,8 @@ public class Game extends JPanel implements ActionListener{
 		// Buttons ausblenden
 		b1.setVisible(false);
 		b2.setVisible(false);
+		b3.setVisible(false);
+		b4.setVisible(false);
 		
 		endBossRoom = -1; // setze auf -1, falls kein Endgegner
 		// Lade Level
@@ -261,6 +277,8 @@ public class Game extends JPanel implements ActionListener{
 		int z1, z2, r, count, count2;
 		
 		try {
+			
+			System.out.println("Lade Datei: "+path);
 			// Reader und Stream vorbereiten -> Jar fähig
 			InputStream is = getClass().getResourceAsStream(path);
 			InputStreamReader reader = new InputStreamReader(is);
@@ -794,7 +812,7 @@ public class Game extends JPanel implements ActionListener{
 			for(int h=0; h<missiles.size(); h++){
 				Missile ms = (Missile)missiles.get(h);
 				r_missile = ms.getBounds();
-				if(ms.getFriendly()){
+				if(ms.getFriendly() && ms.isVisible()){
 					if(r_missile.intersects(r_finalEnemy)){
 						// Missile trifft finalEnemy
 						finalEnemy.setLive(-ms.getDamage());
@@ -806,6 +824,8 @@ public class Game extends JPanel implements ActionListener{
 						// Missile trifft Player
 						player.setLive(-ms.getDamage());
 						ms.setVisible(false);
+						playerCanGetDamage = false;
+						tolleranceTime = tollerance; // Tolleranzwert
 					}
 				}
 				
@@ -1204,6 +1224,9 @@ public class Game extends JPanel implements ActionListener{
 			if(action.equals("start")){
 				if(level>=levelpath.length) level--; 
 				initGame(levelpath[level]);	// Spiel Starten - Später: vorher aktuelles/gewähltes Level in levelpath laden!
+			}
+			else if(action.equals("level")){
+				new Leveleditor();
 			}
 			else if(action.equals("end")) System.exit(0);	// Programm beenden
 		}
