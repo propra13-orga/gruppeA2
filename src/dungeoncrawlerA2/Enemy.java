@@ -132,6 +132,10 @@ public class Enemy extends GameElement{
 		return damage;
 	}
 	
+	public int getType(){
+		 return this.type;
+	 }
+	
 	public Rectangle getBounds(){
 		// Kollisionserkennung
 		return new Rectangle(this.getX()+collisionTollerance/2, this.getY()+collisionTollerance/2, width - collisionTollerance, height - collisionTollerance); 

@@ -3,8 +3,11 @@ package dungeoncrawlerA2;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -22,7 +25,7 @@ import javax.swing.JPanel;
 import javax.swing.JFrame;
 import javax.swing.JRadioButton;
 
-public class Leveleditor extends JFrame implements ActionListener{
+public class Leveleditor extends JFrame implements ActionListener, MouseListener{
 	
 	// Editordaten
 	private String editorObjects = "leveldata/editorobjects.txt";
@@ -111,6 +114,7 @@ public class Leveleditor extends JFrame implements ActionListener{
 	boolean editorLoaded;
 	int visibleRoom;
 	int selectedGround, selectedWall, selectedDoor, selectedEnemy, selectedCheckpoint, selectedItem, selectedFinal, selectedNPC;
+	String selectedElement;
 	
 	// Konstruktor
 	public Leveleditor(){
@@ -127,6 +131,8 @@ public class Leveleditor extends JFrame implements ActionListener{
 		startEditor();
 		add(edit);
 		setVisible(true);
+		
+		addMouseListener(this);
 		
 		visibleRoom = 0;
 		selectedGround = selectedWall = selectedDoor = selectedEnemy = selectedCheckpoint = selectedItem = selectedFinal = selectedNPC = 0;
@@ -219,6 +225,7 @@ public class Leveleditor extends JFrame implements ActionListener{
 		radioFinal.setBounds(fieldSizeX + 20, 440, 80, 40);
 		
 		radioGround.setSelected(true);
+		selectedElement = "ground";
 		
 		// Radiobuttons gruppieren
 		radioGroup.add(radioGround);
@@ -1092,6 +1099,184 @@ public class Leveleditor extends JFrame implements ActionListener{
 		}
 	}
 	
+	public void changeData(){
+		int x,y;
+		// Setze alles auf Ground
+		int[][][] field = {{{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
+				{{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
+				{{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
+				{{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
+				{{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
+				{{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
+				{{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
+				{{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
+				{{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
+				{{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
+				{{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
+				{{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
+				{{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
+				{{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}}}; 
+		
+		// Finde Böden
+		for(int i = 0; i<grounds.size(); i++){
+			Ground gr = (Ground)grounds.get(i);
+			Rectangle rg = gr.getBounds();
+			
+			x = (int)rg.getX()/blockSize;
+			y = (int)rg.getY()/blockSize;
+			
+			field[y][x][1] = gr.getType();
+ 		}
+		
+		// Finde Wände
+		for(int i = 0; i<walls.size(); i++){
+			Wall wl = (Wall)walls.get(i);
+			Rectangle rw = wl.getBounds();
+					
+			x = (int)rw.getX()/blockSize;
+			y = (int)rw.getY()/blockSize;
+					
+			field[y][x][0] = 1;
+			field[y][x][1] = wl.getType();
+		 }
+		
+		leveldata[visibleRoom] = "";
+		
+		for(int i=0; i<field.length;i++){
+			for(int j=0;j<field[i].length;j++){
+				if(field[i][j][0]==1){
+					// Wall
+					leveldata[visibleRoom]+="W"+field[i][j][1]+" ";
+					
+				}
+				else{
+					// Ground
+					leveldata[visibleRoom]+="G"+field[i][j][1] + " ";
+				}
+			}
+		}
+		
+	}
+	
+	public void mouseClicked(MouseEvent e) {
+		int mouseX, mouseY;
+		Rectangle r_mouse;
+		int elementX, elementY;
+		Rectangle r_element;
+		
+		if(levelLoaded && editorLoaded){
+			mouseX = (int)e.getX();
+			mouseY = (int)e.getY();
+			System.out.println("Position der Maus: " + mouseX+":"+mouseY);
+			r_mouse = new Rectangle(mouseX-3,mouseY-3,6,6);
+			
+			if(selectedElement.equals("ground")){
+				Ground selG = (Ground)groundTypes.get(selectedGround);
+				
+				// Ground gegen Ground tauschen
+				for(int i=0;i<grounds.size();i++){
+					Ground gr = (Ground)grounds.get(i);
+					r_element = gr.getBounds();
+					
+					// Nachschauen ob Maus auf Element
+					if(r_mouse.intersects(r_element)){
+						
+						elementX = (int)r_element.getX();
+						elementY = (int)r_element.getY();
+						
+						// Prüfe ob gleicher Typ
+						if(selG.getType()!=gr.getType()){
+							grounds.remove(i);
+							grounds.add(i, new Ground(elementX,elementY,selG.getType()+48));
+						}
+					}
+				}
+				// Wall gegen Ground tauschen
+				for(int j=0;j<walls.size();j++){
+					Wall wl = (Wall)walls.get(j);
+					r_element = wl.getBounds();
+					
+					// Nachschauen ob Maus auf Element
+					if(r_mouse.intersects(r_element)){
+						
+						elementX = (int)r_element.getX();
+						elementY = (int)r_element.getY();
+						
+						walls.remove(j);
+						grounds.add(new Ground(elementX,elementY,selG.getType()+48));
+					}
+				}	
+			}
+			
+			if(selectedElement.equals("wall")){
+				Wall selW = (Wall)wallTypes.get(selectedWall);
+				
+				// Wall gegen Wall tauschen
+				for(int i=0;i<walls.size();i++){
+					Wall wl = (Wall)walls.get(i);
+					r_element = wl.getBounds();
+					
+					// Nachschauen ob Maus auf Element
+					if(r_mouse.intersects(r_element)){
+						
+						elementX = (int)r_element.getX();
+						elementY = (int)r_element.getY();
+						
+						// Prüfe ob gleicher Typ
+						if(selW.getType()!=wl.getType()){
+							walls.remove(i);
+							walls.add(i, new Wall(elementX,elementY,selW.getType()+48));
+						}
+					}
+				}
+				// Ground gegen Wall tauschen
+				for(int j=0;j<grounds.size();j++){
+					Ground gr = (Ground)grounds.get(j);
+					r_element = gr.getBounds();
+					
+					// Nachschauen ob Maus auf Element
+					if(r_mouse.intersects(r_element)){
+						
+						elementX = (int)r_element.getX();
+						elementY = (int)r_element.getY();
+						
+						grounds.remove(j);
+						walls.add(new Wall(elementX,elementY,selW.getType()+48));
+					}
+				}	
+			}
+			
+			changeData();
+			
+			/*
+			else if(action.equals("selDoor")) selectedElement = "door";
+			else if(action.equals("selCheckpoint")) selectedElement = "checkpoint";
+			else if(action.equals("selItem")) selectedElement = "item";
+			else if(action.equals("selNPC")) selectedElement = "npc";
+			else if(action.equals("selEnemy")) selectedElement = "enemy";
+			else if(action.equals("selFinal")) selectedElement = "final";*/
+			
+		}
+		repaint();
+	}
+	
+	public void mousePressed(MouseEvent e) {
+		
+	}
+	
+	public void mouseEntered(MouseEvent e) {
+		
+	}
+	
+	public void mouseExited(MouseEvent e) {
+		
+	}
+	
+	public void mouseReleased(MouseEvent e) {
+		
+	}
+	
+	
 	// Action Listener
 	public void actionPerformed(ActionEvent e){
 		String action = e.getActionCommand();
@@ -1168,6 +1353,15 @@ public class Leveleditor extends JFrame implements ActionListener{
 				setVisible(false);
 				dispose();
 			}
+			else if(action.equals("selGround")) selectedElement = "ground";
+			else if(action.equals("selWall")) selectedElement = "wall";
+			else if(action.equals("selDoor")) selectedElement = "door";
+			else if(action.equals("selCheckpoint")) selectedElement = "checkpoint";
+			else if(action.equals("selItem")) selectedElement = "item";
+			else if(action.equals("selNPC")) selectedElement = "npc";
+			else if(action.equals("selEnemy")) selectedElement = "enemy";
+			else if(action.equals("selFinal")) selectedElement = "final";
+			
 		}
 		else{
 			// im Editor-Menü
@@ -1195,3 +1389,5 @@ public class Leveleditor extends JFrame implements ActionListener{
 		
 	}
 }
+
+

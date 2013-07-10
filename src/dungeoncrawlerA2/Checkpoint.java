@@ -9,6 +9,7 @@ public class Checkpoint extends GameElement{
 	private Image image;
 	private int width;
 	private int height;
+	private int type;
 	
 	private boolean active;
 	 
@@ -29,6 +30,8 @@ public class Checkpoint extends GameElement{
 		else if(type == 1){
 			 this.setActive(true);
 		}
+		
+		this.type = type;
 	}
 	
 	public void setActive(boolean active){
@@ -47,6 +50,10 @@ public class Checkpoint extends GameElement{
 		return this.active;
 	}
 	 
+	public int getType(){
+		 return this.type;
+	 }
+	
 	public Rectangle getBounds(){
 		// Kollisionserkennung
 		return new Rectangle(this.getX()+4, this.getY()+4, width-8, height-8); 

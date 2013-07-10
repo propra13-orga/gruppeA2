@@ -15,6 +15,7 @@ public class FinalEnemy extends GameElement{
 	private Image image;
 	private int width;
 	private int height;
+	
 	private int type;
 	private int dx;
 	private int dy;
@@ -205,6 +206,10 @@ public class FinalEnemy extends GameElement{
 	public int getDamage(){
 		return damage;
 	}
+	
+	public int getType(){
+		 return this.type;
+	 }
 	
 	public Rectangle getBounds(){
 		// Kollisionserkennung

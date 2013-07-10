@@ -9,6 +9,7 @@ public class Door extends GameElement{
 	private Image image;
 	private int width;
 	private int height;
+	private int type;
 	
 	private boolean open;
 	 
@@ -26,6 +27,7 @@ public class Door extends GameElement{
 		if(type == 1){
 			this.setOpen(open);
 		}
+		this.type = type;
 	}
 	
 	public void setOpen(boolean open){
@@ -43,6 +45,10 @@ public class Door extends GameElement{
 	public boolean getOpen(){
 		return this.open;
 	}
+	
+	public int getType(){
+		 return this.type;
+	 }
 	 
 	public Rectangle getBounds(){
 		// Kollisionserkennung

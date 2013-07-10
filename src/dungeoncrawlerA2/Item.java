@@ -10,6 +10,8 @@ public class Item extends GameElement{
 	private String path; // Bilddateipfad
 	private Image image;
 	private int width, height;
+	private int type;
+	
 	private String ItemType;
 	private int amount; // Anzahl an Geld, Munition, Magie, Waffen ... pro Item
 	private boolean visible;
@@ -53,6 +55,8 @@ public class Item extends GameElement{
 		
 		visible = true;
 		
+		this.type=type;
+		
 		ImageIcon ii = new ImageIcon(this.getClass().getResource(path));
 		image = ii.getImage();
 		width = image.getWidth(null);
@@ -90,6 +94,10 @@ public class Item extends GameElement{
 	
 	public int getAmount(){
 		return this.amount;
+	}
+	
+	public int getType(){
+		 return this.type;
 	}
 	
 	public Rectangle getBounds(){
