@@ -63,7 +63,7 @@ public class FinalEnemy extends GameElement{
 			path =  "images/final_enemy_03.png";
 			damage = 3; 
 			dir = 3;
-			speed = 4;
+			speed = 5;
 			live = 50;
 		} 
 		this.steps = 0;
@@ -146,10 +146,10 @@ public class FinalEnemy extends GameElement{
 		}
 		else if(type==3){
 			// feuern
-			if(steps%200==0) this.setDirectionOfMovement(randomNumber); 
+			//if(steps%200==0) this.setDirectionOfMovement(randomNumber); 
 			
-			if(steps==100){
-				m = new Missile(this.getX()+width/2, this.getY()+height, "FE3", 2);
+			if(steps==50){
+				m = new Missile(this.getX()+width/2, this.getY()+height, "FE3", 2, false);
 				missiles.add(m);
 				steps=0;
 			}

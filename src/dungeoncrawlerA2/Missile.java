@@ -21,7 +21,7 @@ public class Missile extends GameElement{
 	private String path; // Bilddateipfad
 	 
 	// Konstruktor
-	public Missile(int x, int y, String type, int dir) {
+	public Missile(int x, int y, String type, int dir, boolean friendly) {
 		 
 		super(x, y); // Aufruf GameElement
 		 
@@ -29,27 +29,27 @@ public class Missile extends GameElement{
 			path =  "images/m_plasma_01.png";
 			speed = 4;
 			damage = 1;
-			friendly = true;
 		}
 		if(type.equals("FE3")){
 			path =  "images/m_plasma_01.png";
-			speed = 3;
+			speed = 5;
 			damage = 1;
-			friendly = false;
 		}
+		
+		this.friendly=friendly;
 		// Richtung setzen
 		dx = dy = 0;
 		if(dir == 0){
-			dy = -speed;
+			dy = -this.speed;
 		}
 		else if(dir == 1){
-			dx = speed;
+			dx = this.speed;
 		}
 		else if(dir == 2){
-			dy = speed;
+			dy = this.speed;
 		}
 		else if(dir == 3){
-			dx = -speed;
+			dx = -this.speed;
 		}
 		
 		this.visible = true;

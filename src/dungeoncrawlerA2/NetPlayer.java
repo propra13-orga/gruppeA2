@@ -3,14 +3,24 @@ package dungeoncrawlerA2;
 import java.awt.Image;
 import java.awt.event.KeyEvent;
 import java.awt.Rectangle;
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.Socket;
 import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 import javax.swing.ImageIcon;
 
 // Evtl später auch GameElement
 
 // Player: Spielfigur
-public class Player{
+public class NetPlayer implements Runnable{
+	
+	private Socket socket;
 	
 	private String player;	// Pfad zum Bild - Spielfigur
 	private int speed = 2;	// Geschwindigkeit der Spielfigur
@@ -47,13 +57,15 @@ public class Player{
 
 	
 	// Konstruktor
-	public Player(int x, int y, int live, int type){
+	public NetPlayer(int x, int y, int live, int type, Socket socket){
 		if(type==0){
 			player = "images/player.png";
 		}
 		else if(type == 1){
 			player = "images/player2.png";
 		}
+		
+		this.socket = socket;
 		
 		// Bild laden plus Informationen
 		ImageIcon ii = new ImageIcon(this.getClass().getResource(player));
@@ -141,10 +153,9 @@ public class Player{
 					mY += 0;
 				}
 				
-				m = new Missile(mX, mY, activeItem.getItemType(), dir, true);
+				m = new Missile(mX, mY, activeItem.getItemType(), dir, false);
 				missiles.add(m);
 				activeItem.addToAmount(-1);
-				
 			}
 		}
 		
@@ -275,8 +286,7 @@ public class Player{
 	
 	// KeyEvent Methoden - von oben weitergereicht
 	// Key gedrückt
-	public void keyPressed(KeyEvent e){
-		int key = e.getKeyCode();
+	public void keyPressed(int key){
 		
 		if(key == KeyEvent.VK_LEFT){
 			dx = -speed;
@@ -303,8 +313,7 @@ public class Player{
 	}
 	
 	// Key losgelassen
-	public void keyReleased(KeyEvent e){
-		int key = e.getKeyCode();
+	public void keyReleased(int key){
 		
 		if(key == KeyEvent.VK_LEFT){
 			dx = 0;
@@ -319,5 +328,73 @@ public class Player{
 			dy = 0;
 		}
 	}
+
+	@Override
+	public void run() {
+		try {
+			getKeycodeOverNetwork();
+		} 
+		catch (Exception e) {
+			System.out.println("Fehlgeschlagen!");
+		}
+		
+	}
+	
+	public void getKeycodeOverNetwork() throws Exception{
+		
+		InputStream is = this.socket.getInputStream();
+		BufferedReader br = new BufferedReader(new InputStreamReader(is));
+		StringTokenizer t;
+		String line;
+		String command;
+		String StrKeycode;
+		String sX, sY;
+		int x,y;
+		int keycode;
+		
+		while(true){
+			x=this.x;
+			y=this.y;
+			line = br.readLine();
+			if(line==null) break;
+			
+			t = new StringTokenizer(line);
+			command = t.nextToken();
+			
+			
+			if(command.equals("P")){
+				StrKeycode = t.nextToken();
+				if(StrKeycode.length()==2){
+					keycode= 10*(StrKeycode.charAt(0)-48)+(StrKeycode.charAt(1)-48);
+					this.keyPressed(keycode);
+				}
+			}
+			else if(command.equals("R")){
+				StrKeycode = t.nextToken();
+				if(StrKeycode.length()==2){
+					keycode= 10*(StrKeycode.charAt(0)-48)+(StrKeycode.charAt(1)-48);
+					this.keyReleased(keycode);
+				}
+			}
+			else{
+				sX = command;
+				x=100*(sX.charAt(0)-48)+10*(sX.charAt(1)-48)+(sX.charAt(2)-48);
+				
+				
+				this.setX(x);
+				
+				sY = t.nextToken();
+				y=100*(sY.charAt(0)-48)+10*(sY.charAt(1)-48)+(sY.charAt(2)-48);
+				
+				
+				
+				this.setY(y);
+			}
+			
+		}
+		
+	}
+	
+	
 	
 }

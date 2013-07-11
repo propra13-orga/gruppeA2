@@ -387,11 +387,8 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 			startY = 150;
 			startLive = 6;
 			intro = "";
-			endBossLocation = "F1 00 10 06";
-			// Raum vom Endgegner einlesen
-			int r10 = endBossLocation.charAt(3)-48;
-			int r01 = endBossLocation.charAt(4)-48;
-			endBossRoom = 10*r10+r01;
+			endBossLocation = "";
+			endBossRoom = -1;
 			
 			rooms = 1; // Hole Anzahl Räume
 			
@@ -514,14 +511,19 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 					// Endgegnerdaten einlesen
 					if(request.equals("#FINAL")){
 						elementCounter++;
-						endBossLocation = tokens.nextToken()+" ";
-						for(int i = 0; i<3; i++) endBossLocation += tokens.nextToken() +" ";
-						// Raum vom Endgegner einlesen
-						int r10 = endBossLocation.charAt(3)-48;
-						int r01 = endBossLocation.charAt(4)-48;
-						endBossRoom = 10*r10+r01;
+						if(tokens.hasMoreTokens()){
+							endBossLocation = tokens.nextToken()+" ";
+							for(int i = 0; i<3; i++) endBossLocation += tokens.nextToken() +" ";
+							// Raum vom Endgegner einlesen
+							int r10 = endBossLocation.charAt(3)-48;
+							int r01 = endBossLocation.charAt(4)-48;
+							endBossRoom = 10*r10+r01;
+						}
+						else{
+							endBossLocation = "";
+							endBossRoom = -1; // kein Endgegner
+						}
 						
-						System.out.println(endBossLocation + " "+endBossRoom);
 					}
 					
 					// Anzahl Räume auslesen

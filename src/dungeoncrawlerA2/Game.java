@@ -12,10 +12,17 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.Rectangle;
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.net.ConnectException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.UnknownHostException;
 
 import java.util.ArrayList;
 import java.util.StringTokenizer;
@@ -23,16 +30,42 @@ import java.util.StringTokenizer;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.JButton;
+import javax.swing.JTextField;
 import javax.swing.Timer;
 
 // Game: Menü, Spielfeld und Spielsteuerung
 public class Game extends JPanel implements ActionListener{
+	
+	// Netzwerkelemente
+	private boolean inNetworkMenu;
+	private boolean isServer;
+	private boolean isClient;
+	private boolean inNetworkGame;
+	
+	private InetAddress localIP;
+	private InetAddress remoteIP;
+	private int port = 6789;
+	
+	private ServerSocket serverSocket;
+	private Socket client;
+	
+	private NetPlayer player2;
+	private Thread thread;
+	//private DataOutputStream os;
+	private PrintStream os;
+	
+	private int delay; // zum verzögern bei netzwerkspiel
+	
+	private JTextField ip0,ip1,ip2,ip3;
 	
 	// Menüelemente
 	private JButton b1;
 	private JButton b2;
 	private JButton b3; // Leveleditor
 	private JButton b4; // Multiplayer
+	// Netzwerkmenüelemente
+	private JButton netStartServer, netConnect, back;
+	
 	private int buttonPosX;
 	private int buttonPosY;
 	
@@ -56,6 +89,8 @@ public class Game extends JPanel implements ActionListener{
 	private ArrayList<Enemy> enemys = new ArrayList<Enemy>();
 	private ArrayList<Item> items = new ArrayList<Item>();
 	private ArrayList<Missile> missiles = new ArrayList<Missile>();
+	private ArrayList<Missile> missiles2 = new ArrayList<Missile>();
+	private ArrayList<Missile> eMissiles = new ArrayList<Missile>();
 	private ArrayList<Checkpoint> checkpoints = new ArrayList<Checkpoint>();
 	private ArrayList<NPC> npcs = new ArrayList<NPC>();
 	private FinalEnemy finalEnemy;
@@ -129,6 +164,7 @@ public class Game extends JPanel implements ActionListener{
 	private boolean inDialog;
 	private boolean inShop;
 	
+	
 	// TODO setFont hinzufügen und Schriftarten anpassen
 	
 	// Konstruktor
@@ -145,6 +181,9 @@ public class Game extends JPanel implements ActionListener{
 		setBackground(backgroundColor);
 		setDoubleBuffered(true); 
 		firstStart=true;	
+		inNetworkMenu=false;
+		inNetworkGame = isServer = isClient = false;
+		delay = 0;
 		
 		timer = new Timer(1000/fps, this); // Timer nach fps einstellen
 		
@@ -153,6 +192,16 @@ public class Game extends JPanel implements ActionListener{
 		b2 = new JButton("Exit");
 		b3 = new JButton("Leveleditor");
 		b4 = new JButton("Multiplayer");
+		
+		netStartServer = new JButton("Server erstellen");
+		netConnect = new JButton("Verbinden");
+		back = new JButton("Hauptmenü");
+		
+		ip0 = new JTextField("192");
+		ip1 = new JTextField("168");
+		ip2 = new JTextField("1");
+		ip3 = new JTextField("98");
+		
 		initMenu();
 		
 	}
@@ -168,30 +217,103 @@ public class Game extends JPanel implements ActionListener{
 		b4.setBounds(buttonPosX,buttonPosY+40,200,30);
 		b3.setBounds(buttonPosX,buttonPosY+80,200,30);
 		b2.setBounds(buttonPosX,buttonPosY+120,200,30);
+		
+		netStartServer.setBounds(buttonPosX,buttonPosY+40,200,30);
+		netConnect.setBounds(buttonPosX,buttonPosY+120,200,30);
+		back.setBounds(buttonPosX,buttonPosY,200,30);
+		
+		ip0.setBounds(buttonPosX,buttonPosY+160,40,30);
+		ip1.setBounds(buttonPosX+50,buttonPosY+160,40,30);
+		ip2.setBounds(buttonPosX+100,buttonPosY+160,40,30);
+		ip3.setBounds(buttonPosX+150,buttonPosY+160,40,30);
 		// benenne Aktionen
 		b1.setActionCommand("start");
 		b2.setActionCommand("end");
 		b3.setActionCommand("level");
 		b4.setActionCommand("multi");
+		
+		netStartServer.setActionCommand("startServer");
+		netConnect.setActionCommand("connectToServer");
+		back.setActionCommand("back");
+		
 		// ActionListener hinzufügen
 		b1.addActionListener(this);
 		b2.addActionListener(this);
 		b3.addActionListener(this);
 		b4.addActionListener(this);
+		
+		netStartServer.addActionListener(this);
+		netConnect.addActionListener(this);
+		back.addActionListener(this);
+		
+		netStartServer.setVisible(false);
+		netConnect.setVisible(false);
+		back.setVisible(false);
+		ip0.setVisible(false);
+		ip1.setVisible(false);
+		ip2.setVisible(false);
+		ip3.setVisible(false);
+		
 		// füge Buttons zum Panel hinzu
 		add(b1);
 		add(b2);
 		add(b3);
 		add(b4);
+		add(netStartServer);
+		add(netConnect);
+		add(back);
+		add(ip0);
+		add(ip1);
+		add(ip2);
+		add(ip3);
+		
 	}
 	
 	// Rückkehr zum Menü und Anzeige von Spielergebnis (Game Over oder You Win)
 	public void paintMessage(String msg, Graphics g){
-		// Mache Buttons wieder sichtbar
-		b1.setVisible(true);
-		b2.setVisible(true);
-		b3.setVisible(true);
-		b4.setVisible(true);
+		if(!inNetworkMenu){
+			// Im Menü - Mache Buttons wieder sichtbar
+			b1.setVisible(true);
+			b2.setVisible(true);
+			b3.setVisible(true);
+			b4.setVisible(true);
+			netStartServer.setVisible(false);
+			netConnect.setVisible(false);
+			back.setVisible(false);
+			ip0.setVisible(false);
+			ip1.setVisible(false);
+			ip2.setVisible(false);
+			ip3.setVisible(false);
+		}
+		else if(isServer||isClient){
+			// Netzwerkspiel eingeleitet
+			b1.setVisible(false);
+			b2.setVisible(false);
+			b3.setVisible(false);
+			b4.setVisible(false);
+			netStartServer.setVisible(false);
+			netConnect.setVisible(false);
+			back.setVisible(false);
+			ip0.setVisible(false);
+			ip1.setVisible(false);
+			ip2.setVisible(false);
+			ip3.setVisible(false);
+		}
+		else {
+			// Im Netzwerkmenü - mache Netzwerkbuttons sichtbar
+			b1.setVisible(false);
+			b2.setVisible(false);
+			b3.setVisible(false);
+			b4.setVisible(false);
+			netStartServer.setVisible(true);
+			netConnect.setVisible(true);
+			back.setVisible(true);
+			ip0.setVisible(true);
+			ip1.setVisible(true);
+			ip2.setVisible(true);
+			ip3.setVisible(true);
+		
+		}
 		
 		Font small = new Font("Arial", Font.BOLD, 20);
 		FontMetrics metr = this.getFontMetrics(small);
@@ -242,11 +364,71 @@ public class Game extends JPanel implements ActionListener{
 		
 		initRoom(room); // ersten Raum aufbauen
 		
-		player = new Player(startX, startY, startLive); // setze neue Spielfigur an Stelle x,y
+		player = new Player(startX, startY, startLive, 0); // setze neue Spielfigur an Stelle x,y
 		playerCanGetDamage = true;
 		tolleranceTime = 0;
 		
 		// Statusleiste vorbereiten
+		prepareStatusBar();
+		
+		timer.start();
+	}
+	
+	public void initNetGame(Socket client){
+		// Buttons ausblenden
+		netStartServer.setVisible(false);
+		netConnect.setVisible(false);
+		back.setVisible(false);
+		ip0.setVisible(false);
+		ip1.setVisible(false);
+		ip2.setVisible(false);
+		ip3.setVisible(false);
+				
+		endBossRoom = -1; // setze auf -1, falls kein Endgegner
+		// Lade Lobby
+		loadLevel("leveldata/lobby.txt");
+				
+		// Spielablaufparameter setzen
+		firstStart=false;
+		ingame = true;
+		inNetworkGame = true;
+		won = false;
+		inDialog = inShop = false;
+				
+		initRoom(0); // ersten Raum der Lobby aufbauen
+		
+		if(isServer){
+			player = new Player(50, windowSizeY/2, startLive, 0); // setze neue Spielfigur an Stelle x,y
+			player2 = new NetPlayer(windowSizeX-70, windowSizeY/2, startLive, 1, client);
+		}
+		else{
+			player = new Player(windowSizeX-70, windowSizeY/2, startLive, 1); // setze neue Spielfigur an Stelle x,y
+			player2 = new NetPlayer(50, windowSizeY/2, startLive, 0, client);
+		}
+		
+		try {
+			//os = new DataOutputStream(client.getOutputStream());
+			os = new PrintStream(client.getOutputStream(), true);
+			
+		} catch (IOException e) {
+			
+			e.printStackTrace();
+		}	
+		
+		thread = new Thread(player2);
+		thread.start();
+				
+		playerCanGetDamage = true;
+		tolleranceTime = 0;
+				
+		// Statusleiste vorbereiten
+		prepareStatusBar();
+				
+		timer.start();
+	}
+	
+	// Statusleiste vorbereiten
+	public void prepareStatusBar(){
 		ImageIcon ii;
 		
 		ii = new ImageIcon(this.getClass().getResource(statusBarBackgroundPath));	// Bild - Hintergrund Statusleiste
@@ -262,8 +444,61 @@ public class Game extends JPanel implements ActionListener{
 		statusBarLiveImage = ii.getImage();
 		statusBarLiveImageWidth = statusBarLiveImage.getWidth(null);
 		statusBarLiveImageHeight = statusBarLiveImage.getHeight(null);
+	}
+	
+	// Startet Netzwerkmenü
+	public void initNetworkMenu(){
 		
-		timer.start();
+		inNetworkMenu = true;
+		
+	}
+	
+	// Starte Netzwerkspiel als Server
+	public void startServer(){
+		try {
+			serverSocket = new ServerSocket(port);
+			isServer = true; // Definiere Server
+			
+			System.out.println("Warte auf Verbindung...");
+			client = serverSocket.accept(); // wartet bis verbunden
+			
+			
+			System.out.println("Verbindung hergestellt!");
+			
+			initNetGame(client); // Netzwerkspiel starten
+		} 
+		catch (IOException e) {
+			
+			e.printStackTrace();
+		}
+	}
+	
+	// Starte Netwerkspiel als Client
+	public void startClient(){
+		String IP = "";
+		IP += ip0.getText()+"."+ip1.getText()+"."+ip2.getText()+"."+ip3.getText();
+		System.out.println("Verbinde mit: "+IP);
+		try {
+			client = new Socket(IP, port);
+			
+			if(client.isConnected()){
+				System.out.println("Verbindung erfolgreich!");
+				
+				isClient = true; // Definiere Client
+				initNetGame(client); // Netzwerkspiel starten
+			}
+			
+		} 
+		catch(ConnectException e){
+			System.out.println("Verbindung fehlgeschlagen!");
+		}
+		catch (UnknownHostException e) {
+			
+			System.out.println("Unbekannte IP! Verbindung fehlgeschlagen!");
+		} catch (IOException e) {
+			
+			e.printStackTrace();
+		}
 	}
 	
 	// Lädt Level aus Textdatei
@@ -350,12 +585,18 @@ public class Game extends JPanel implements ActionListener{
 				
 				// Endgegnerdaten einlesen
 				if(request.equals("#FINAL")){
-					endBossLocation = tokens.nextToken()+" ";
-					for(int i = 0; i<3; i++) endBossLocation += tokens.nextToken() +" ";
-					// Raum vom Endgegner einlesen
-					int r10 = endBossLocation.charAt(3)-48;
-					int r01 = endBossLocation.charAt(4)-48;
-					endBossRoom = 10*r10+r01;
+					if(tokens.hasMoreTokens()){
+						endBossLocation = tokens.nextToken()+" ";
+						for(int i = 0; i<3; i++) endBossLocation += tokens.nextToken() +" ";
+						// Raum vom Endgegner einlesen
+						int r10 = endBossLocation.charAt(3)-48;
+						int r01 = endBossLocation.charAt(4)-48;
+						endBossRoom = 10*r10+r01;
+					}
+					else{
+						endBossLocation = "";
+						endBossRoom = -1; // kein Endgegner
+					}
 					
 				}
 				
@@ -473,6 +714,8 @@ public class Game extends JPanel implements ActionListener{
 		enemys.clear();
 		items.clear();
 		missiles.clear();
+		missiles2.clear();
+		eMissiles.clear();
 		checkpoints.clear();
 		finalEnemy = null;
 		
@@ -653,14 +896,16 @@ public class Game extends JPanel implements ActionListener{
 		// Gegner einfügen - wichtig: Erst Raum und Items, dann andere Objekte
 		room.addAll(enemys);
 		
-		missiles = player.getMissiles();
+		missiles=player.getMissiles();
+		if(inNetworkGame) missiles2=player2.getMissiles();
 		
 		if(finalEnemy!=null){
 			room.add(finalEnemy);
-			missiles.addAll(finalEnemy.getMissiles());
+			eMissiles=finalEnemy.getMissiles();
 		}
 		room.addAll(missiles);
-		
+		room.addAll(missiles2);
+		room.addAll(eMissiles);
 		
 		for(int i=0; i<room.size(); i++){
 			// Element holen und zeichnen
@@ -729,24 +974,29 @@ public class Game extends JPanel implements ActionListener{
 		Rectangle r_checkpoint;
 		Rectangle r_finalEnemy;
 		Rectangle r_npc;
+		Rectangle r_player2;
 		
 		// Spieler Ausmaße ermitteln
 		Rectangle r_player = player.getBounds();
+		if(inNetworkGame) r_player2 = player2.getBounds();
+		else r_player2 = new Rectangle(-10,-10,1,1);
 		
 		// Kollision mit npc
-		for(int p = 0; p<npcs.size(); p++){
-			NPC n = (NPC)npcs.get(p);
-			r_npc = n.getBounds();
-			
-			if(r_npc.intersects(r_player)){
-				player.resetMovement();
-				if(n.isShop()){
-					// Shop
-					enterShop();
-				}
-				else if(n.hasDialog()){
-					// NPC+Dialog
-					enterDialog(dialog);
+		if(!inNetworkGame){
+			for(int p = 0; p<npcs.size(); p++){
+				NPC n = (NPC)npcs.get(p);
+				r_npc = n.getBounds();
+				
+				if(r_npc.intersects(r_player)){
+					player.resetMovement();
+					if(n.isShop()){
+						// Shop
+						enterShop();
+					}
+					else if(n.hasDialog()){
+						// NPC+Dialog
+						enterDialog(dialog);
+					}
 				}
 			}
 		}
@@ -777,6 +1027,13 @@ public class Game extends JPanel implements ActionListener{
 					r_missile = ms.getBounds();
 					if(r_missile.intersects(r_door)) ms.setVisible(false);
 				}
+				if(inNetworkGame){
+					for(int c = 0; c<missiles2.size(); c++){
+						Missile ms = (Missile)missiles2.get(c);
+						r_missile = ms.getBounds();
+						if(r_missile.intersects(r_door)) ms.setVisible(false);
+					}
+				}
 				
 				// Endboss - Tür
 				if(room==endBossRoom && finalEnemy!=null){
@@ -784,6 +1041,34 @@ public class Game extends JPanel implements ActionListener{
 					if(r_finalEnemy.intersects(r_door)){
 						finalEnemy.resetMovement();
 						finalEnemy.setDirectionOfMovement(2);
+					}
+				}
+			}
+			
+		}
+		
+		// eventuelle Kollision im Netzwerkspiel
+		if(inNetworkGame){
+			for(int h=0; h<missiles2.size(); h++){
+				Missile ms = (Missile)missiles2.get(h);
+				r_missile = ms.getBounds();
+				if(!ms.getFriendly() && ms.isVisible()){
+					if(r_missile.intersects(r_player)){
+						// Missile trifft Player
+						player.setLive(-ms.getDamage());
+						ms.setVisible(false);
+						playerCanGetDamage = false;
+						tolleranceTime = tollerance; // Tolleranzwert
+					}
+				}
+			}
+			for(int h=0; h<missiles.size(); h++){
+				Missile ms = (Missile)missiles.get(h);
+				r_missile = ms.getBounds();
+				if(ms.getFriendly() && ms.isVisible()){
+					if(r_missile.intersects(r_player2)){
+						// Missile trifft Player2
+						ms.setVisible(false);
 					}
 				}
 			}
@@ -819,14 +1104,16 @@ public class Game extends JPanel implements ActionListener{
 						ms.setVisible(false);
 					}
 				}
-				else{
-					if(r_missile.intersects(r_player)){
-						// Missile trifft Player
-						player.setLive(-ms.getDamage());
-						ms.setVisible(false);
-						playerCanGetDamage = false;
-						tolleranceTime = tollerance; // Tolleranzwert
-					}
+			}
+			for(int h=0; h<eMissiles.size();h++){
+				Missile ms = (Missile)eMissiles.get(h);
+				r_missile = ms.getBounds();
+				if(r_missile.intersects(r_player)&&ms.isVisible()){
+					// Missile trifft Player
+					player.setLive(-ms.getDamage());
+					ms.setVisible(false);
+					playerCanGetDamage = false;
+					tolleranceTime = tollerance; // Tolleranzwert
 				}
 				
 			}
@@ -857,72 +1144,85 @@ public class Game extends JPanel implements ActionListener{
 				r_missile = ms.getReducedBounds();
 				if(r_wall.intersects(r_missile)) ms.setVisible(false);
 			}
+			if(inNetworkGame){
+				for(int n = 0; n<missiles2.size(); n++){
+					Missile ms = (Missile)missiles2.get(n);
+					r_missile = ms.getReducedBounds();
+					if(r_wall.intersects(r_missile)) ms.setVisible(false);
+				}
+			}
 		}
 		
 		// Kollisionen mit Gegner -> Lebenspunkte weg || Missile remove
-		for(int j=0;j<enemys.size(); j++){
-			Enemy e = (Enemy)enemys.get(j);
-			r_enemy = e.getBounds();
-			
-			if(r_player.intersects(r_enemy)){
-				// Leben reduzieren
-				if(playerCanGetDamage && player.isImmortal()==false){
-					player.setLive(-e.getDamage()); // Hier Schadensfunktion aufrufen
-					playerCanGetDamage = false;
-					tolleranceTime = tollerance; // Tolleranzwert
+		if(!inNetworkGame){
+			for(int j=0;j<enemys.size(); j++){
+				Enemy e = (Enemy)enemys.get(j);
+				r_enemy = e.getBounds();
+				
+				if(r_player.intersects(r_enemy)){
+					// Leben reduzieren
+					if(playerCanGetDamage && player.isImmortal()==false){
+						player.setLive(-e.getDamage()); // Hier Schadensfunktion aufrufen
+						playerCanGetDamage = false;
+						tolleranceTime = tollerance; // Tolleranzwert
+					}
+					// Gegner dreht um
+					e.resetMovement();
+					if(player.getDir()!=e.getDirectionOfMovement()) e.setDirectionOfMovement(2); 
+					// Spieler bleibt stehen
+					player.resetMovement();
 				}
-				// Gegner dreht um
-				e.resetMovement();
-				if(player.getDir()!=e.getDirectionOfMovement()) e.setDirectionOfMovement(2); 
-				// Spieler bleibt stehen
-				player.resetMovement();
-			}
-			
-			// Kollision mit Missile
-			for(int n = 0; n<missiles.size(); n++){
-				Missile ms = (Missile)missiles.get(n);
-				r_missile = ms.getBounds();
-				if(r_enemy.intersects(r_missile)){
-					ms.setVisible(false);
-					e.setVisible(false); // Hier später Schaden verteilen
+				
+				// Kollision mit Missile
+				for(int n = 0; n<missiles.size(); n++){
+					Missile ms = (Missile)missiles.get(n);
+					r_missile = ms.getBounds();
+					if(r_enemy.intersects(r_missile)){
+						ms.setVisible(false);
+						e.setVisible(false); // Hier später Schaden verteilen
+					}
 				}
 			}
 		}
 		
 		// Kollisionen Gegner mit Wand oder Spieler
-		for(int k = 0; k<enemys.size(); k++){
-			// Hole Gegner
-			Enemy e = (Enemy)enemys.get(k);
-			r_enemy = e.getBounds();
-			
-			for(int l = 0; l<walls.size(); l++){
-				// Hole Wand
-				Wall w = (Wall)walls.get(l);
-				r_wall = w.getBounds();
-				if(r_enemy.intersects(r_wall)){
-					e.resetMovement();
-					e.setDirectionOfMovement(1);
+		if(!inNetworkGame){
+			for(int k = 0; k<enemys.size(); k++){
+				// Hole Gegner
+				Enemy e = (Enemy)enemys.get(k);
+				r_enemy = e.getBounds();
+				
+				for(int l = 0; l<walls.size(); l++){
+					// Hole Wand
+					Wall w = (Wall)walls.get(l);
+					r_wall = w.getBounds();
+					if(r_enemy.intersects(r_wall)){
+						e.resetMovement();
+						e.setDirectionOfMovement(1);
+					}
 				}
+				
+				// verhindern dass Gegner Raum verlässt --> umdrehen wenn Bildschirm verlassen
+				if(e.getX()<0 || e.getX()>windowSizeX-e.getImage().getWidth(null) || e.getY()<0 || e.getY()>windowSizeY-e.getImage().getHeight(null)) e.setDirectionOfMovement(2);
+				
 			}
-			
-			// verhindern dass Gegner Raum verlässt --> umdrehen wenn Bildschirm verlassen
-			if(e.getX()<0 || e.getX()>windowSizeX-e.getImage().getWidth(null) || e.getY()<0 || e.getY()>windowSizeY-e.getImage().getHeight(null)) e.setDirectionOfMovement(2);
-			
 		}
 		
 		// Kollisionen Spieler mit Checkpoint
-		for(int o = 0; o<checkpoints.size(); o++){
-			Checkpoint cp = (Checkpoint)checkpoints.get(o);
-			r_checkpoint = cp.getBounds();
-			boolean active = cp.getActive();
-			if(active == false){
-				if(r_player.intersects(r_checkpoint)){
-					cp.setActive(true);
-					activeCheckpointX = cp.getX();
-					activeCheckpointY = cp.getY();
-					activeCheckpointRoom = this.room;
-					activeCheckpointLevel = this.level;
-					System.out.println("Checkpoint aktiviert in Raum "+activeCheckpointRoom+" mit Koordinaten "+activeCheckpointX + " "+ activeCheckpointY);
+		if(!inNetworkGame){
+			for(int o = 0; o<checkpoints.size(); o++){
+				Checkpoint cp = (Checkpoint)checkpoints.get(o);
+				r_checkpoint = cp.getBounds();
+				boolean active = cp.getActive();
+				if(active == false){
+					if(r_player.intersects(r_checkpoint)){
+						cp.setActive(true);
+						activeCheckpointX = cp.getX();
+						activeCheckpointY = cp.getY();
+						activeCheckpointRoom = this.room;
+						activeCheckpointLevel = this.level;
+						System.out.println("Checkpoint aktiviert in Raum "+activeCheckpointRoom+" mit Koordinaten "+activeCheckpointX + " "+ activeCheckpointY);
+					}
 				}
 			}
 		}
@@ -957,6 +1257,24 @@ public class Game extends JPanel implements ActionListener{
 					it.setVisible(false);
 				}
 			}
+			if(inNetworkGame){
+				if(r_player2.intersects(r_item)){
+					if(it.getItemType().equals("mana")){
+						// Mana zu Spieler hinzufügen
+						player2.resetMana();
+					}
+					else if(it.getItemType().equals("health")){
+						// Gesundheit herstellen
+						player2.setLive(3); 
+					}
+					else{
+						// Waffen und nutzbare Items zu Spieler hinzufügen
+						player2.addItem(it);
+						System.out.println(it.getItemType() + " added to Player2.");
+					}
+					it.setVisible(false);
+				}
+			}
 		}
 		
 	}
@@ -972,6 +1290,9 @@ public class Game extends JPanel implements ActionListener{
 			
 			// zeichne Spielfigur
 			g.drawImage(player.getImage(), player.getX(), player.getY(), this);
+			
+			// zeichne ggf Netzwerkspieler
+			if(inNetworkGame) g.drawImage(player2.getImage(), player2.getX(), player2.getY(), this);
 			
 			// zeichne Statusleiste
 			paintStatusBar(g);
@@ -1145,6 +1466,10 @@ public class Game extends JPanel implements ActionListener{
 	
 	// Aktion -> Timer oder Button 
 	public void actionPerformed(ActionEvent e){
+		int x;
+		String xOut="";
+		int y;
+		String yOut="";
 		if(ingame){
 			// im Spiel - wird vom Timer abhängig aufgerufen
 			
@@ -1197,6 +1522,25 @@ public class Game extends JPanel implements ActionListener{
 					}
 					
 					player.move();	// bewege Spielfigur
+					if(inNetworkGame){
+						 delay++;
+						if(delay >= 5){
+							x = player.getX();
+							y = player.getY();
+							
+							if(x<10) xOut = "00"+x;
+							else if(x<100) xOut = "0"+x;
+							else xOut = ""+x;
+							
+							if(y<10) yOut = "00"+y;
+							else if(y<100) yOut = "0"+y;
+							else yOut = ""+y;
+							
+							os.println(xOut + " " + yOut);
+							delay = 0;
+						}
+						player2.move(); // bewege Netzwerkspieler wenn da
+					}
 					
 					// Bewege Gegner
 					for(int j=0;j<enemys.size(); j++){
@@ -1211,6 +1555,20 @@ public class Game extends JPanel implements ActionListener{
 						if(m.isVisible() == false) missiles.remove(k); // entfernen falls weg
 						m.move();
 					}
+					
+					for(int k=0;k<missiles2.size(); k++){
+						Missile m = (Missile)missiles2.get(k);
+						if(m.isVisible() == false) missiles2.remove(k); // entfernen falls weg
+						m.move();
+					}
+					
+					
+					for(int k=0;k<eMissiles.size(); k++){
+						Missile m = (Missile)eMissiles.get(k);
+						if(m.isVisible() == false) eMissiles.remove(k); // entfernen falls weg
+						m.move();
+					}
+					
 					
 					checkCollision();	// prüfe Kollision
 					checkRoom();	// prüfe ob Raum gewechselt oder Ziel erreicht
@@ -1228,7 +1586,15 @@ public class Game extends JPanel implements ActionListener{
 			else if(action.equals("level")){
 				new Leveleditor();
 			}
+			else if(action.equals("multi")){
+				initNetworkMenu();
+			}
 			else if(action.equals("end")) System.exit(0);	// Programm beenden
+			else if(action.equals("back")){
+				inNetworkMenu = false;
+			}
+			else if(action.equals("startServer")) startServer();
+			else if(action.equals("connectToServer")) startClient();
 		}
 
 		repaint();	// zeichne Bildschirm neu - erneuter Aufruf von paint()
@@ -1240,9 +1606,20 @@ public class Game extends JPanel implements ActionListener{
 	private class TAdapter extends KeyAdapter{
 		
 		public void keyReleased(KeyEvent e){
+			if(ingame && inNetworkGame){
+				String key = "R "+e.getKeyCode();
+				
+				os.println(key);
+			}
 			if(ingame && inShop==false && inDialog==false) player.keyReleased(e);
+			
 		}
 		public void keyPressed(KeyEvent e){
+			if(ingame && inNetworkGame){
+				String key = "P "+e.getKeyCode();
+				
+				os.println(key);
+			}
 			if(ingame && inShop==false && inDialog==false) player.keyPressed(e);
 			else if(inDialog){
 				if(e.getKeyCode()==KeyEvent.VK_SPACE || e.getKeyCode()==KeyEvent.VK_ENTER) inDialog=false;
