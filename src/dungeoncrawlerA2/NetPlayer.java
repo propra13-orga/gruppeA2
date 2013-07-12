@@ -21,6 +21,8 @@ import javax.swing.ImageIcon;
 public class NetPlayer implements Runnable{
 	
 	private Socket socket;
+	private int chosenMap;
+	private boolean ready;
 	
 	private String player;	// Pfad zum Bild - Spielfigur
 	private int speed = 2;	// Geschwindigkeit der Spielfigur
@@ -66,6 +68,8 @@ public class NetPlayer implements Runnable{
 		}
 		
 		this.socket = socket;
+		this.chosenMap = 0;
+		this.ready = false;
 		
 		// Bild laden plus Informationen
 		ImageIcon ii = new ImageIcon(this.getClass().getResource(player));
@@ -187,6 +191,14 @@ public class NetPlayer implements Runnable{
 	}
 	
 	// get Methoden
+	public int getChosenMap(){
+		return this.chosenMap;
+	}
+	
+	public boolean getReady(){
+		return this.ready;
+	}
+	
 	public int getWidth(){
 		return this.width;
 	}
@@ -376,7 +388,25 @@ public class NetPlayer implements Runnable{
 					this.keyReleased(keycode);
 				}
 			}
+			else if(command.equals("LV")){
+				// Level wählen
+				StrKeycode = t.nextToken();
+				
+				keycode = StrKeycode.charAt(0)-48;
+				this.chosenMap = keycode;
+				
+			}
+			else if(command.equals("START")){
+				// Spieler bereit
+				StrKeycode = t.nextToken();
+				
+				keycode = StrKeycode.charAt(0)-48;
+				if(keycode==1) this.ready=true;
+				else this.ready = false;
+				
+			}
 			else{
+				// Position abgleichen
 				sX = command;
 				x=100*(sX.charAt(0)-48)+10*(sX.charAt(1)-48)+(sX.charAt(2)-48);
 				

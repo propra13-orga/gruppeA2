@@ -37,10 +37,18 @@ import javax.swing.Timer;
 public class Game extends JPanel implements ActionListener{
 	
 	// Netzwerkelemente
+	private String[] battlepath = {"leveldata/battle01.txt","leveldata/battle02.txt","leveldata/battle03.txt","leveldata/battle04.txt","leveldata/battle05.txt","leveldata/battle06.txt"};	
+	
+	private boolean p1ready,p2ready;
+	
 	private boolean inNetworkMenu;
 	private boolean isServer;
 	private boolean isClient;
 	private boolean inNetworkGame;
+	private boolean inLobby;
+	private boolean inBattle;
+	private boolean chooseBattleMapBox;
+	private int chosenBattleLevel;
 	
 	private InetAddress localIP;
 	private InetAddress remoteIP;
@@ -51,7 +59,7 @@ public class Game extends JPanel implements ActionListener{
 	
 	private NetPlayer player2;
 	private Thread thread;
-	//private DataOutputStream os;
+	
 	private PrintStream os;
 	
 	private int delay; // zum verzögern bei netzwerkspiel
@@ -107,7 +115,7 @@ public class Game extends JPanel implements ActionListener{
 	
 	// Designelemente
 	private Color backgroundColor = Color.BLACK; // Hintergrundfarbe
-	private int fps = 100;	// Bildwiedrholrate - (evtl später runtersetzen?)
+	private int fps = 80;	// Bildwiedrholrate - (evtl später runtersetzen?)
 	
 	private int windowSizeX = 800;	
 	private int windowSizeY = 560; // Angepasst auf 800x600 Bild, 40x40px Objekte, Ststusleiste abgezogen
@@ -181,7 +189,7 @@ public class Game extends JPanel implements ActionListener{
 		setBackground(backgroundColor);
 		setDoubleBuffered(true); 
 		firstStart=true;	
-		inNetworkMenu=false;
+		inLobby = inNetworkMenu=false;
 		inNetworkGame = isServer = isClient = false;
 		delay = 0;
 		
@@ -374,6 +382,39 @@ public class Game extends JPanel implements ActionListener{
 		timer.start();
 	}
 	
+	
+	public void initBattle(String path){
+						
+		// Lade Lobby
+		loadLevel(path);	
+		inBattle = true;
+				
+		// Spielablaufparameter setzen
+		inLobby = false;
+						
+		initRoom(0); // ersten Raum aufbauen
+				
+		if(isServer){
+			player.setX(50);
+			player.setY(windowSizeY/2);
+			player2.setX(windowSizeX-70);
+			player2.setY(windowSizeY/2);
+					
+		}
+		else{
+			player.setX(windowSizeX-70);
+			player.setY(windowSizeY/2);
+			player2.setX(50);
+			player2.setY(windowSizeY/2);
+		}
+						
+		playerCanGetDamage = true;
+		tolleranceTime = 0;
+						
+		// Statusleiste vorbereiten
+		// prepareStatusBar();
+	}
+	
 	public void initNetGame(Socket client){
 		// Buttons ausblenden
 		netStartServer.setVisible(false);
@@ -386,28 +427,33 @@ public class Game extends JPanel implements ActionListener{
 				
 		endBossRoom = -1; // setze auf -1, falls kein Endgegner
 		// Lade Lobby
-		loadLevel("leveldata/lobby.txt");
-				
+		loadLevel("leveldata/lobby.txt");		
+		
 		// Spielablaufparameter setzen
+		inLobby = true;
+		inBattle = false;
 		firstStart=false;
 		ingame = true;
 		inNetworkGame = true;
 		won = false;
 		inDialog = inShop = false;
+		chooseBattleMapBox = p1ready=p2ready=false;
 				
 		initRoom(0); // ersten Raum der Lobby aufbauen
 		
 		if(isServer){
 			player = new Player(50, windowSizeY/2, startLive, 0); // setze neue Spielfigur an Stelle x,y
 			player2 = new NetPlayer(windowSizeX-70, windowSizeY/2, startLive, 1, client);
+			
 		}
 		else{
 			player = new Player(windowSizeX-70, windowSizeY/2, startLive, 1); // setze neue Spielfigur an Stelle x,y
 			player2 = new NetPlayer(50, windowSizeY/2, startLive, 0, client);
 		}
 		
+		chosenBattleLevel = 0;
+		
 		try {
-			//os = new DataOutputStream(client.getOutputStream());
 			os = new PrintStream(client.getOutputStream(), true);
 			
 		} catch (IOException e) {
@@ -1300,6 +1346,8 @@ public class Game extends JPanel implements ActionListener{
 			// Prüfe ob in Shop und zeichne
 			if(inShop) paintShop(g);
 			if(inDialog) paintDialog(dialog, g);
+			if(chooseBattleMapBox) paintChooseBox(g);
+			if(inLobby && !chooseBattleMapBox) paintChooseText(g);
 		}
 		else{
 			// Nachricht (Game Over/You Win) und Rückkehr ins Menü vorbereiten 
@@ -1380,6 +1428,69 @@ public class Game extends JPanel implements ActionListener{
 				 }
 			}
 		}
+	}
+	
+	public void paintChooseBox(Graphics g){
+		int boxX = 50;
+		int boxY = 50;
+		int boxSizeX = windowSizeX-2*boxX;
+		int boxSizeY = 100;
+		g.setColor(Color.BLACK);
+		g.fillRoundRect(boxX, boxY, boxSizeX , boxSizeY, 30, 30); // Kasten für Box
+		
+		// Willkommenstext 
+		g.setColor(Color.WHITE);
+		
+		String lv ="";
+		String welcome = "Wähle Battle Level:";
+		int msgPos = boxX+boxSizeX/2-40;
+		g.drawString(welcome, msgPos, boxY+20); // Zeichne String
+		
+		
+		for(int i = 0; i<battlepath.length; i++){
+			lv = ""+(i+1);
+			
+			g.setColor(Color.blue);
+			g.drawRoundRect(boxX+30+i*(80), boxY+50,30,30, 10, 10);
+			
+			if(i == chosenBattleLevel) g.fillRoundRect(boxX+30+i*(80), boxY+50,30,30, 10, 10);
+			
+			// Levelnummern zeichnen
+			g.setColor(Color.WHITE);
+			g.drawString(lv,boxX+40+i*(80), boxY+70); 
+			
+		}
+	}
+	
+	public void paintChooseText(Graphics g){
+		String cl = "Battle Map: "+(chosenBattleLevel+1);
+		String instruct = "Press C to open Chat! Press ENTER when ready.";
+		String instruct2 = "Press SPACE to choose Battlemap.";
+		String p1r, p2r;
+		p1r=p2r="";
+		if(isServer){
+			p1r = "Player 1 (YOU):  ";
+			if(p1ready) p1r += "OK";
+			p2r = "Player 2: ";
+			if(p2ready) p2r += "OK";
+		}
+		else if(isClient){
+			p1r = "Player 1:  ";
+			if(p2ready) p1r += "OK";
+			p2r = "Player 2 (YOU): ";
+			if(p1ready) p2r += "OK";
+		}
+		
+		g.setColor(Color.WHITE);
+		
+		g.drawString(cl,100, 60); 
+		g.drawString(instruct,100, 80);
+		if(isServer) g.drawString(instruct2,100, 100);
+		
+		g.setColor(Color.blue);
+		g.drawString(p1r,100, 140); 
+		g.drawString(p2r,100, 160);
+		g.setColor(Color.WHITE);
 	}
 	
 	// Statusleiste zeichnen
@@ -1522,6 +1633,8 @@ public class Game extends JPanel implements ActionListener{
 					}
 					
 					player.move();	// bewege Spielfigur
+					
+					// Netzwerkspieleinstellungen
 					if(inNetworkGame){
 						 delay++;
 						if(delay >= 5){
@@ -1540,6 +1653,11 @@ public class Game extends JPanel implements ActionListener{
 							delay = 0;
 						}
 						player2.move(); // bewege Netzwerkspieler wenn da
+						
+						// bestimme Map und ob Gegner bereit
+						if(isClient&&inLobby) chosenBattleLevel = player2.getChosenMap();
+						if(inLobby) this.p2ready = player2.getReady();
+						if(p1ready && p2ready && !inBattle) initBattle(battlepath[chosenBattleLevel]); 
 					}
 					
 					// Bewege Gegner
@@ -1609,18 +1727,50 @@ public class Game extends JPanel implements ActionListener{
 			if(ingame && inNetworkGame){
 				String key = "R "+e.getKeyCode();
 				
-				os.println(key);
+				if(!chooseBattleMapBox)os.println(key);
 			}
-			if(ingame && inShop==false && inDialog==false) player.keyReleased(e);
+			if(ingame && !inShop && !inDialog && !chooseBattleMapBox) player.keyReleased(e);
 			
 		}
 		public void keyPressed(KeyEvent e){
 			if(ingame && inNetworkGame){
 				String key = "P "+e.getKeyCode();
 				
-				os.println(key);
+				if(!chooseBattleMapBox)os.println(key);
+				
+				if(isServer && inLobby){
+					if(e.getKeyCode()==KeyEvent.VK_SPACE){
+						if(chooseBattleMapBox){
+							os.println("LV "+chosenBattleLevel);
+							chooseBattleMapBox=false;
+						}
+						else chooseBattleMapBox=true;
+					} 
+					else if(chooseBattleMapBox && e.getKeyCode()==KeyEvent.VK_RIGHT){
+						if(chosenBattleLevel < battlepath.length-1) chosenBattleLevel++;
+					}
+					else if(chooseBattleMapBox && e.getKeyCode()==KeyEvent.VK_LEFT){
+						if(chosenBattleLevel > 0) chosenBattleLevel--;
+					}
+				}
+				
+				// Abfrage ob bereit
+				if(inLobby && !chooseBattleMapBox){
+					if(e.getKeyCode()==KeyEvent.VK_ENTER){
+						if(!p1ready){
+							p1ready=true;
+							os.println("START 1");
+						}
+						else{
+							p1ready=false;
+							os.println("START 0");
+						}
+						
+					}
+				}
+					
 			}
-			if(ingame && inShop==false && inDialog==false) player.keyPressed(e);
+			if(ingame && !inShop && !inDialog && !chooseBattleMapBox) player.keyPressed(e);
 			else if(inDialog){
 				if(e.getKeyCode()==KeyEvent.VK_SPACE || e.getKeyCode()==KeyEvent.VK_ENTER) inDialog=false;
 			}
