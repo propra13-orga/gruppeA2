@@ -23,6 +23,8 @@ public class Player{
 	private int goBackY;
 	private int dir;
 	
+	private int startX,startY;
+	
 	private int width;
     private int height;
 	private Image image;
@@ -44,7 +46,7 @@ public class Player{
 	private Item activeItem;
 	
 	private ArrayList<Missile> missiles = new ArrayList<Missile>();
-
+	
 	
 	// Konstruktor
 	public Player(int x, int y, int live, int type){
@@ -75,8 +77,8 @@ public class Player{
         this.activeItem = null;
         
         // Startkoordinate setzen
-		this.x = x;
-		this.y = y;
+		this.startX = this.x = x;
+		this.startY = this.y = y;
 		this.dir = 0;
 	}
 	
@@ -254,6 +256,26 @@ public class Player{
 		else this.live += changeLive;
 		if(this.live>12) this.live=12; // bestimme maximale Anzahl an leben
 		
+	}
+	
+	public void resetPlayer(){
+		this.x = this.startX;
+		this.y = this.startY;
+		
+		this.live = startLive;
+        this.armour = startArmour;
+        
+        // Geld auf 0 setzen
+        this.money = 0;
+        this.mana = 0;
+        
+        // Items und sonstige Werte setzen
+        this.immortal = false;
+        this.activeItem = null;
+        
+        missiles = new ArrayList<Missile>();
+    	itemList = new ArrayList<Item>();
+        
 	}
 	
 	public void setMoney(int changeMoney){

@@ -24,6 +24,7 @@ public class NetPlayer implements Runnable{
 	private int chosenMap;
 	private boolean ready;
 	private String message;
+	private boolean opponentLostTheGame;
 	
 	private String player;	// Pfad zum Bild - Spielfigur
 	private int speed = 2;	// Geschwindigkeit der Spielfigur
@@ -35,6 +36,8 @@ public class NetPlayer implements Runnable{
 	private int goBackX; // Rücksprungwerte bei Kollision
 	private int goBackY;
 	private int dir;
+	
+	private int startX, startY;
 	
 	private int width;
     private int height;
@@ -72,6 +75,7 @@ public class NetPlayer implements Runnable{
 		this.chosenMap = 0;
 		this.ready = false;
 		this.message = "";
+		this.opponentLostTheGame = false;
 		
 		// Bild laden plus Informationen
 		ImageIcon ii = new ImageIcon(this.getClass().getResource(player));
@@ -93,8 +97,8 @@ public class NetPlayer implements Runnable{
         this.activeItem = null;
         
         // Startkoordinate setzen
-		this.x = x;
-		this.y = y;
+		this.startX = this.x = x;
+		this.startY = this.y = y;
 		this.dir = 0;
 	}
 	
@@ -193,6 +197,10 @@ public class NetPlayer implements Runnable{
 	}
 	
 	// get Methoden
+	public boolean getLost(){
+		return this.opponentLostTheGame;
+	}
+	
 	public String getMessage(){
 		return this.message;
 	}
@@ -304,6 +312,29 @@ public class NetPlayer implements Runnable{
 		this.mana -= rem;
 		if(this.mana<0) this.mana = 0;
 		else if(this.mana > startMana) this.mana = startMana;
+	}
+	
+	public void resetPlayer(){
+		this.x = this.startX;
+		this.y = this.startY;
+		
+		this.opponentLostTheGame = false;
+		this.ready = false;
+		
+		this.live = startLive;
+        this.armour = startArmour;
+        
+        // Geld auf 0 setzen
+        this.money = 0;
+        this.mana = 0;
+        
+        // Items und sonstige Werte setzen
+        this.immortal = false;
+        this.activeItem = null;
+        
+        missiles = new ArrayList<Missile>();
+    	itemList = new ArrayList<Item>();
+        
 	}
 	
 	// KeyEvent Methoden - von oben weitergereicht
@@ -421,6 +452,10 @@ public class NetPlayer implements Runnable{
 				while(t.hasMoreTokens()) StrKeycode+=t.nextToken()+" ";
 				this.message = StrKeycode;
 				
+			}
+			else if(command.equals("LOST")){
+				// Anderer Spieler verloren
+				this.opponentLostTheGame = true;
 			}
 			else{
 				// Position abgleichen

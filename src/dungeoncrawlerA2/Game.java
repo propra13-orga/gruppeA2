@@ -416,7 +416,7 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// starte Netzwerkspiel in Lobby
-	public void initNetGame(Socket client){
+	public void initNetGame(Socket client, boolean firstNetGame){
 		// Buttons ausblenden
 		netStartServer.setVisible(false);
 		netConnect.setVisible(false);
@@ -445,36 +445,46 @@ public class Game extends JPanel implements ActionListener{
 				
 		initRoom(0); // ersten Raum der Lobby aufbauen
 		
-		if(isServer){
-			player = new Player(50, windowSizeY/2, startLive, 0); // setze neue Spielfigur an Stelle x,y
-			player2 = new NetPlayer(windowSizeX-70, windowSizeY/2, startLive, 1, client);
-			
-		}
-		else{
-			player = new Player(windowSizeX-70, windowSizeY/2, startLive, 1); // setze neue Spielfigur an Stelle x,y
-			player2 = new NetPlayer(50, windowSizeY/2, startLive, 0, client);
-		}
 		
 		chosenBattleLevel = 0;
 		
-		try {
-			os = new PrintStream(client.getOutputStream(), true);
+		if(firstNetGame){
+
+			if(isServer){
+				player = new Player(50, windowSizeY/2, startLive, 0); // setze neue Spielfigur an Stelle x,y
+				player2 = new NetPlayer(windowSizeX-70, windowSizeY/2, startLive, 1, client);
+				
+			}
+			else{
+				player = new Player(windowSizeX-70, windowSizeY/2, startLive, 1); // setze neue Spielfigur an Stelle x,y
+				player2 = new NetPlayer(50, windowSizeY/2, startLive, 0, client);
+			}
 			
-		} catch (IOException e) {
-			
-			e.printStackTrace();
+			try {
+				os = new PrintStream(client.getOutputStream(), true);
+				
+			} catch (IOException e) {
+				
+				e.printStackTrace();
+			}
+			thread = new Thread(player2);
+			thread.start();
+			// Statusleiste vorbereiten
+			prepareStatusBar();
+					
+			timer.start();
 		}	
+		else{
+			player.resetPlayer();
+			player2.resetPlayer();
+		}
 		
-		thread = new Thread(player2);
-		thread.start();
+		
 				
 		playerCanGetDamage = true;
 		tolleranceTime = 0;
 				
-		// Statusleiste vorbereiten
-		prepareStatusBar();
-				
-		timer.start();
+		
 	}
 	
 	// Statusleiste vorbereiten
@@ -515,7 +525,7 @@ public class Game extends JPanel implements ActionListener{
 			
 			System.out.println("Verbindung hergestellt!");
 			
-			initNetGame(client); // Netzwerkspiel starten
+			initNetGame(client,true); // Netzwerkspiel starten
 		} 
 		catch (IOException e) {
 			
@@ -535,7 +545,7 @@ public class Game extends JPanel implements ActionListener{
 				System.out.println("Verbindung erfolgreich!");
 				
 				isClient = true; // Definiere Client
-				initNetGame(client); // Netzwerkspiel starten
+				initNetGame(client, true); // Netzwerkspiel starten
 			}
 			
 		} 
@@ -1647,10 +1657,17 @@ public class Game extends JPanel implements ActionListener{
 				}
 				
 				if(player.getLive() <= 0){ // prüfe ob Spieler noch im Spiel oder Lebenspunkte 0
-					// Spieler stirbt, Spiel beenden
-					ingame = false;
-					leftTry--;
-					timer.stop();
+					if(inNetworkGame){
+						// Zurück zur Lobby
+						os.println("LOST"); // Sende Lost befehl
+						this.initNetGame(client,false);
+					}
+					else{
+						// Spieler stirbt, Spiel beenden
+						ingame = false;
+						leftTry--;
+						timer.stop();
+					}
 				}
 				else{
 					// Prüfe ob Spielfigur Schaden erleiden kann
@@ -1717,6 +1734,8 @@ public class Game extends JPanel implements ActionListener{
 								 player2.resetMessage();
 							 }
 						}
+						// prüfe ob Gegner verloren
+						if(player2.getLost()) this.initNetGame(client,false);
 					}
 					
 					// Bewege Gegner
