@@ -23,6 +23,7 @@ public class NetPlayer implements Runnable{
 	private Socket socket;
 	private int chosenMap;
 	private boolean ready;
+	private String message;
 	
 	private String player;	// Pfad zum Bild - Spielfigur
 	private int speed = 2;	// Geschwindigkeit der Spielfigur
@@ -70,6 +71,7 @@ public class NetPlayer implements Runnable{
 		this.socket = socket;
 		this.chosenMap = 0;
 		this.ready = false;
+		this.message = "";
 		
 		// Bild laden plus Informationen
 		ImageIcon ii = new ImageIcon(this.getClass().getResource(player));
@@ -191,6 +193,10 @@ public class NetPlayer implements Runnable{
 	}
 	
 	// get Methoden
+	public String getMessage(){
+		return this.message;
+	}
+	
 	public int getChosenMap(){
 		return this.chosenMap;
 	}
@@ -253,6 +259,10 @@ public class NetPlayer implements Runnable{
 	}
 	
 	// set Methoden
+	public void resetMessage(){
+		this.message = "";
+	}
+	
 	public void setImmortal(boolean mort){
 		this.immortal = mort;
 	}
@@ -403,6 +413,13 @@ public class NetPlayer implements Runnable{
 				keycode = StrKeycode.charAt(0)-48;
 				if(keycode==1) this.ready=true;
 				else this.ready = false;
+				
+			}
+			else if(command.equals("MSG")){
+				// Chat
+				StrKeycode = "";
+				while(t.hasMoreTokens()) StrKeycode+=t.nextToken()+" ";
+				this.message = StrKeycode;
 				
 			}
 			else{

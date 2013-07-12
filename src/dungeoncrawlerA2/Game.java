@@ -12,14 +12,11 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.Rectangle;
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.ConnectException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -47,11 +44,12 @@ public class Game extends JPanel implements ActionListener{
 	private boolean inNetworkGame;
 	private boolean inLobby;
 	private boolean inBattle;
+	private boolean inChat;
 	private boolean chooseBattleMapBox;
 	private int chosenBattleLevel;
+	private String[] chat={"","","","",""};
+	private String cmsg;
 	
-	private InetAddress localIP;
-	private InetAddress remoteIP;
 	private int port = 6789;
 	
 	private ServerSocket serverSocket;
@@ -191,6 +189,7 @@ public class Game extends JPanel implements ActionListener{
 		firstStart=true;	
 		inLobby = inNetworkMenu=false;
 		inNetworkGame = isServer = isClient = false;
+		chooseBattleMapBox = inChat = p1ready=p2ready=false;
 		delay = 0;
 		
 		timer = new Timer(1000/fps, this); // Timer nach fps einstellen
@@ -382,15 +381,16 @@ public class Game extends JPanel implements ActionListener{
 		timer.start();
 	}
 	
-	
+	// starte Netzwerkspiel -> Battlemap
 	public void initBattle(String path){
 						
 		// Lade Lobby
 		loadLevel(path);	
-		inBattle = true;
+		
 				
 		// Spielablaufparameter setzen
-		inLobby = false;
+		inLobby = inChat = false;
+		inBattle = true;
 						
 		initRoom(0); // ersten Raum aufbauen
 				
@@ -415,6 +415,7 @@ public class Game extends JPanel implements ActionListener{
 		// prepareStatusBar();
 	}
 	
+	// starte Netzwerkspiel in Lobby
 	public void initNetGame(Socket client){
 		// Buttons ausblenden
 		netStartServer.setVisible(false);
@@ -424,6 +425,9 @@ public class Game extends JPanel implements ActionListener{
 		ip1.setVisible(false);
 		ip2.setVisible(false);
 		ip3.setVisible(false);
+		
+		// Chat leeren
+		for(int i=0;i<chat.length;i++) chat[i]="";
 				
 		endBossRoom = -1; // setze auf -1, falls kein Endgegner
 		// Lade Lobby
@@ -431,7 +435,7 @@ public class Game extends JPanel implements ActionListener{
 		
 		// Spielablaufparameter setzen
 		inLobby = true;
-		inBattle = false;
+		inBattle = inChat = false;
 		firstStart=false;
 		ingame = true;
 		inNetworkGame = true;
@@ -1346,8 +1350,13 @@ public class Game extends JPanel implements ActionListener{
 			// Prüfe ob in Shop und zeichne
 			if(inShop) paintShop(g);
 			if(inDialog) paintDialog(dialog, g);
-			if(chooseBattleMapBox) paintChooseBox(g);
-			if(inLobby && !chooseBattleMapBox) paintChooseText(g);
+			if(inNetworkGame){
+				if(chooseBattleMapBox) paintChooseBox(g);
+				if(inLobby && !chooseBattleMapBox) paintChooseText(g);
+				if(inLobby && inChat) paintChatBox(g);
+			}
+			
+			
 		}
 		else{
 			// Nachricht (Game Over/You Win) und Rückkehr ins Menü vorbereiten 
@@ -1366,14 +1375,45 @@ public class Game extends JPanel implements ActionListener{
 		Toolkit.getDefaultToolkit().sync();
 		g.dispose();
 	}
+
+	// Zeichne Texteingabe für Chat
+	public void paintChatBox(Graphics g){
+		String cutcmsg;
+		g.setColor(Color.BLACK);
+		
+		// Zeichne Box
+		g.fillRoundRect(100, windowSizeY/2, windowSizeX-200, 50, 10, 10);
+		
+		g.setColor(Color.WHITE);
+		
+		if(cmsg.length()>0) cutcmsg=cmsg.substring(1);
+		else cutcmsg = "";
+		// zeichne Text
+		g.drawString(cutcmsg,110, windowSizeY/2+10);
+	}
 	
+	public void chatAdd(String m, boolean ownMessage){
+		String mPlusInfo="";
+		if(isServer){
+			if(ownMessage) mPlusInfo = "Player 1 (YOU): ";
+			else mPlusInfo = "Player 2: ";
+		}
+		else if(isClient){
+			if(ownMessage) mPlusInfo = "Player 2 (YOU): ";
+			else mPlusInfo = "Player 1: ";
+		}
+		
+		mPlusInfo +=m;
+		for(int i=0;i<chat.length-1;i++){
+			chat[i]=chat[i+1];
+		}
+		chat[chat.length-1]=mPlusInfo;
+		
+	}
+	
+	// Zeichne Dialog
 	public void paintDialog(String dialog, Graphics g){
 		// Nachricht analysieren
-		Font dia = new Font("Arial", Font.BOLD, 15);
-		FontMetrics metr = this.getFontMetrics(dia);
-		
-		int length = metr.stringWidth(dialog);
-		
 		int dialogY = windowSizeY/2;
 		int dialogSizeY = 100;
 		int dialogX =  windowSizeX/2-250;
@@ -1388,6 +1428,7 @@ public class Game extends JPanel implements ActionListener{
 		
 	}
 	
+	// Zeichne Shop
 	public void paintShop(Graphics g){
 		int shopSizeX = windowSizeX-2*shopX;
 		int shopSizeY = windowSizeY-2*shopY;
@@ -1404,7 +1445,6 @@ public class Game extends JPanel implements ActionListener{
 		int msgPos = shopX+shopSizeX/2-metr.stringWidth(welcome)/2;
 		g.drawString(welcome, msgPos, shopY+20); // Zeichne String
 		
-		Font price = new Font("Arial", Font.ITALIC, 10);
 		String itemPrice;
 		// Shopelemente erstellen und zeichnen
 		shopItems.clear();
@@ -1430,6 +1470,7 @@ public class Game extends JPanel implements ActionListener{
 		}
 	}
 	
+	// Zeichne BattleMap Auswahlbox für Player1
 	public void paintChooseBox(Graphics g){
 		int boxX = 50;
 		int boxY = 50;
@@ -1461,7 +1502,8 @@ public class Game extends JPanel implements ActionListener{
 			
 		}
 	}
-	
+
+	// Zeichne Text und Chat
 	public void paintChooseText(Graphics g){
 		String cl = "Battle Map: "+(chosenBattleLevel+1);
 		String instruct = "Press C to open Chat! Press ENTER when ready.";
@@ -1483,13 +1525,21 @@ public class Game extends JPanel implements ActionListener{
 		
 		g.setColor(Color.WHITE);
 		
+		// Zeichne Infos
 		g.drawString(cl,100, 60); 
 		g.drawString(instruct,100, 80);
 		if(isServer) g.drawString(instruct2,100, 100);
 		
+		// Zeichne Bereitschaft der Spieler
 		g.setColor(Color.blue);
 		g.drawString(p1r,100, 140); 
 		g.drawString(p2r,100, 160);
+		g.setColor(Color.BLACK);
+		
+		// Zeichne Chat
+		for(int i=0;i<chat.length;i++){
+			g.drawString(chat[i],120, windowSizeY-(chat.length-i)*20-40);
+		}
 		g.setColor(Color.WHITE);
 	}
 	
@@ -1564,12 +1614,14 @@ public class Game extends JPanel implements ActionListener{
 		
 	}
 	
+	// Shop betreten
 	public void enterShop(){
 		chosenItem = 0;
 		inShop = true;
 		player.hasEnteredShopOrDialog();
 	}
 	
+	// Dialog starten
 	public void enterDialog(String dialog){
 		inDialog = true;
 		player.hasEnteredShopOrDialog();
@@ -1658,6 +1710,13 @@ public class Game extends JPanel implements ActionListener{
 						if(isClient&&inLobby) chosenBattleLevel = player2.getChosenMap();
 						if(inLobby) this.p2ready = player2.getReady();
 						if(p1ready && p2ready && !inBattle) initBattle(battlepath[chosenBattleLevel]); 
+						if(inLobby){
+							// Chatnachricht holen
+							 if(!player2.getMessage().equals("")){
+								 chatAdd(player2.getMessage(),false);
+								 player2.resetMessage();
+							 }
+						}
 					}
 					
 					// Bewege Gegner
@@ -1723,22 +1782,31 @@ public class Game extends JPanel implements ActionListener{
 	// Steuerung - Weitergabe der Keycodes nach Unten
 	private class TAdapter extends KeyAdapter{
 		
+		public void keyTyped(KeyEvent e){
+			if(inChat){
+				
+					cmsg+=e.getKeyChar();
+					
+			}
+		}
+		
 		public void keyReleased(KeyEvent e){
 			if(ingame && inNetworkGame){
 				String key = "R "+e.getKeyCode();
 				
-				if(!chooseBattleMapBox)os.println(key);
+				os.println(key);
 			}
-			if(ingame && !inShop && !inDialog && !chooseBattleMapBox) player.keyReleased(e);
+			if(ingame && !inShop && !inDialog) player.keyReleased(e);
 			
 		}
 		public void keyPressed(KeyEvent e){
 			if(ingame && inNetworkGame){
 				String key = "P "+e.getKeyCode();
 				
-				if(!chooseBattleMapBox)os.println(key);
+				if(!chooseBattleMapBox && !inChat)os.println(key);
 				
-				if(isServer && inLobby){
+				// Server -> map wählen
+				if(isServer && inLobby && !inChat){
 					if(e.getKeyCode()==KeyEvent.VK_SPACE){
 						if(chooseBattleMapBox){
 							os.println("LV "+chosenBattleLevel);
@@ -1756,21 +1824,45 @@ public class Game extends JPanel implements ActionListener{
 				
 				// Abfrage ob bereit
 				if(inLobby && !chooseBattleMapBox){
-					if(e.getKeyCode()==KeyEvent.VK_ENTER){
-						if(!p1ready){
-							p1ready=true;
-							os.println("START 1");
+					if(!inChat){
+						if(e.getKeyCode()==KeyEvent.VK_ENTER){
+							if(!p1ready){
+								p1ready=true;
+								os.println("START 1");
+							}
+							else{
+								p1ready=false;
+								os.println("START 0");
+							}
+							
 						}
-						else{
-							p1ready=false;
-							os.println("START 0");
+						// Chat betreten
+						if(e.getKeyCode()==KeyEvent.VK_C){
+							inChat=true;
+							cmsg = ""; 
+						}
+							
+					}
+					else{
+						
+						if(e.getKeyCode()==KeyEvent.VK_BACK_SPACE){
+							cmsg = "";
+						}
+						else if(e.getKeyCode()==KeyEvent.VK_ENTER){
+							String cutcmsg;
+							inChat = false;
+							if(cmsg.length()>0) cutcmsg=cmsg.substring(1);
+							else cutcmsg = "";
+							os.println("MSG "+cutcmsg);
+							chatAdd(cutcmsg,true);
 						}
 						
 					}
+					
 				}
 					
 			}
-			if(ingame && !inShop && !inDialog && !chooseBattleMapBox) player.keyPressed(e);
+			if(ingame && !inShop && !inDialog && !chooseBattleMapBox && !inChat) player.keyPressed(e);
 			else if(inDialog){
 				if(e.getKeyCode()==KeyEvent.VK_SPACE || e.getKeyCode()==KeyEvent.VK_ENTER) inDialog=false;
 			}
