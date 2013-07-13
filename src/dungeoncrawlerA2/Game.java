@@ -157,7 +157,7 @@ public class Game extends JPanel implements ActionListener{
 	private String[] interactdata; // für Shops und besondere Interaktionen
 	private int[][] exitdata;
 	private String[] doordata;
-	private String dialog = "Hallo, ich kann dir was erzählen.";
+	private String[] dialog;
 	
 	private String intro;
 	private String levelName;
@@ -577,6 +577,7 @@ public class Game extends JPanel implements ActionListener{
 	public void loadLevel(String path){
 		boolean isReadingLevel = false;
 		boolean isReadingIntro = false;
+		boolean isReadingDialog = false;
 		int rooms = 0;
 		String line = null;
 		String request = null;
@@ -686,6 +687,8 @@ public class Game extends JPanel implements ActionListener{
 					itemdata = new String[rooms];
 					interactdata = new String[rooms];
 					doordata = new String[rooms];
+					dialog = new String[rooms];
+					for(int i=0;i<dialog.length;i++) dialog[i] = "";
 				}
 				
 				// Spezielle leveldaten einlesen (pro Raum)
@@ -736,6 +739,15 @@ public class Game extends JPanel implements ActionListener{
 					else doordata[r]="";
 					while(tokens.hasMoreTokens()) doordata[r]+=tokens.nextToken()+" "; // hole Rest
 					
+				}
+				
+				// Dialog einlesen
+				if(isReadingDialog){
+					if(request.equals("#DIAEND")) isReadingDialog = false;
+					else dialog[r] += line+"\n";
+				}
+				if(request.equals("#DIALOG")){
+					isReadingDialog = true;
 				}
 				
 				// Ausgänge einlesen
@@ -1067,7 +1079,7 @@ public class Game extends JPanel implements ActionListener{
 					}
 					else if(n.hasDialog()){
 						// NPC+Dialog
-						enterDialog(dialog);
+						enterDialog(dialog[room]);
 					}
 				}
 			}
@@ -1414,7 +1426,7 @@ public class Game extends JPanel implements ActionListener{
 		
 		damage = multiply*stdDamage;
 		
-		System.out.println(weaponElement + " trifft " + armourElement + " Schaden: " + damage);
+		System.out.println(weaponElement + " trifft " + armourElement + "\nSchaden: " + damage);
 		
 		damage = -1*damage;
 		return damage;
@@ -1472,7 +1484,7 @@ public class Game extends JPanel implements ActionListener{
 			
 			// Prüfe ob in Shop und zeichne
 			if(inShop) paintShop(g);
-			if(inDialog) paintDialog(dialog, g);
+			if(inDialog) paintDialog(dialog[room], g);
 			if(inNetworkGame){
 				if(chooseBattleMapBox) paintChooseBox(g);
 				if(inLobby && !chooseBattleMapBox) paintChooseText(g);
@@ -1539,15 +1551,25 @@ public class Game extends JPanel implements ActionListener{
 	public void paintDialog(String dialog, Graphics g){
 		// Nachricht analysieren
 		int dialogY = windowSizeY/2;
-		int dialogSizeY = 100;
-		int dialogX =  windowSizeX/2-250;
-		int dialogSizeX = 500;
+		int dialogSizeY = 250;
+		int dialogX =  windowSizeX/2-300;
+		int dialogSizeX = 600;
+		String help = "";
+		int countLines = 0;
 		
 		// Zeichnen
 		g.setColor(Color.BLACK);
 		g.fillRoundRect(dialogX, dialogY, dialogSizeX , dialogSizeY, 30, 30); // Kasten für Dialog
 		g.setColor(Color.WHITE);
-		g.drawString(dialog, dialogX+20, dialogY+20); // Zeichne String
+		
+		for(int i = 0; i<dialog.length();i++){
+			help+=dialog.charAt(i);
+			if(dialog.charAt(i)=='\n'){
+				g.drawString(help, dialogX+20, dialogY+20+(countLines*20)); // Zeichne String
+				help = "";
+				countLines++;
+			}
+		}
 		
 		
 	}

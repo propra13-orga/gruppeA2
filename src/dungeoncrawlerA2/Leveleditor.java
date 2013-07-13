@@ -40,7 +40,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 	private String[] interactdata; // für Shops und besondere Interaktionen
 	private int[][] exitdata;
 	private String[] doordata;
-	private String dialog = "Hallo, ich kann dir was erzählen.";
+	private String[] dialog;
 		
 	private String intro;
 	private String levelName;
@@ -419,6 +419,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 			itemdata[0] = "";
 			interactdata[0] = "";
 			doordata[0] = "";
+			dialog[0] = "";
 			
 			// Level geladen - am Ende
 			levelLoaded = true;
@@ -427,6 +428,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 			// bestehendes Level laden - aus Game übernommen + erweitert
 			boolean isReadingLevel = false;
 			boolean isReadingIntro = false;
+			boolean isReadingDialog = false;
 			String line = null;
 			String request = null;
 			String data1, data2;
@@ -541,6 +543,8 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 						itemdata = new String[rooms];
 						interactdata = new String[rooms];
 						doordata = new String[rooms];
+						dialog = new String[rooms];
+						for(int i=0;i<dialog.length;i++) dialog[i] = "";
 					}
 					
 					// Spezielle leveldaten einlesen (pro Raum)
@@ -597,6 +601,15 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 						else doordata[r]="";
 						while(tokens.hasMoreTokens()) doordata[r]+=tokens.nextToken()+" "; // hole Rest
 						
+					}
+					
+					// Dialog einlesen
+					if(isReadingDialog){
+						if(request.equals("#DIAEND")) isReadingDialog = false;
+						else dialog[r] += line+"\n";
+					}
+					if(request.equals("#DIALOG")){
+						isReadingDialog = true;
 					}
 					
 					// Ausgänge einlesen
@@ -716,6 +729,10 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 				
 				// #ITEM
 				writer.write("#ITEM "+itemdata[i] +"\n");
+				
+				// #DIALOG
+				writer.write("#DIALOG\n"+dialog[i]+"\n#DIAEND\n");
+				
 				writer.write("\n");
 			}
 			
