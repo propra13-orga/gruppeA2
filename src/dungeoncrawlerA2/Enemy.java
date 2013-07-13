@@ -145,6 +145,10 @@ public class Enemy extends GameElement{
 		return damage;
 	}
 	
+	public String getElement(){
+		return this.element;
+	}
+	
 	public int getType(){
 		 return this.type;
 	 }

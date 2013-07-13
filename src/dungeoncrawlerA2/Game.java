@@ -1127,7 +1127,10 @@ public class Game extends JPanel implements ActionListener{
 				if(!ms.getFriendly() && ms.isVisible()){
 					if(r_missile.intersects(r_player)){
 						// Missile trifft Player
-						player.setLive(-ms.getDamage());
+						// player.setLive(-ms.getDamage());
+						player.setLive(calculateDamage(ms.getElement(),player.getArmourType(),ms.getDamage()));
+						player.addArmour(calculateArmour(ms.getElement(),player.getArmourType()));
+						
 						ms.setVisible(false);
 						playerCanGetDamage = false;
 						tolleranceTime = tollerance; // Tolleranzwert
@@ -1159,7 +1162,10 @@ public class Game extends JPanel implements ActionListener{
 				finalEnemy.setDirectionOfMovement(2);
 				// Leben reduzieren
 				if(playerCanGetDamage && player.isImmortal()==false){
-					player.setLive(-finalEnemy.getDamage()); // Hier Schadensfunktion aufrufen
+					// player.setLive(-finalEnemy.getDamage()); // Hier Schadensfunktion aufrufen
+					player.setLive(calculateDamage(finalEnemy.getElement(), player.getArmourType(), finalEnemy.getDamage()));
+					player.addArmour(calculateArmour(finalEnemy.getElement(), player.getArmourType()));
+					
 					playerCanGetDamage = false;
 					tolleranceTime = tollerance; // Tolleranzwert
 				}
@@ -1172,7 +1178,9 @@ public class Game extends JPanel implements ActionListener{
 				if(ms.getFriendly() && ms.isVisible()){
 					if(r_missile.intersects(r_finalEnemy)){
 						// Missile trifft finalEnemy
-						finalEnemy.setLive(-ms.getDamage());
+						
+						// finalEnemy.setLive(-ms.getDamage());
+						finalEnemy.setLive(calculateDamage(ms.getElement(),finalEnemy.getElement(),ms.getDamage()));
 						ms.setVisible(false);
 					}
 				}
@@ -1182,7 +1190,10 @@ public class Game extends JPanel implements ActionListener{
 				r_missile = ms.getBounds();
 				if(r_missile.intersects(r_player)&&ms.isVisible()){
 					// Missile trifft Player
-					player.setLive(-ms.getDamage());
+					// player.setLive(-ms.getDamage());
+					player.setLive(calculateDamage(ms.getElement(), player.getArmourType(), ms.getDamage()));
+					player.addArmour(calculateArmour(ms.getElement(), player.getArmourType()));
+					
 					ms.setVisible(false);
 					playerCanGetDamage = false;
 					tolleranceTime = tollerance; // Tolleranzwert
@@ -1234,7 +1245,10 @@ public class Game extends JPanel implements ActionListener{
 				if(r_player.intersects(r_enemy)){
 					// Leben reduzieren
 					if(playerCanGetDamage && player.isImmortal()==false){
-						player.setLive(-e.getDamage()); // Hier Schadensfunktion aufrufen
+						// player.setLive(-e.getDamage()); // Hier Schadensfunktion aufrufen
+						player.setLive(calculateDamage(e.getElement(),player.getArmourType(),e.getDamage()));
+						player.addArmour(calculateArmour(e.getElement(),player.getArmourType()));
+						
 						playerCanGetDamage = false;
 						tolleranceTime = tollerance; // Tolleranzwert
 					}
@@ -1251,7 +1265,8 @@ public class Game extends JPanel implements ActionListener{
 					r_missile = ms.getBounds();
 					if(r_enemy.intersects(r_missile)){
 						ms.setVisible(false);
-						e.setLive(-ms.getDamage());
+						//e.setLive(-ms.getDamage());
+						e.setLive(calculateDamage(ms.getElement(),e.getElement(),ms.getDamage()));
 					}
 				}
 			}
@@ -1373,6 +1388,70 @@ public class Game extends JPanel implements ActionListener{
 		
 	}
 	
+	// individuellen Schaden berechnen
+	public int calculateDamage(String weaponElement, String armourElement, int stdDamage){
+		// Generell plasma schlägt feuer, feuer schlägt eis, eis schlägt plasma, ohne Rüstung sollte man vorsichtig sein
+		
+		int damage;
+		int multiply = 1;
+		
+		if(armourElement.equals("none")) multiply = 3; // 3facher Schaden ohne Rüstung
+		else if(!weaponElement.equals(armourElement)){
+			// Wenn Rüstung = Waffe --> normaler Schaden
+			if(weaponElement.equals("plasma")){
+				if(armourElement.equals("ice")) multiply = 0;
+				else if(armourElement.equals("fire")) multiply = 2;
+			}
+			else if(weaponElement.equals("ice")){
+				if(armourElement.equals("plasma")) multiply = 2;
+				else if(armourElement.equals("fire")) multiply = 0;
+			}
+			else if(weaponElement.equals("fire")){
+				if(armourElement.equals("ice")) multiply = 2;
+				else if(armourElement.equals("plasma")) multiply = 0;
+			}
+		}
+		
+		damage = multiply*stdDamage;
+		
+		System.out.println(weaponElement + " trifft " + armourElement + " Schaden: " + damage);
+		
+		damage = -1*damage;
+		return damage;
+	}
+	
+	// berechne ob Rüstung reduziert wird 
+	public int calculateArmour(String weaponElement, String armourElement){
+		int armourLoss = 0;
+		
+		// -> stärkere Waffe zieht schwacher Rüstung 3 ab
+		// --> gleiche Waffe zieht gleicher Rüstung 2 ab
+		// ---> schwächere Waffe zieht stärkererRüstung 1 ab
+		
+		if(!armourElement.equals("none")){
+			
+			if(armourElement.equals("fire")){
+				if(weaponElement.equals("plasma")) armourLoss = 3;
+				else if(weaponElement.equals("fire"))  armourLoss = 2;
+				else if(weaponElement.equals("ice"))  armourLoss = 1;
+			}
+			else if(armourElement.equals("ice")){
+				if(weaponElement.equals("plasma"))  armourLoss = 1;
+				else if(weaponElement.equals("fire")) armourLoss = 3;
+				else if(weaponElement.equals("ice")) armourLoss = 2;
+			}
+			else if(armourElement.equals("plasma")){
+				if(weaponElement.equals("plasma")) armourLoss = 2;
+				else if(weaponElement.equals("fire"))  armourLoss = 1;
+				else if(weaponElement.equals("ice"))  armourLoss = 3;
+			}
+			
+		}
+		
+		armourLoss = -1*armourLoss;
+		return armourLoss;
+	}
+	
 	// Paint Methode - zeichnet Bildschirm
 	public void paint(Graphics g){
 		super.paint(g);
@@ -1436,6 +1515,7 @@ public class Game extends JPanel implements ActionListener{
 		g.drawString(cutcmsg,110, windowSizeY/2+10);
 	}
 	
+	// Chat - füge Zeile hinzu
 	public void chatAdd(String m, boolean ownMessage){
 		String mPlusInfo="";
 		if(isServer){

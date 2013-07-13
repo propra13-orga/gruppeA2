@@ -275,6 +275,12 @@ public class Player{
 		
 	}
 	
+	public void addArmour(int changeArmour){
+		this.armour += changeArmour;
+		if (this.armour<0) this.armour = 0;
+		if(this.armour == 0) this.armourType="none";
+	}
+	
 	public void setArmour(int amount, String type){
 		this.armourType = type;
 		this.armour = amount;

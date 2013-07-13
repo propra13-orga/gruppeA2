@@ -55,21 +55,21 @@ public class Item extends GameElement{
 			// Armour - plasma
 			path = "images/armour_plasma_01.png";
 			ItemType = "armPlasma";
-			amount=3;
+			amount=6;
 			ItemHasMissiles = false;
 		}
 		else if(type == 6){
 			// Armour - fire
 			path = "images/armour_fire_01.png";
 			ItemType = "armFire";
-			amount=3;
+			amount=6;
 			ItemHasMissiles = false;
 		}
 		else if(type == 7){
 			// Armour - ice
 			path = "images/armour_ice_01.png";
 			ItemType = "armIce";
-			amount=3;
+			amount=6;
 			ItemHasMissiles = false;
 		}
 		else if(type == 11){
