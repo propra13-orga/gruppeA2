@@ -1,7 +1,7 @@
 #NR 01
 #TITLE Level 01
 #ROOMS 07
-#FINAL 
+#FINAL F1 06 10 06
 #START 150 450 06
 #INTRO
 Das ist ein Beispielintro, dass vor dem Level ausgestrahlt werden könnte.

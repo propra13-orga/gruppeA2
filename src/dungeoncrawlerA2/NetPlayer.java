@@ -58,6 +58,7 @@ public class NetPlayer implements Runnable{
 	
 	private ArrayList<Item> itemList = new ArrayList<Item>();
 	private Item activeItem;
+	private int activeItemNumber;
 	
 	private ArrayList<Missile> missiles = new ArrayList<Missile>();
 
@@ -95,6 +96,7 @@ public class NetPlayer implements Runnable{
         // Items und sonstige Werte setzen
         this.immortal = false;
         this.activeItem = null;
+        this.activeItemNumber = 0;
         
         // Startkoordinate setzen
 		this.startX = this.x = x;
@@ -178,6 +180,18 @@ public class NetPlayer implements Runnable{
 	
 	public Item getActiveItem(){
 		return this.activeItem;
+	}
+	
+	public void switchActiveItem(){
+		Item it;
+		
+		if(this.activeItem!=null){
+			this.activeItemNumber++;
+			if(this.activeItemNumber>=itemList.size()) this.activeItemNumber = 0;
+			
+			it=itemList.get(this.activeItemNumber);
+			setActiveItem(it);
+		}
 	}
 	
 	public void addItem(Item item){
@@ -362,6 +376,9 @@ public class NetPlayer implements Runnable{
 		}
 		if(key == KeyEvent.VK_CONTROL){
 			useMagic();
+		}
+		if(key == KeyEvent.VK_SHIFT){
+			switchActiveItem();
 		}
 	}
 	

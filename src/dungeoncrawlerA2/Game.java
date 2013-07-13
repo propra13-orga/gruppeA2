@@ -1564,7 +1564,7 @@ public class Game extends JPanel implements ActionListener{
 			g.drawImage(statusBarLiveImage, statusBarX+i*(statusBarLiveImageWidth+statusBarSpace), statusBarY, this);
 		}
 		
-		// Lebenspunkte ermitteln + Darstellen
+		// Rüstung ermitteln + Darstellen
 		int a = player.getArmour();
 		for(int i = 0; i<a; i++){
 			g.drawImage(statusBarArmourImage, statusBarX+i*(statusBarLiveImageWidth+statusBarSpace), statusBarY+statusBarLiveImage.getHeight(null), this);

@@ -51,6 +51,20 @@ public class Item extends GameElement{
 			amount=100; // Hier für Munition
 			ItemHasMissiles = true;
 		}
+		else if(type == 12){
+			// Icegun
+			path = "images/w_icegun_01.png";
+			ItemType = "icegun";
+			amount=100; // Hier für Munition
+			ItemHasMissiles = true;
+		}
+		else if(type == 13){
+			// Firegun
+			path = "images/w_firegun_01.png";
+			ItemType = "firegun";
+			amount=100; // Hier für Munition
+			ItemHasMissiles = true;
+		}
 		
 		
 		visible = true;

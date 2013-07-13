@@ -44,6 +44,7 @@ public class Player{
 	
 	private ArrayList<Item> itemList = new ArrayList<Item>();
 	private Item activeItem;
+	private int activeItemNumber;
 	
 	private ArrayList<Missile> missiles = new ArrayList<Missile>();
 	
@@ -75,6 +76,7 @@ public class Player{
         // Items und sonstige Werte setzen
         this.immortal = false;
         this.activeItem = null;
+        this.activeItemNumber = 0;
         
         // Startkoordinate setzen
 		this.startX = this.x = x;
@@ -157,6 +159,18 @@ public class Player{
 		this.activeItem = item;
 	}
 	
+	public void switchActiveItem(){
+		Item it;
+		
+		if(this.activeItem!=null){
+			this.activeItemNumber++;
+			if(this.activeItemNumber>=itemList.size()) this.activeItemNumber = 0;
+			
+			it=itemList.get(this.activeItemNumber);
+			setActiveItem(it);
+		}
+	}
+	
 	public Item getActiveItem(){
 		return this.activeItem;
 	}
@@ -167,7 +181,7 @@ public class Player{
 		
 		if(activeItem==null) this.setActiveItem(item);
 		for(int i = 0; i<itemList.size(); i++){
-			it = itemList.get(i);
+			it = (Item)itemList.get(i);
 			// prüfe ob Item schon vorhanden --> keine Doppelbelegung, nur Munition aufladen
 			if(it.getItemType().equals(item.getItemType())){
 				hasItem = true;
@@ -322,6 +336,10 @@ public class Player{
 		if(key == KeyEvent.VK_CONTROL){
 			useMagic();
 		}
+		if(key == KeyEvent.VK_SHIFT){
+			switchActiveItem();
+		}
+		
 	}
 	
 	// Key losgelassen

@@ -18,6 +18,8 @@ public class Missile extends GameElement{
 	 
 	private boolean visible;
 	
+	private String element;
+	
 	private String path; // Bilddateipfad
 	 
 	// Konstruktor
@@ -29,11 +31,25 @@ public class Missile extends GameElement{
 			path =  "images/m_plasma_01.png";
 			speed = 4;
 			damage = 1;
+			element = "plasma";
 		}
-		if(type.equals("FE3")){
+		else if(type.equals("icegun")){
+			path =  "images/m_ice_01.png";
+			speed = 4;
+			damage = 1;
+			element = "ice";
+		}
+		else if(type.equals("firegun")){
+			path =  "images/m_fire_01.png";
+			speed = 4;
+			damage = 1;
+			element = "fire";
+		}
+		else if(type.equals("FE3")){
 			path =  "images/m_plasma_01.png";
 			speed = 5;
 			damage = 1;
+			element = "plasma";
 		}
 		
 		this.friendly=friendly;
@@ -72,6 +88,10 @@ public class Missile extends GameElement{
 	
 	public boolean isVisible(){
 		return visible;
+	}
+	
+	public String getElement(){
+		return this.element;
 	}
 	
 	public int getDamage(){
