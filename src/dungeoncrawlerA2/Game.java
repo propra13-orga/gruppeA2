@@ -1239,7 +1239,7 @@ public class Game extends JPanel implements ActionListener{
 					r_missile = ms.getBounds();
 					if(r_enemy.intersects(r_missile)){
 						ms.setVisible(false);
-						e.setVisible(false); // Hier später Schaden verteilen
+						e.setLive(-ms.getDamage());
 					}
 				}
 			}
@@ -1741,6 +1741,7 @@ public class Game extends JPanel implements ActionListener{
 					// Bewege Gegner
 					for(int j=0;j<enemys.size(); j++){
 						Enemy en = (Enemy)enemys.get(j);
+						if(en.getLive()<=0) en.setVisible(false);
 						if(en.isVisible() == false) enemys.remove(j); // entfernen falls weg
 						en.move();
 					}

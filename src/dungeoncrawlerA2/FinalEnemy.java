@@ -34,6 +34,7 @@ public class FinalEnemy extends GameElement{
 	private int damage; // Schadenspunkte
 	private int speed; // Geschwindigkeit
 	private int live;
+	private String element;
 	
 	// Konstruktor
 	public FinalEnemy(int x, int y, int type) {
@@ -48,7 +49,8 @@ public class FinalEnemy extends GameElement{
 			damage = 2; 
 			dir = 4;
 			speed = 1;
-			live = 15;
+			live = 20;
+			element = "plasma";
 		} 
 		else if(type==2){
 			// Zweiter Endgegner
@@ -56,7 +58,8 @@ public class FinalEnemy extends GameElement{
 			damage = 3; 
 			dir = 2;
 			speed = 3;
-			live = 30;
+			live = 40;
+			element = "fire";
 		} 
 		else if(type==3){
 			// Dritter Endgegner
@@ -64,7 +67,8 @@ public class FinalEnemy extends GameElement{
 			damage = 3; 
 			dir = 3;
 			speed = 5;
-			live = 50;
+			live = 70;
+			element = "ice";
 		} 
 		this.steps = 0;
 		

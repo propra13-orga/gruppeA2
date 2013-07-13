@@ -19,6 +19,8 @@ public class Enemy extends GameElement{
 	private int goBackX, goBackY;
 	private int steps;
 	private int randomNumber;
+	private int live;
+	private String element;
 	
 	private boolean visible;
 	
@@ -40,7 +42,9 @@ public class Enemy extends GameElement{
 			path =  "images/enemy_01.png";
 			damage = 1; 
 			dir = 1;
-			speed = 1;
+			speed = 2;
+			live = 2;
+			element = "plasma";
 		} 
 		this.steps = 0;
 		
@@ -118,7 +122,16 @@ public class Enemy extends GameElement{
 		this.visible = visible;
 	}
 	
+	public void setLive(int addLive){
+		this.live += addLive;
+		if(this.live==1) this.speed = 1;
+	}
+	
 	// get Methoden
+	
+	public int getLive(){
+		return this.live;
+	}
 	
 	public int getDirectionOfMovement(){
 		return this.dir;
