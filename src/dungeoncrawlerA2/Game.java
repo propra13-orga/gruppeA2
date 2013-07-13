@@ -95,8 +95,8 @@ public class Game extends JPanel implements ActionListener{
 	private ArrayList<Enemy> enemys = new ArrayList<Enemy>();
 	private ArrayList<Item> items = new ArrayList<Item>();
 	private ArrayList<Missile> missiles = new ArrayList<Missile>();
-	private ArrayList<Missile> missiles2 = new ArrayList<Missile>();
-	private ArrayList<Missile> eMissiles = new ArrayList<Missile>();
+	private ArrayList<Missile> missiles2 = new ArrayList<Missile>(); // Raketen Netzwerkspieler
+	private ArrayList<Missile> eMissiles = new ArrayList<Missile>(); // Raketen Gegner
 	private ArrayList<Checkpoint> checkpoints = new ArrayList<Checkpoint>();
 	private ArrayList<NPC> npcs = new ArrayList<NPC>();
 	private FinalEnemy finalEnemy;
@@ -128,12 +128,18 @@ public class Game extends JPanel implements ActionListener{
 	private String statusBarLivePath = "images/live_01.png";
 	private String statusBarBackgroundPath = "images/statusBar.png";
 	private String statusBarMoneyPath = "images/money_01.png";
-	private String statusBarArmourPath = "images/armour_01.png";
+	
+	private String statusBarFireArmourPath = "images/armour_fire_01.png";
+	private String statusBarIceArmourPath = "images/armour_ice_01.png";
+	private String statusBarPlasmaArmourPath = "images/armour_plasma_01.png";
 	
 	private Image statusBarBackground;
 	private Image statusBarMoneyImage;
 	private Image statusBarLiveImage;
-	private Image statusBarArmourImage;
+	
+	private Image statusBarFireArmourImage;
+	private Image statusBarIceArmourImage;
+	private Image statusBarPlasmaArmourImage;
 	
 	private int statusBarLiveImageWidth, statusBarLiveImageHeight; // Größe der Lebenspunkte in Statusleiste
 	private int itemBoxSize = 30;
@@ -497,8 +503,14 @@ public class Game extends JPanel implements ActionListener{
 		ii = new ImageIcon(this.getClass().getResource(statusBarMoneyPath)); // Bild Geld
 		statusBarMoneyImage = ii.getImage();
 		
-		ii = new ImageIcon(this.getClass().getResource(statusBarArmourPath)); // Bild Rüstung
-		statusBarArmourImage = ii.getImage();
+		ii = new ImageIcon(this.getClass().getResource(statusBarFireArmourPath)); // Bild Rüstung
+		statusBarFireArmourImage = ii.getImage();
+		
+		ii = new ImageIcon(this.getClass().getResource(statusBarPlasmaArmourPath)); // Bild Rüstung
+		statusBarPlasmaArmourImage = ii.getImage();
+		
+		ii = new ImageIcon(this.getClass().getResource(statusBarIceArmourPath)); // Bild Rüstung
+		statusBarIceArmourImage = ii.getImage();
 		
 		ii = new ImageIcon(this.getClass().getResource(statusBarLivePath)); // Bild Lebenspunkte
 		statusBarLiveImage = ii.getImage();
@@ -1308,6 +1320,19 @@ public class Game extends JPanel implements ActionListener{
 						// Gesundheit herstellen
 						player.setLive(3); 
 					}
+					else if(it.getItemType().equals("key")){
+						// Schlüssel
+						//<------------------------------------------------------------------------------------------------------
+					}
+					else if(it.getItemType().equals("armPlasma")){
+						player.setArmour(it.getAmount(), "plasma");
+					}
+					else if(it.getItemType().equals("armFire")){
+						player.setArmour(it.getAmount(), "fire");
+					}
+					else if(it.getItemType().equals("armIce")){
+						player.setArmour(it.getAmount(), "ice");
+					}
 					else{
 						// Waffen und nutzbare Items zu Spieler hinzufügen
 						player.addItem(it);
@@ -1326,6 +1351,15 @@ public class Game extends JPanel implements ActionListener{
 					else if(it.getItemType().equals("health")){
 						// Gesundheit herstellen
 						player2.setLive(3); 
+					}
+					else if(it.getItemType().equals("armPlasma")){
+						player2.setArmour(it.getAmount(), "plasma");
+					}
+					else if(it.getItemType().equals("armFire")){
+						player2.setArmour(it.getAmount(), "fire");
+					}
+					else if(it.getItemType().equals("armIce")){
+						player2.setArmour(it.getAmount(), "ice");
 					}
 					else{
 						// Waffen und nutzbare Items zu Spieler hinzufügen
@@ -1566,8 +1600,14 @@ public class Game extends JPanel implements ActionListener{
 		
 		// Rüstung ermitteln + Darstellen
 		int a = player.getArmour();
+		String armType = player.getArmourType();
 		for(int i = 0; i<a; i++){
-			g.drawImage(statusBarArmourImage, statusBarX+i*(statusBarLiveImageWidth+statusBarSpace), statusBarY+statusBarLiveImage.getHeight(null), this);
+			if(!armType.equals("none")){
+				if(armType.equals("fire")) g.drawImage(statusBarFireArmourImage, statusBarX+i*(statusBarLiveImageWidth+statusBarSpace), statusBarY+statusBarLiveImage.getHeight(null), this);
+				else if(armType.equals("ice")) g.drawImage(statusBarIceArmourImage, statusBarX+i*(statusBarLiveImageWidth+statusBarSpace), statusBarY+statusBarLiveImage.getHeight(null), this);
+				else if(armType.equals("plasma")) g.drawImage(statusBarPlasmaArmourImage, statusBarX+i*(statusBarLiveImageWidth+statusBarSpace), statusBarY+statusBarLiveImage.getHeight(null), this);
+			}
+			
 		}
 		
 		// Geld ermitteln und darstellen

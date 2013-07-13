@@ -44,6 +44,34 @@ public class Item extends GameElement{
 			amount=100;
 			ItemHasMissiles = false;
 		}
+		else if(type == 4){
+			//Key
+			path = "images/healthpack_01.png"; // <----------------------- Pfad ändern
+			ItemType = "key";
+			amount=1;
+			ItemHasMissiles = false;
+		}
+		else if(type == 5){
+			// Armour - plasma
+			path = "images/armour_plasma_01.png";
+			ItemType = "armPlasma";
+			amount=3;
+			ItemHasMissiles = false;
+		}
+		else if(type == 6){
+			// Armour - fire
+			path = "images/armour_fire_01.png";
+			ItemType = "armFire";
+			amount=3;
+			ItemHasMissiles = false;
+		}
+		else if(type == 7){
+			// Armour - ice
+			path = "images/armour_ice_01.png";
+			ItemType = "armIce";
+			amount=3;
+			ItemHasMissiles = false;
+		}
 		else if(type == 11){
 			// Plasmagun
 			path = "images/w_plasmagun_01.png";

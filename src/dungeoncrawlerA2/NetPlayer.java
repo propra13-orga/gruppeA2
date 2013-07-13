@@ -47,7 +47,7 @@ public class NetPlayer implements Runnable{
 	private int startLive; // Lebenspunkte zu Beginn - für komplettes Auffüllen
 	
 	private int armour;
-	private int startArmour = 3;
+	private String armourType;
 	
 	private int money;
 	private int mana;
@@ -87,7 +87,8 @@ public class NetPlayer implements Runnable{
         // Lebenspunkte ermitteln
         startLive = live;
         this.setLive(startLive);
-        this.armour = startArmour;
+        this.armour = 0;
+        this.armourType = "none";
         
         // Geld auf 0 setzen
         this.money = 0;
@@ -259,6 +260,10 @@ public class NetPlayer implements Runnable{
 		return this.armour;
 	}
 	
+	public String getArmourType(){
+		return this.armourType;
+	}
+	
 	public int getMoney(){
 		return this.money;
 	}
@@ -303,10 +308,8 @@ public class NetPlayer implements Runnable{
 	}
 	
 	public void setLive(int changeLive){
-		// ändert Anzahl der Lebenspunkte || Rüstung 
-		// TODO später etl von außen getrennt
-		if(armour>0 && changeLive<=0) this.armour--;
-		else this.live += changeLive;
+		// ändert Anzahl der Lebenspunkte 
+		this.live += changeLive;
 		if(this.live>12) this.live=12; // bestimme maximale Anzahl an leben
 		
 	}
@@ -328,6 +331,11 @@ public class NetPlayer implements Runnable{
 		else if(this.mana > startMana) this.mana = startMana;
 	}
 	
+	public void setArmour(int amount, String type){
+		this.armourType = type;
+		this.armour = amount;
+	}
+	
 	public void resetPlayer(){
 		this.x = this.startX;
 		this.y = this.startY;
@@ -336,7 +344,8 @@ public class NetPlayer implements Runnable{
 		this.ready = false;
 		
 		this.live = startLive;
-        this.armour = startArmour;
+        this.armour = 0;
+        this.armourType = "none";
         
         // Geld auf 0 setzen
         this.money = 0;
