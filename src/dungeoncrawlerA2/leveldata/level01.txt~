@@ -36,10 +36,12 @@ Eeeendliiiich FREI!
 Falls du eine Waffe besitzt, kannst du mit SPACE feuern.
 Bei mehreren Waffen kannst du mit SHIFT die Waffe wechseln.
 Wenn du genügend Nanobots besitzt, kannst du mit STRG einen Komplettschutz
-aktivieren. Für primitive Völker sieht es aus wie Magie. 
+aktivieren. Für primitive Völker sieht es aus wie Magie...
 Solange der Schutz aktiv ist verbrauchst du die Bots. Such dir lieber eine Rüstung!
 ...
-Dort drüben liegt sogar ein Ball voller Nanobots... hol ihn dir, sonst mach ich es!
+Dort drüben liegt sogar ein Ball voller Nanobots... hol ihn dir, sonst mach ich es!!!
+
+(Drücke SPACE oder ENTER)
 #DIAEND
 
 #NEWROOM 01
@@ -62,10 +64,18 @@ W1 W1 W1 W1 W1 W1 W1 W1 G1 G1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1
 #DOOR 
 #EXIT 02 -1 00 -1
 #ENEMY E1 03 12 E1 15 11 E1 17 07 
-#INTERACT C0 120 120 
-#ITEM I1 050 050 I1 070 050 I1 090 050 I1 110 050 I1 130 050 I1 150 050 I1 170 050 I1 190 050 I1 210 050 I1 230 050 I1 250 050 I1 050 070 I1 070 070 I1 090 070 I1 110 070 I1 130 070 I1 150 070 I1 170 070 I1 190 070 I1 210 070 I1 230 070 I1 250 070 I1 050 090 I1 070 090 I1 090 090 I1 110 090 I1 130 090 I1 150 090 I1 170 090 I1 190 090 I1 210 090 I1 230 090 I1 250 090 J1 700 050 J2 600 050 J3 700 100 I3 500 050 I5 450 050 I6 450 100 I7 450 150
+#INTERACT C0 120 120 N1 090 470
+#ITEM I1 050 050 I1 070 050 I1 090 050 I1 110 050 I1 130 050 I1 150 050 I1 170 050 I1 190 050 I1 210 050 I1 230 050 I1 250 050 I1 050 070 I1 070 070 I1 090 070 I1 110 070 I1 130 070 I1 150 070 I1 170 070 I1 190 070 I1 210 070 I1 230 070 I1 250 070 I1 050 090 I1 070 090 I1 090 090 I1 110 090 I1 130 090 I1 150 090 I1 170 090 I1 190 090 I1 210 090 I1 230 090 I1 250 090 J1 700 050 J2 600 050 J3 700 100 I3 500 050 I5 450 050 I6 450 100 I7 450 150 I4 060 470 
 #DIALOG
+Aaahh... ich hab mir mein Bein gebrochen wegen diesen dämlichen Spinnenbots.
+Kannst du bitte meinen Kollegen befreien, der sollte irgendwo in diesem Gefängnis sein.
+Ich habe noch ein paar Nanobots, das sollte reichen.
 
+In seiner Zelle findest du eine Plasmakanone. Damit kannst du die Spinnen besiegen.
+Leider sind die Gegner hier im Knast immun gegen Hitze und kommen mit Plasma 
+ziemlich gut klar. Wenn du eine Eiskanone findest würde ich dir diese ans Herz legen...
+
+So, nun nimm den Schlüssel und mach sie fertig!!!
 #DIAEND
 
 #NEWROOM 02
@@ -77,7 +87,7 @@ W1 G1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 W1 W1 W1 W1
 W1 G1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 W1 G1 G1 W1 
 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 
 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 
-W1 G1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 G1 G1 W1 
+W1 G1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 G1 W1 
 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 W1 G1 G1 W1 
 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 W1 G1 G1 W1 
 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 W1 G1 G1 W1 
@@ -85,7 +95,7 @@ W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 W1
 W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 G1 G1 G1 G1 G1 G1 G1 G1 W1 
 W1 W1 W1 W1 W1 W1 W1 W1 G1 G1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 
 
-#DOOR 
+#DOOR D1 18 07 c
 #EXIT -1 03 01 -1
 #ENEMY E1 07 04
 #INTERACT

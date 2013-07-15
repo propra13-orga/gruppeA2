@@ -35,6 +35,8 @@ public class Player{
 	private int armour;
 	private String armourType;
 	
+	private int keys;
+	
 	private int money;
 	private int mana;
 	private int startMana = 1000;
@@ -78,6 +80,7 @@ public class Player{
         this.immortal = false;
         this.activeItem = null;
         this.activeItemNumber = 0;
+        this.keys = 0;
         
         // Startkoordinate setzen
 		this.startX = this.x = x;
@@ -250,7 +253,16 @@ public class Player{
 		return this.immortal;
 	}
 	
+	public int getKeys(){
+		return this.keys;
+	}
+	
 	// set Methoden
+	public void changeKeys(int key){
+		this.keys += key;
+		if(this.keys<0) this.keys = 0;
+	}
+	
 	public void setImmortal(boolean mort){
 		this.immortal = mort;
 	}
@@ -301,6 +313,7 @@ public class Player{
         // Items und sonstige Werte setzen
         this.immortal = false;
         this.activeItem = null;
+        this.keys = 0;
         
         missiles = new ArrayList<Missile>();
     	itemList = new ArrayList<Item>();

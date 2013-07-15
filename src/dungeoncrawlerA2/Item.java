@@ -46,7 +46,7 @@ public class Item extends GameElement{
 		}
 		else if(type == 4){
 			//Key
-			path = "images/healthpack_01.png"; // <----------------------- Pfad ändern
+			path = "images/key_01.png";
 			ItemType = "key";
 			amount=1;
 			ItemHasMissiles = false;

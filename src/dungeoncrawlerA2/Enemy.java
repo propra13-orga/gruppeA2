@@ -45,6 +45,15 @@ public class Enemy extends GameElement{
 			speed = 2;
 			live = 2;
 			element = "plasma";
+		}
+		else if(type==2){
+			// Anfangs Unbeweglicher Stachelkopf
+			path =  "images/enemy_02.png";
+			damage = 1; 
+			dir = 1;
+			speed = 0;
+			live = 4;
+			element = "plasma";
 		} 
 		this.steps = 0;
 		
@@ -99,6 +108,10 @@ public class Enemy extends GameElement{
 				this.steps = 0;
 			}
 			
+		}
+		else if(type==2){
+			// Anfangs Unbeweglicher Stachelkopf
+			// Läuft bei Leben < 2 automatisch im Kreis
 		}
 		// Bewegen
 		this.setX(goBackX+dx);

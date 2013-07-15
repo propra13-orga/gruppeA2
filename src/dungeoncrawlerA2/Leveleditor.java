@@ -399,6 +399,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 			itemdata = new String[rooms];
 			interactdata = new String[rooms];
 			doordata = new String[rooms];
+			dialog = new String[rooms];
 			
 			leveldata[0] = "W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 "+
 "W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 "+

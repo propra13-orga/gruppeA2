@@ -128,6 +128,7 @@ public class Game extends JPanel implements ActionListener{
 	private String statusBarLivePath = "images/live_01.png";
 	private String statusBarBackgroundPath = "images/statusBar.png";
 	private String statusBarMoneyPath = "images/money_01.png";
+	private String statusBarKeyPath = "images/key_statusBar.png";
 	
 	private String statusBarFireArmourPath = "images/armour_fire_01.png";
 	private String statusBarIceArmourPath = "images/armour_ice_01.png";
@@ -136,6 +137,7 @@ public class Game extends JPanel implements ActionListener{
 	private Image statusBarBackground;
 	private Image statusBarMoneyImage;
 	private Image statusBarLiveImage;
+	private Image statusBarKeyImage;
 	
 	private Image statusBarFireArmourImage;
 	private Image statusBarIceArmourImage;
@@ -167,6 +169,7 @@ public class Game extends JPanel implements ActionListener{
 	private int endBossRoom;
 	
 	// Zustandsvariablen & Zeitabhängige Events;
+	private boolean finalAlive;
 	private boolean playerCanGetDamage; 
 	private int tolleranceTime; // Tolleranzzeit um bei Gegnerkontakt nicht alle Leben zu verlieren
 	private Item playerActiveItem;
@@ -503,6 +506,9 @@ public class Game extends JPanel implements ActionListener{
 		ii = new ImageIcon(this.getClass().getResource(statusBarMoneyPath)); // Bild Geld
 		statusBarMoneyImage = ii.getImage();
 		
+		ii = new ImageIcon(this.getClass().getResource(statusBarKeyPath)); // Bild Key
+		statusBarKeyImage = ii.getImage();
+		
 		ii = new ImageIcon(this.getClass().getResource(statusBarFireArmourPath)); // Bild Rüstung
 		statusBarFireArmourImage = ii.getImage();
 		
@@ -578,6 +584,7 @@ public class Game extends JPanel implements ActionListener{
 		boolean isReadingLevel = false;
 		boolean isReadingIntro = false;
 		boolean isReadingDialog = false;
+		finalAlive = false;
 		int rooms = 0;
 		String line = null;
 		String request = null;
@@ -665,6 +672,7 @@ public class Game extends JPanel implements ActionListener{
 						int r10 = endBossLocation.charAt(3)-48;
 						int r01 = endBossLocation.charAt(4)-48;
 						endBossRoom = 10*r10+r01;
+						finalAlive = true;
 					}
 					else{
 						endBossLocation = "";
@@ -804,7 +812,7 @@ public class Game extends JPanel implements ActionListener{
 		finalEnemy = null;
 		
 		// Endgegner, falls vorhanden, auslesen
-		if(roomnumber == endBossRoom){
+		if(roomnumber == endBossRoom && finalAlive){
 			element = endBossLocation.charAt(0);
 			type = endBossLocation.charAt(1);
 			
@@ -1093,7 +1101,15 @@ public class Game extends JPanel implements ActionListener{
 			
 			if(open==false){
 				// Player - Tür
-				if(r_player.intersects(r_door)) player.resetMovement();
+				if(r_player.intersects(r_door)){
+					 player.resetMovement();
+					 if(player.getKeys()>0){
+						 // Öffne Tür
+						 dr.setOpen(true);
+						 player.changeKeys(-1);
+						 doordata[room]=doordata[room].replace('c', 'o');
+					 }
+				}
 				 
 				// Gegner - Tür
 				for(int b = 0; b<enemys.size(); b++){
@@ -1302,7 +1318,10 @@ public class Game extends JPanel implements ActionListener{
 				}
 				
 				// verhindern dass Gegner Raum verlässt --> umdrehen wenn Bildschirm verlassen
-				if(e.getX()<0 || e.getX()>windowSizeX-e.getImage().getWidth(null) || e.getY()<0 || e.getY()>windowSizeY-e.getImage().getHeight(null)) e.setDirectionOfMovement(2);
+				if(e.getX()<0 || e.getX()>windowSizeX-e.getImage().getWidth(null) || e.getY()<0 || e.getY()>windowSizeY-e.getImage().getHeight(null)){
+					e.resetMovement(); 
+					e.setDirectionOfMovement(2);
+				}
 				
 			}
 		}
@@ -1349,7 +1368,7 @@ public class Game extends JPanel implements ActionListener{
 					}
 					else if(it.getItemType().equals("key")){
 						// Schlüssel
-						//<------------------------------------------------------------------------------------------------------
+						player.changeKeys(1);
 					}
 					else if(it.getItemType().equals("armPlasma")){
 						player.setArmour(it.getAmount(), "plasma");
@@ -1712,8 +1731,14 @@ public class Game extends JPanel implements ActionListener{
 			
 		}
 		
-		// Geld ermitteln und darstellen
+		// Geld und Schlüssel ermitteln und darstellen
 		int m = player.getMoney();
+		int k = player.getKeys();
+		
+		String key = "x ";	// Anzahl Schlüssel in String umwandeln
+		if(k<10) key+="0"+k;
+		else if(k<100) key+=""+k;
+		else key+=k;
 		
 		String mon = "x ";	// Anzahl Geld in String umwandeln
 		if(m<10) mon+="00"+m;
@@ -1721,6 +1746,7 @@ public class Game extends JPanel implements ActionListener{
 		else mon+=m;
 		
 		g.drawImage(statusBarMoneyImage, statusBarX+statusBarLiveContainer, statusBarY+2, this); // Bild Geld zeichnen
+		g.drawImage(statusBarKeyImage, statusBarX+statusBarLiveContainer, statusBarY+4+statusBarMoneyImage.getHeight(null), this); // Bild Geld zeichnen
 		
 		Font small = new Font("Arial", Font.ITALIC, 12);
 		FontMetrics metr = this.getFontMetrics(small);
@@ -1730,6 +1756,7 @@ public class Game extends JPanel implements ActionListener{
 		g.setColor(Color.white);
 		g.setFont(small);
 		g.drawString(mon, barX, statusBarY + statusBarMoneyImage.getWidth(null)/2+4); // Zeichne String
+		g.drawString(key, barX, statusBarY + statusBarMoneyImage.getWidth(null)+12); // Zeichne String
 		
 		barX += metr.stringWidth(mon) + 25;
 		
@@ -1828,14 +1855,16 @@ public class Game extends JPanel implements ActionListener{
 					}
 					
 					// Endgegnerbehandlung
-					if(finalEnemy != null){
+					if(finalEnemy != null && finalAlive){
 						if(finalEnemy.getLive()<=0){
 							// Gegner besiegt
 							finalEnemy = null;
+							finalAlive = false;
 							
 							for(int a=0; a<doors.size(); a++){
 								Door dr = (Door)doors.get(a);
 								dr.setOpen(true);
+								doordata[room]=doordata[room].replace('c', 'o');
 							}
 						}
 						else{
