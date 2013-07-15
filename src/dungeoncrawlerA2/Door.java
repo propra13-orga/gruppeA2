@@ -24,9 +24,7 @@ public class Door extends GameElement{
 		super(x, y); // Aufruf GameElement
 		 
 		type -= 48; // Von char in int
-		if(type == 1){
-			this.setOpen(open);
-		}
+		this.setOpen(open);
 		this.type = type;
 	}
 	

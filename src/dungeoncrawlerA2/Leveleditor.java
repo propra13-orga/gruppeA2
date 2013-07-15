@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -1117,11 +1118,15 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 				
 			}
 		}
+		Toolkit.getDefaultToolkit().sync();
+		g.dispose();
 	}
 	
 	public void changeData(){
 		int x,y;
+		
 		// Setze alles auf Ground
+		// Baue leveldata START
 		int[][][] field = {{{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
 				{{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
 				{{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}},
@@ -1174,6 +1179,123 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 					leveldata[visibleRoom]+="G"+field[i][j][1] + " ";
 				}
 			}
+		}
+		// Baue Leveldata ENDE
+		
+		// Baue Doordata
+		doordata[visibleRoom] = "";
+		for(int i=0;i<doors.size(); i++){
+			Door dr = (Door)doors.get(i);
+			Rectangle rd = dr.getBounds();
+			String sx,sy;
+			
+			x = (int)rd.getX()/blockSize;
+			y = (int)rd.getY()/blockSize;
+			
+			if(x>=10) sx=""+x;
+			else sx="0"+x;
+
+			if(y>=10) sy=""+y;
+			else sy="0"+y;
+			
+			doordata[visibleRoom]+="D"+dr.getType()+" "+sx+" "+sy+" c ";
+		}
+		
+		// Baue Itemdata
+		itemdata[visibleRoom] = "";
+		for(int i=0;i<items.size(); i++){
+			Item it = (Item)items.get(i);
+			String sx,sy;
+			String itemCode;
+			
+			// Format bestimmen (I oder J)
+			int type = it.getType();
+			if(type>=10){
+				type-=10;
+				itemCode="J"+type;
+			}
+			else itemCode="I"+type;
+			
+			// Koordinaten bestimmen
+			x = (int)it.getX();
+			y = (int)it.getY();
+			
+			if(x>=100) sx= ""+x;
+			else if(x>=10) sx="0"+x;
+			else sx="00"+x;
+
+			if(y>=100) sy= ""+y;
+			else if(y>=10) sy="0"+y;
+			else sy="00"+y;
+			
+			// Codieren
+			itemdata[visibleRoom]+=itemCode + " " + sx + " " + sy + " ";
+		}
+		
+		// Baue interactdata -> Checkpoints, NPC und Shop
+		interactdata[visibleRoom]="";
+		for(int i=0;i<checkpoints.size();i++){
+			String sy, sx;
+			Checkpoint cp = (Checkpoint)checkpoints.get(i);
+			// Koordinaten bestimmen
+			x = (int)cp.getX();
+			y = (int)cp.getY();
+						
+			if(x>=100) sx= ""+x;
+			else if(x>=10) sx="0"+x;
+			else sx="00"+x;
+
+			if(y>=100) sy= ""+y;
+			else if(y>=10) sy="0"+y;
+			else sy="00"+y;
+			interactdata[visibleRoom]="C0 "+sx + " " + sy+ " ";
+			
+		}
+		// +NPC
+		for(int i=0;i<npcs.size();i++){
+			String sy, sx, npcCode;
+			NPC npc = (NPC)npcs.get(i);
+			// Koordinaten bestimmen
+			x = (int)npc.getX();
+			y = (int)npc.getY();
+						
+			if(x>=100) sx= ""+x;
+			else if(x>=10) sx="0"+x;
+			else sx="00"+x;
+
+			if(y>=100) sy= ""+y;
+			else if(y>=10) sy="0"+y;
+			else sy="00"+y;
+			
+			// Format bestimmen (N oder S)
+			int type = npc.getType();
+			if(type>=10){
+				type-=10;
+				npcCode="S"+type;
+			}
+			else npcCode="N"+type;
+			
+			interactdata[visibleRoom]+=npcCode+" "+sx + " " + sy+" ";
+			
+		}
+		
+		// Baue enemydata
+		enemydata[visibleRoom]="";
+		for(int i=0;i<enemys.size(); i++){
+			Enemy en = (Enemy)enemys.get(i);
+			Rectangle re = en.getBounds();
+			String sx,sy;
+			
+			x = (int)en.getX()/blockSize;
+			y = (int)en.getY()/blockSize;
+			
+			if(x>=10) sx=""+x;
+			else sx="0"+x;
+
+			if(y>=10) sy=""+y;
+			else sy="0"+y;
+			
+			enemydata[visibleRoom]+="E"+en.getType()+" "+sx+" "+sy+" ";
 		}
 		
 	}
@@ -1266,14 +1388,182 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 				}	
 			}
 			
+			// Door
+			if(selectedElement.equals("door")){
+				Door selD = (Door)doorTypes.get(selectedDoor);
+				
+				// Door auf Ground setzen 
+				for(int j=0;j<grounds.size();j++){
+					Ground gr = (Ground)grounds.get(j);
+					r_element = gr.getBounds();
+					int rem = -1;
+					
+					// Nachschauen ob Maus auf Element
+					if(r_mouse.intersects(r_element)){
+						boolean isSet = false;
+						elementX = (int)r_element.getX();
+						elementY = (int)r_element.getY();
+						
+						// Schaue nach ob Tür auf Platz
+						for(int i = 0; i<doors.size(); i++){
+							Door dr = (Door)doors.get(i);
+							Rectangle r_door = dr.getBounds();
+							
+							if(r_mouse.intersects(r_door)){
+								isSet = true;
+							}
+							
+							if(isSet){
+								 if(rem==-1) rem=i;
+							}
+						}
+						if(!isSet) doors.add(new Door(elementX,elementY,selD.getType()+48,false));
+						if(rem!=-1)  doors.remove(rem);
+					}
+				}	
+				
+			}
+			
+			// ITEM
+			if(selectedElement.equals("item")){
+				Item selI = (Item)itemTypes.get(selectedItem);
+				boolean sameItemRemoved = false;
+				boolean isCorrectPlace = false;
+				Rectangle rsItem;
+				
+				for(int i=0;i<grounds.size();i++){
+					// Stelle sicher, dass Item nur auf Ground plazierbar
+					Ground gr = (Ground)grounds.get(i);
+					Rectangle rg = gr.getBounds();
+					
+					if(rg.contains(mouseX, mouseY)) isCorrectPlace = true;
+				}
+				
+				// Plaziere oder entferne Item
+				if(isCorrectPlace){
+					rsItem = new Rectangle(mouseX,mouseY,selI.getImage().getWidth(null),selI.getImage().getHeight(null));
+					
+					for(int i=0;i<items.size();i++){
+						Item it = (Item)items.get(i);
+						Rectangle rit = it.getBounds();
+						
+						if(rsItem.intersects(rit)){
+							if(selI.getType()==it.getType()) sameItemRemoved = true;
+							items.remove(i);
+						}
+					}
+					
+					if(!sameItemRemoved){
+						items.add(new Item(mouseX,mouseY,selI.getType()+48));
+					}
+				}
+			}
+			
+			// Checkpoint
+			if(selectedElement.equals("checkpoint")){
+				boolean isCorrectPlace = false;
+				boolean intersectsOldCP = false;
+				
+				for(int i=0;i<grounds.size();i++){
+					// Stelle sicher, dass Item nur auf Ground plazierbar
+					Ground gr = (Ground)grounds.get(i);
+					Rectangle rg = gr.getBounds();
+					
+					if(rg.contains(mouseX, mouseY)) isCorrectPlace = true;
+				}
+				
+				if(isCorrectPlace){
+					
+					for(int j=0; j<checkpoints.size(); j++){
+						Checkpoint cp = (Checkpoint)checkpoints.get(j);
+						Rectangle rcp = cp.getBounds();
+						if(rcp.contains(mouseX, mouseY)) intersectsOldCP = true;
+					}
+					
+					// Maximal 1 checkpoint pro Raum
+					checkpoints.clear();
+					if(!intersectsOldCP) checkpoints.add(new Checkpoint(mouseX,mouseY,48));
+				}
+			}
+			
+			// NPC
+			if(selectedElement.equals("npc")){
+				NPC selN = (NPC)npcTypes.get(selectedNPC);
+				boolean sameNPCRemoved = false;
+				boolean isCorrectPlace = false;
+				Rectangle rsNPC;
+				
+				for(int i=0;i<grounds.size();i++){
+					// Stelle sicher, dass Item nur auf Ground plazierbar
+					Ground gr = (Ground)grounds.get(i);
+					Rectangle rg = gr.getBounds();
+					
+					if(rg.contains(mouseX, mouseY)) isCorrectPlace = true;
+				}
+				
+				// Plaziere oder entferne Item
+				if(isCorrectPlace){
+					rsNPC = new Rectangle(mouseX,mouseY,selN.getImage().getWidth(null),selN.getImage().getHeight(null));
+					
+					for(int i=0;i<npcs.size();i++){
+						NPC npc = (NPC)npcs.get(i);
+						Rectangle rNPC = npc.getBounds();
+						
+						if(rsNPC.intersects(rNPC)){
+							if(selN.getType()==npc.getType()) sameNPCRemoved = true;
+							npcs.remove(i);
+						}
+					}
+					
+					if(!sameNPCRemoved){
+						npcs.add(new NPC(mouseX,mouseY,selN.getType()+48));
+					}
+				}
+			}
+			
+			// ENEMY
+			if(selectedElement.equals("enemy")){
+				Enemy selE = (Enemy)enemyTypes.get(selectedEnemy);
+				boolean sameEnemyRemoved = false;
+				boolean isCorrectPlace = false;
+				Rectangle rsEnemy;
+				elementX=elementY=0;
+				
+				for(int i=0;i<grounds.size();i++){
+					// Stelle sicher, dass Item nur auf Ground plazierbar
+					Ground gr = (Ground)grounds.get(i);
+					Rectangle rg = gr.getBounds();
+					
+								
+					if(rg.contains(mouseX, mouseY)){
+						 isCorrectPlace = true;
+						 elementX=(int)rg.getX();
+						 elementY=(int)rg.getY();
+					}
+				}
+							
+				// Plaziere oder entferne Item
+				if(isCorrectPlace){			
+					rsEnemy = new Rectangle(elementX,elementY,selE.getImage().getWidth(null),selE.getImage().getHeight(null));
+					for(int i=0;i<enemys.size();i++){
+						Enemy en = (Enemy)enemys.get(i);
+						Rectangle ren = en.getBounds();
+									
+						if(rsEnemy.intersects(ren)){
+							if(selE.getType()==en.getType()) sameEnemyRemoved = true;
+							enemys.remove(i);
+						}
+					}
+								
+					if(!sameEnemyRemoved){
+						enemys.add(new Enemy(elementX,elementY,selE.getType()+48));
+					}
+				}
+			}
+			
 			changeData();
 			
 			/*
-			else if(action.equals("selDoor")) selectedElement = "door";
-			else if(action.equals("selCheckpoint")) selectedElement = "checkpoint";
-			else if(action.equals("selItem")) selectedElement = "item";
-			else if(action.equals("selNPC")) selectedElement = "npc";
-			else if(action.equals("selEnemy")) selectedElement = "enemy";
 			else if(action.equals("selFinal")) selectedElement = "final";*/
 			
 		}
