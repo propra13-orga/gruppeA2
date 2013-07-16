@@ -21,10 +21,12 @@ import java.util.StringTokenizer;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.JFrame;
 import javax.swing.JRadioButton;
+import javax.swing.JTextField;
 
 public class Leveleditor extends JFrame implements ActionListener, MouseListener{
 	
@@ -34,6 +36,21 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 	// Leveldatenelemente
 	private String levelPath;
 	private int rooms;
+	
+	private String newRoomData = "G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 "+
+			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 "+
+			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 "+
+			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 "+
+			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 "+
+			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 "+
+			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 "+
+			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 "+
+			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 "+
+			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 "+
+			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 "+
+			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 "+
+			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 "+
+			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 ";
 		
 	private String[] leveldata;
 	private String[] enemydata;
@@ -49,6 +66,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		
 	private String endBossLocation;
 	private int endBossRoom;
+	private int endBossX, endBossY;
 	
 	private int startX, startY;	// Startwert Spielfigur 
 	private int startLive; // Lebenspunkte zu beginn des Levels
@@ -73,6 +91,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 	private ArrayList<Checkpoint> checkpointTypes = new ArrayList<Checkpoint>();
 	private ArrayList<NPC> npcTypes = new ArrayList<NPC>();
 	private ArrayList<FinalEnemy> finalEnemyTypes = new ArrayList<FinalEnemy>();
+	private Player player = new Player(0,0,0,0); // Dummy Player
 	
 	// Fenstergröße
 	private int windowSizeX = 1200;	
@@ -95,6 +114,9 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 	JButton bSwitchExit2;
 	JButton bSwitchExit3;
 	
+	JButton bSetFinal, bSetPlayer;
+	JTextField tFinalRoom, tFinalX, tFinalY, tPlayerX, tPlayerY, tPlayerLive;
+	
 	JButton bSwitchGround, bSwitchWall, bSwitchDoor, bSwitchEnemy, bSwitchCheckpoint, bSwitchItem, bSwitchFinal, bSwitchNPC;
 	
 	JButton bSave, bExit;
@@ -105,14 +127,16 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 	JRadioButton radioEnemy;
 	JRadioButton radioCheckpoint;
 	JRadioButton radioItem;
-	JRadioButton radioFinal;
 	JRadioButton radioNPC;
 	
 	ButtonGroup radioGroup;
 	
+	JCheckBox checkFinal;
+	
 	// Statusvariablen
 	boolean levelLoaded;
 	boolean editorLoaded;
+	boolean finalIsSelected;
 	int visibleRoom;
 	int selectedGround, selectedWall, selectedDoor, selectedEnemy, selectedCheckpoint, selectedItem, selectedFinal, selectedNPC;
 	String selectedElement;
@@ -175,6 +199,16 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		bSwitchExit2 = new JButton("Exit2");
 		bSwitchExit3 = new JButton("Exit3");
 		
+		bSetFinal = new JButton("OK");
+		bSetPlayer = new JButton("OK");
+		
+		tFinalRoom = new JTextField();
+		tFinalX = new JTextField();
+		tFinalY = new JTextField();
+		tPlayerX = new JTextField();
+		tPlayerY = new JTextField();
+		tPlayerLive = new JTextField();
+		
 		bSave = new JButton("Speichern");
 		bExit = new JButton("Beenden");
 		
@@ -194,8 +228,10 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		radioItem = new JRadioButton("Item");
 		radioNPC = new JRadioButton("NPC");
 		radioEnemy = new JRadioButton("Enemy");
-		radioFinal = new JRadioButton("Final");
+	
 		radioGroup = new ButtonGroup();
+	
+		checkFinal = new JCheckBox("Final");
 		
 		// bestimme Position und Größe
 		bSwitchRoom.setBounds(110,fieldSizeY+50,90,30);
@@ -203,6 +239,16 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		bSwitchExit1.setBounds(210,fieldSizeY+50,90,30);
 		bSwitchExit2.setBounds(110,fieldSizeY+90,90,30);
 		bSwitchExit3.setBounds(10,fieldSizeY+50,90,30);
+
+		bSetFinal.setBounds(560,fieldSizeY+90,90,30);
+		bSetPlayer.setBounds(560,fieldSizeY+50,90,30);
+		
+		tFinalRoom.setBounds(400,fieldSizeY+90,30,30);
+		tFinalX.setBounds(440,fieldSizeY+90,30,30);
+		tFinalY.setBounds(480,fieldSizeY+90,30,30);
+		tPlayerX.setBounds(440,fieldSizeY+50,30,30);
+		tPlayerY.setBounds(480,fieldSizeY+50,30,30);
+		tPlayerLive.setBounds(520,fieldSizeY+50,30,30);
 		
 		bSave.setBounds(windowSizeX-200,windowSizeY-100,120,30);
 		bExit.setBounds(windowSizeX-200,windowSizeY-60,120,30);
@@ -223,7 +269,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		radioItem.setBounds(fieldSizeX + 20, 260, 80, 40);
 		radioNPC.setBounds(fieldSizeX + 20, 320, 80, 40);
 		radioEnemy.setBounds(fieldSizeX + 20, 380, 80, 40);
-		radioFinal.setBounds(fieldSizeX + 20, 440, 80, 40);
+		checkFinal.setBounds(fieldSizeX + 20, 440, 80, 40);
 		
 		radioGround.setSelected(true);
 		selectedElement = "ground";
@@ -236,7 +282,6 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		radioGroup.add(radioItem);
 		radioGroup.add(radioNPC);
 		radioGroup.add(radioEnemy);
-		radioGroup.add(radioFinal);
 		
 		// Radiobuttonhintergrund
 		radioGround.setBackground(backgroundColor);
@@ -260,8 +305,8 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		radioEnemy.setBackground(backgroundColor);
 		radioEnemy.setForeground(Color.white);
 		
-		radioFinal.setBackground(backgroundColor);
-		radioFinal.setForeground(Color.white);
+		checkFinal.setBackground(backgroundColor);
+		checkFinal.setForeground(Color.white);
 		
 		// benenne Aktionen
 		bSwitchRoom.setActionCommand("switchRoom");
@@ -269,6 +314,9 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		bSwitchExit1.setActionCommand("switchExit1");
 		bSwitchExit2.setActionCommand("switchExit2");
 		bSwitchExit3.setActionCommand("switchExit3");
+		
+		bSetFinal.setActionCommand("setFinal");
+		bSetPlayer.setActionCommand("setPlayer");
 		
 		bSave.setActionCommand("save");
 		bExit.setActionCommand("end");
@@ -289,7 +337,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		radioItem.setActionCommand("selItem");
 		radioNPC.setActionCommand("selNPC");
 		radioEnemy.setActionCommand("selEnemy");
-		radioFinal.setActionCommand("selFinal");
+		checkFinal.setActionCommand("selFinal");
 		
 		// ActionListener hinzufügen
 		bSwitchRoom.addActionListener(this);
@@ -297,6 +345,9 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		bSwitchExit1.addActionListener(this);
 		bSwitchExit2.addActionListener(this);
 		bSwitchExit3.addActionListener(this);
+		
+		bSetFinal.addActionListener(this);
+		bSetPlayer.addActionListener(this);
 		
 		bSave.addActionListener(this);
 		bExit.addActionListener(this);
@@ -317,7 +368,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		radioItem.addActionListener(this);
 		radioNPC.addActionListener(this);
 		radioEnemy.addActionListener(this);
-		radioFinal.addActionListener(this);
+		checkFinal.addActionListener(this);
 		
 		// füge Buttons zum Panel hinzu
 		edit.add(bSwitchRoom);
@@ -325,6 +376,16 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		edit.add(bSwitchExit1);
 		edit.add(bSwitchExit2);
 		edit.add(bSwitchExit3);
+		
+		edit.add(bSetFinal);
+		edit.add(bSetPlayer);
+		
+		edit.add(tFinalRoom);
+		edit.add(tFinalX);
+		edit.add(tFinalY);
+		edit.add(tPlayerX);
+		edit.add(tPlayerY);
+		edit.add(tPlayerLive);
 		
 		edit.add(bSave);
 		edit.add(bExit);
@@ -345,7 +406,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		edit.add(radioItem);
 		edit.add(radioNPC);
 		edit.add(radioEnemy);
-		edit.add(radioFinal);
+		edit.add(checkFinal);
 		
 		// Buttons unsichtbar machen
 		bSwitchRoom.setVisible(false);
@@ -353,6 +414,16 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		bSwitchExit1.setVisible(false);
 		bSwitchExit2.setVisible(false);
 		bSwitchExit3.setVisible(false);
+		
+		bSetFinal.setVisible(false);
+		bSetPlayer.setVisible(false);
+		
+		tFinalRoom.setVisible(false);
+		tFinalX.setVisible(false);
+		tFinalY.setVisible(false);
+		tPlayerX.setVisible(false);
+		tPlayerY.setVisible(false);
+		tPlayerLive.setVisible(false);
 		
 		bSave.setVisible(false);
 		bExit.setVisible(false);
@@ -373,7 +444,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		radioItem.setVisible(false);
 		radioNPC.setVisible(false);
 		radioEnemy.setVisible(false);
-		radioFinal.setVisible(false);
+		checkFinal.setVisible(false);
 	}
 	
 	private void loadLevel(String path){
@@ -402,20 +473,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 			doordata = new String[rooms];
 			dialog = new String[rooms];
 			
-			leveldata[0] = "W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 "+
-"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 "+
-"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 "+
-"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 "+
-"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 "+
-"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 "+
-"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 "+
-"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 "+
-"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 "+
-"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 "+
-"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 "+
-"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 "+
-"W1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 W1 "+
-"W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 W1 ";
+			leveldata[0] = newRoomData;
 			enemydata[0] = "";
 			exitdata[0][0]=exitdata[0][1]=exitdata[0][2]=exitdata[0][3]=-1;
 			itemdata[0] = "";
@@ -519,9 +577,23 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 							endBossLocation = tokens.nextToken()+" ";
 							for(int i = 0; i<3; i++) endBossLocation += tokens.nextToken() +" ";
 							// Raum vom Endgegner einlesen
+							selectedFinal = endBossLocation.charAt(1)-49;
 							int r10 = endBossLocation.charAt(3)-48;
 							int r01 = endBossLocation.charAt(4)-48;
+							
+							int x10 = endBossLocation.charAt(6)-48;
+							int x01 = endBossLocation.charAt(7)-48;
+							endBossX = 10*x10+x01;
+							endBossX *= blockSize;
+							
+							int y10 = endBossLocation.charAt(9)-48;
+							int y01 = endBossLocation.charAt(10)-48;
+							endBossY = 10*y10+y01;
+							endBossY *= blockSize;
+							
 							endBossRoom = 10*r10+r01;
+							
+							checkFinal.setSelected(true);
 						}
 						else{
 							endBossLocation = "";
@@ -752,6 +824,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		String request = "";
 		String type;
 		int typeNumber;
+		finalIsSelected = false;
 		
 		// Buttons entfernen wenn Editor gestartet
 		bNewMap.setVisible(false);
@@ -763,6 +836,16 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		bSwitchExit1.setVisible(true);
 		bSwitchExit2.setVisible(true);
 		bSwitchExit3.setVisible(true);
+		
+		bSetFinal.setVisible(true);
+		bSetPlayer.setVisible(true);
+		
+		tFinalRoom.setVisible(true);
+		tFinalX.setVisible(true);
+		tFinalY.setVisible(true);
+		tPlayerX.setVisible(true);
+		tPlayerY.setVisible(true);
+		tPlayerLive.setVisible(true);
 		
 		bSave.setVisible(true);
 		bExit.setVisible(true);
@@ -783,7 +866,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		radioItem.setVisible(true);
 		radioNPC.setVisible(true);
 		radioEnemy.setVisible(true);
-		radioFinal.setVisible(true);
+		checkFinal.setVisible(true);
 		
 		// ersten Raum initialisieren
 		initRoom(visibleRoom);
@@ -811,42 +894,42 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 					if(request.equals("WALL")){
 						Wall w = new Wall(0,0,typeNumber);
 						wallTypes.add(w);
-						System.out.println(request +" Type: " + (typeNumber-48) + " hinzugefügt.");
+						// System.out.println(request +" Type: " + (typeNumber-48) + " hinzugefügt.");
 					}
 					else if(request.equals("GROUND")){
 						Ground g = new Ground(0,0,typeNumber);
 						groundTypes.add(g);
-						System.out.println(request +" Type: " + (typeNumber-48) + " hinzugefügt.");
+						// System.out.println(request +" Type: " + (typeNumber-48) + " hinzugefügt.");
 					}
 					else if(request.equals("DOOR")){
 						Door d = new Door(0,0,typeNumber,false);
 						doorTypes.add(d);
-						System.out.println(request +" Type: " + (typeNumber-48) + " hinzugefügt.");
+						// System.out.println(request +" Type: " + (typeNumber-48) + " hinzugefügt.");
 					}
 					else if(request.equals("CHECKPOINT")){
 						Checkpoint c = new Checkpoint(0,0,typeNumber);
 						checkpointTypes.add(c);
-						System.out.println(request +" Type: " + (typeNumber-48) + " hinzugefügt.");
+						// System.out.println(request +" Type: " + (typeNumber-48) + " hinzugefügt.");
 					}
 					else if(request.equals("ENEMY")){
 						Enemy e = new Enemy(0,0,typeNumber);
 						enemyTypes.add(e);
-						System.out.println(request +" Type: " + (typeNumber-48) + " hinzugefügt.");
+						// System.out.println(request +" Type: " + (typeNumber-48) + " hinzugefügt.");
 					}
 					else if(request.equals("FINAL")){
 						FinalEnemy fe = new FinalEnemy(0,0,typeNumber);
 						finalEnemyTypes.add(fe);
-						System.out.println(request +" Type: " + (typeNumber-48) + " hinzugefügt.");
+						// System.out.println(request +" Type: " + (typeNumber-48) + " hinzugefügt.");
 					}
 					else if(request.equals("ITEM")){
 						Item it = new Item(0,0,typeNumber);
 						itemTypes.add(it);
-						System.out.println(request +" Type: " + (typeNumber-48) +" = " + it.getItemType() + " hinzugefügt.");
+						// System.out.println(request +" Type: " + (typeNumber-48) +" = " + it.getItemType() + " hinzugefügt.");
 					}
 					else if(request.equals("NPC")){
 						NPC npc = new NPC(0,0,typeNumber);
 						npcTypes.add(npc);
-						System.out.println(request +" Type: " + (typeNumber-48) + " hinzugefügt.");
+						// System.out.println(request +" Type: " + (typeNumber-48) + " hinzugefügt.");
 					}
 				}
 				
@@ -887,6 +970,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		finalEnemy = null;
 			
 		// Endgegner, falls vorhanden, auslesen
+		System.out.println("initRoom Final: "+endBossLocation);
 		if(roomnumber == endBossRoom){
 			element = endBossLocation.charAt(0);
 			type = endBossLocation.charAt(1);
@@ -1064,6 +1148,8 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 			GameElement element = (GameElement)room.get(i);
 			g.drawImage(element.getImage(),element.getX(),element.getY(), this);
 		}
+		
+		if(visibleRoom==0) g.drawImage(player.getImage(), startX, startY, this);
 	}
 		
 	public void paint(Graphics g){
@@ -1074,6 +1160,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 			
 			// Ausgänge und Raum Infos
 			Font small = new Font("Arial", Font.BOLD, 14);
+			Font smaller = new Font("Arial", Font.BOLD, 10);
 			g.setColor(Color.white);
 			g.setFont(small);
 			String vRoom = ""+visibleRoom;
@@ -1116,6 +1203,46 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 				FinalEnemy fen = (FinalEnemy)finalEnemyTypes.get(selectedFinal);
 				g.drawImage(fen.getImage(),fieldSizeX + 140,440,50,50,this);
 				
+				// Player und Final set Bereich
+				String textFinalRoom,textFinalX,textFinalY;
+				if(checkFinal.isSelected()&&endBossRoom>=0){
+					textFinalRoom=""+endBossRoom;
+					textFinalX = ""+endBossX;
+					textFinalY=""+endBossY;
+					
+					tFinalRoom.setText(textFinalRoom);
+					tFinalX.setText(textFinalX);
+					tFinalY.setText(textFinalY);
+				}
+				else{
+					tFinalRoom.setText("");
+					tFinalX.setText("");
+					tFinalY.setText("");
+				}
+				
+				String label="Player:";
+				String label2="Final:";
+				
+				String textX=""+startX;
+				String textY=""+startY;
+				String textLive=""+startLive;
+				
+				tPlayerX.setText(textX);
+				tPlayerY.setText(textY);
+				tPlayerLive.setText(textLive);
+				
+				g.drawString(label, 320, fieldSizeY+70);
+				g.drawString(label2, 320, fieldSizeY+110);
+				
+				g.drawString("0", 410, fieldSizeY+70);
+				g.drawString("X", 530, fieldSizeY+110);
+				
+				g.setFont(smaller);
+				g.drawString("Room", 400, fieldSizeY+40);
+				g.drawString("X", 450, fieldSizeY+40);
+				g.drawString("Y", 490, fieldSizeY+40);
+				g.drawString("Live", 520, fieldSizeY+40);
+				g.setFont(small);
 			}
 		}
 		Toolkit.getDefaultToolkit().sync();
@@ -1298,6 +1425,96 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 			enemydata[visibleRoom]+="E"+en.getType()+" "+sx+" "+sy+" ";
 		}
 		
+	}
+	
+	public void changePlayerPos(){
+		int pX,pY,pL;
+		String spX,spY,spL;
+		
+		spX = tPlayerX.getText();
+		if(spX.length()>3) pX=fieldSizeX-(int)player.getBounds().getWidth();
+		else if(spX.length()==3) pX=(spX.charAt(0)-48)*100+(spX.charAt(1)-48)*10+(spX.charAt(2)-48);
+		else if(spX.length()==2) pX=(spX.charAt(0)-48)*10+(spX.charAt(1)-48);
+		else if(spX.length()==1) pX=spX.charAt(0)-48;
+		else pX = 0;
+		if(pX>fieldSizeX-(int)player.getBounds().getWidth()) pX = fieldSizeX-(int)player.getBounds().getWidth();
+		
+		spY = tPlayerY.getText();
+		if(spY.length()>3) pY=fieldSizeY-(int)player.getBounds().getHeight();
+		else if(spY.length()==3) pY=(spY.charAt(0)-48)*100+(spY.charAt(1)-48)*10+(spY.charAt(2)-48);
+		else if(spY.length()==2) pY=(spY.charAt(0)-48)*10+(spY.charAt(1)-48);
+		else if(spY.length()==1) pY=spY.charAt(0)-48;
+		else pY = 0;
+		if(pY>fieldSizeX-(int)player.getBounds().getHeight()) pY = fieldSizeX-(int)player.getBounds().getHeight();
+		
+		spL = tPlayerLive.getText();
+		if(spL.length()>2) pL = 12;
+		else if(spL.length()==2) pL = (spL.charAt(0)-48)*10+(spL.charAt(1)-48);
+		else if(spL.length()==1) pL = spL.charAt(0)-48;
+		else pL = 3;
+		if(pL>12) pL=12;
+		
+		startX = pX;
+		startY = pY;
+		startLive = pL;
+		
+		System.out.println("Playerdata" +startX + " " + startY + " "+ startLive);
+
+	}
+	
+	public void changeFinalData(){
+		int fX, fY, fR;
+		String sfX,sfY,sfR;
+		FinalEnemy sfe = (FinalEnemy)finalEnemyTypes.get(selectedFinal);
+		
+		// Hole Pos aus Text
+		sfX = tFinalX.getText();
+		if(sfX.length()>3) fX=fieldSizeX-(int)sfe.getBounds().getWidth();
+		else if(sfX.length()==3) fX=(sfX.charAt(0)-48)*100+(sfX.charAt(1)-48)*10+(sfX.charAt(2)-48);
+		else if(sfX.length()==2) fX=(sfX.charAt(0)-48)*10+(sfX.charAt(1)-48);
+		else if(sfX.length()==1) fX=sfX.charAt(0)-48;
+		else fX = 0;
+		if(fX>fieldSizeX-(int)sfe.getBounds().getWidth()) fX = fieldSizeX-(int)sfe.getBounds().getWidth();
+		
+		sfY = tFinalY.getText();
+		if(sfY.length()>3) fY=fieldSizeY-(int)sfe.getBounds().getHeight();
+		else if(sfY.length()==3) fY=(sfY.charAt(0)-48)*100+(sfY.charAt(1)-48)*10+(sfY.charAt(2)-48);
+		else if(sfY.length()==2) fY=(sfY.charAt(0)-48)*10+(sfY.charAt(1)-48);
+		else if(sfY.length()==1) fY=sfY.charAt(0)-48;
+		else fY = 0;
+		if(fY>fieldSizeY-(int)sfe.getBounds().getHeight()) fY = fieldSizeY-(int)sfe.getBounds().getHeight();
+		
+		sfR = tFinalRoom.getText();
+		if(sfR.length()>2) fR = rooms-1;
+		else if(sfR.length()==2) fR = (sfR.charAt(0)-48)*10+(sfR.charAt(1)-48);
+		else if(sfR.length()==1) fR = sfR.charAt(0)-48;
+		else fR = 0;
+		if(fR>=rooms) fR=rooms-1;
+		
+		// Formatiere Pos
+		fX= fX/blockSize;
+		fY= fY/blockSize;
+		
+
+		endBossX = fX*blockSize;
+		endBossY = fY*blockSize;
+		endBossRoom = fR;
+		
+		
+		if(fR<10) sfR = "0"+fR;
+		else sfR = ""+fR;
+		
+		if(fX<10) sfX = "0"+fX;
+		else sfX = "" + fX;
+
+		if(fY<10) sfY = "0"+fY;
+		else sfY = "" + fY;
+				
+		
+		endBossLocation="";
+		endBossLocation+="F"+(selectedFinal+1)+" "+sfR+" "+sfX+" "+sfY;
+		
+		finalEnemy = new FinalEnemy(endBossX,endBossY,selectedFinal+49);
 	}
 	
 	public void mouseClicked(MouseEvent e) {
@@ -1563,8 +1780,6 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 			
 			changeData();
 			
-			/*
-			else if(action.equals("selFinal")) selectedElement = "final";*/
 			
 		}
 		repaint();
@@ -1645,6 +1860,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 			else if(action.equals("switchFinal")){
 				selectedFinal++;
 				if(selectedFinal>=finalEnemyTypes.size()) selectedFinal=0;
+				 if(checkFinal.isSelected()) changeFinalData();
 			}
 			else if(action.equals("save")){
 				 JFileChooser chooser = new JFileChooser();
@@ -1670,8 +1886,25 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 			else if(action.equals("selItem")) selectedElement = "item";
 			else if(action.equals("selNPC")) selectedElement = "npc";
 			else if(action.equals("selEnemy")) selectedElement = "enemy";
-			else if(action.equals("selFinal")) selectedElement = "final";
-			
+			else if(action.equals("selFinal")){
+				 if(checkFinal.isSelected()){
+					 finalIsSelected = true;
+					 changeFinalData();
+				 }
+				 else{
+					 finalIsSelected = false;
+					 finalEnemy = null;
+					 endBossLocation="";
+					 endBossRoom=-1;
+				 }
+			}
+			else if(action.equals("setFinal")){
+				 if(checkFinal.isSelected()) changeFinalData();
+			}
+				
+			else if(action.equals("setPlayer")){
+				changePlayerPos();
+			}
 		}
 		else{
 			// im Editor-Menü
