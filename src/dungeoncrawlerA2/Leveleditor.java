@@ -26,6 +26,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.JFrame;
 import javax.swing.JRadioButton;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 public class Leveleditor extends JFrame implements ActionListener, MouseListener{
@@ -114,6 +115,10 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 	JButton bSwitchExit2;
 	JButton bSwitchExit3;
 	
+	JButton addRoom, removeRoom;
+	
+	JButton levelInfos, raumDialog;
+	
 	JButton bSetFinal, bSetPlayer;
 	JTextField tFinalRoom, tFinalX, tFinalY, tPlayerX, tPlayerY, tPlayerLive;
 	
@@ -199,6 +204,12 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		bSwitchExit2 = new JButton("Exit2");
 		bSwitchExit3 = new JButton("Exit3");
 		
+		levelInfos = new JButton("Levelinfos");
+		raumDialog = new JButton("Raumdialog");
+		
+		addRoom = new JButton("Raum hinzufügen");
+		removeRoom = new JButton("Raum löschen");
+		
 		bSetFinal = new JButton("OK");
 		bSetPlayer = new JButton("OK");
 		
@@ -239,6 +250,12 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		bSwitchExit1.setBounds(210,fieldSizeY+50,90,30);
 		bSwitchExit2.setBounds(110,fieldSizeY+90,90,30);
 		bSwitchExit3.setBounds(10,fieldSizeY+50,90,30);
+		
+		levelInfos.setBounds(700,fieldSizeY+170,180,30);
+		raumDialog.setBounds(700,fieldSizeY+130,180,30);
+		
+		addRoom.setBounds(700,fieldSizeY+50,180,30);
+		removeRoom.setBounds(700,fieldSizeY+90,180,30);
 
 		bSetFinal.setBounds(560,fieldSizeY+90,90,30);
 		bSetPlayer.setBounds(560,fieldSizeY+50,90,30);
@@ -315,6 +332,12 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		bSwitchExit2.setActionCommand("switchExit2");
 		bSwitchExit3.setActionCommand("switchExit3");
 		
+		levelInfos.setActionCommand("openLevelInfos");
+		raumDialog.setActionCommand("openRaumDialog");
+		
+		addRoom.setActionCommand("addRoom");
+		removeRoom.setActionCommand("removeRoom");
+		
 		bSetFinal.setActionCommand("setFinal");
 		bSetPlayer.setActionCommand("setPlayer");
 		
@@ -346,6 +369,12 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		bSwitchExit2.addActionListener(this);
 		bSwitchExit3.addActionListener(this);
 		
+		levelInfos.addActionListener(this);
+		raumDialog.addActionListener(this);
+		
+		addRoom.addActionListener(this);
+		removeRoom.addActionListener(this);
+		
 		bSetFinal.addActionListener(this);
 		bSetPlayer.addActionListener(this);
 		
@@ -376,6 +405,12 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		edit.add(bSwitchExit1);
 		edit.add(bSwitchExit2);
 		edit.add(bSwitchExit3);
+		
+		edit.add(levelInfos);
+		edit.add(raumDialog);
+		
+		edit.add(addRoom);
+		edit.add(removeRoom);
 		
 		edit.add(bSetFinal);
 		edit.add(bSetPlayer);
@@ -414,6 +449,12 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		bSwitchExit1.setVisible(false);
 		bSwitchExit2.setVisible(false);
 		bSwitchExit3.setVisible(false);
+		
+		levelInfos.setVisible(false);
+		raumDialog.setVisible(false);
+		
+		addRoom.setVisible(false);
+		removeRoom.setVisible(false);
 		
 		bSetFinal.setVisible(false);
 		bSetPlayer.setVisible(false);
@@ -837,6 +878,12 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		bSwitchExit2.setVisible(true);
 		bSwitchExit3.setVisible(true);
 		
+		levelInfos.setVisible(true);
+		raumDialog.setVisible(true);
+		
+		addRoom.setVisible(true);
+		removeRoom.setVisible(true);
+		
 		bSetFinal.setVisible(true);
 		bSetPlayer.setVisible(true);
 		
@@ -1249,6 +1296,122 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		g.dispose();
 	}
 	
+	public void addRoom(){
+		System.out.println("Füge Raum nach "+(rooms-1) +" hinzu.");
+		
+		String[] leveldataSave = new String[rooms];
+		String[] enemydataSave = new String[rooms];
+		String[] itemdataSave = new String[rooms];
+		String[] interactdataSave = new String[rooms];
+		int[][] exitdataSave = new int[rooms][4];
+		String[] doordataSave = new String[rooms];
+		String[] dialogSave = new String[rooms];
+		
+		// Sichern
+		for(int i=0;i<rooms;i++){
+			leveldataSave[i] = leveldata[i];
+			enemydataSave[i] = enemydata[i];
+			itemdataSave[i] = itemdata[i];
+			interactdataSave[i] = interactdata[i];
+			exitdataSave[i] = exitdata[i];
+			doordataSave[i] = doordata[i];
+			dialogSave[i] = dialog[i];
+		}
+		
+		rooms++;
+		
+		leveldata = new String[rooms];
+		enemydata = new String[rooms];
+		exitdata = new int[rooms][4];
+		itemdata = new String[rooms];
+		interactdata = new String[rooms];
+		doordata = new String[rooms];
+		dialog = new String[rooms];
+		
+		for(int i=0;i<rooms;i++){
+			if(i<rooms-1){
+				leveldata[i] = leveldataSave[i];
+				enemydata[i] = enemydataSave[i];
+				exitdata[i][0]=exitdataSave[i][0];
+				exitdata[i][1]=exitdataSave[i][1];
+				exitdata[i][2]=exitdataSave[i][2];
+				exitdata[i][3]=exitdataSave[i][3];
+				itemdata[i] = itemdataSave[i];
+				interactdata[i] = interactdataSave[i];
+				doordata[i] = doordataSave[i];
+				dialog[i] = dialogSave[i];
+			}
+			else{
+				leveldata[i] = newRoomData;
+				enemydata[i] = "";
+				exitdata[i][0]=exitdata[i][1]=exitdata[i][2]=exitdata[i][3]=-1;
+				itemdata[i] = "";
+				interactdata[i] = "";
+				doordata[i] = "";
+				dialog[i] = "";
+			}
+		}
+		
+	}
+	
+	public void removeRoom(){
+		System.out.println("Lösche Raum "+visibleRoom+".");
+		int counter = 0;
+		
+		if(rooms!=1){
+			String[] leveldataSave = new String[rooms];
+			String[] enemydataSave = new String[rooms];
+			String[] itemdataSave = new String[rooms];
+			String[] interactdataSave = new String[rooms];
+			int[][] exitdataSave = new int[rooms][4];
+			String[] doordataSave = new String[rooms];
+			String[] dialogSave = new String[rooms];
+			
+			// Sichern
+			for(int i=0;i<rooms;i++){
+				leveldataSave[i] = leveldata[i];
+				enemydataSave[i] = enemydata[i];
+				itemdataSave[i] = itemdata[i];
+				interactdataSave[i] = interactdata[i];
+				exitdataSave[i] = exitdata[i];
+				doordataSave[i] = doordata[i];
+				dialogSave[i] = dialog[i];
+			}
+			
+			
+			leveldata = new String[rooms-1];
+			enemydata = new String[rooms-1];
+			exitdata = new int[rooms-1][4];
+			itemdata = new String[rooms-1];
+			interactdata = new String[rooms-1];
+			doordata = new String[rooms-1];
+			dialog = new String[rooms-1];
+			
+			for(int i=0;i<rooms;i++){
+				if(i!=visibleRoom){
+					leveldata[counter] = leveldataSave[i];
+					enemydata[counter] = enemydataSave[i];
+					exitdata[counter][0]=exitdataSave[i][0];
+					exitdata[counter][1]=exitdataSave[i][1];
+					exitdata[counter][2]=exitdataSave[i][2];
+					exitdata[counter][3]=exitdataSave[i][3];
+					itemdata[counter] = itemdataSave[i];
+					interactdata[counter] = interactdataSave[i];
+					doordata[counter] = doordataSave[i];
+					dialog[counter] = dialogSave[i];
+					counter++;
+				}
+			}
+
+			rooms--;
+			initRoom(visibleRoom);
+		}
+		else{
+			System.out.println("Löschen des einzigen Raumes nicht möglich!");
+		}
+		
+	}
+	
 	public void changeData(){
 		int x,y;
 		
@@ -1488,7 +1651,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		if(sfR.length()>2) fR = rooms-1;
 		else if(sfR.length()==2) fR = (sfR.charAt(0)-48)*10+(sfR.charAt(1)-48);
 		else if(sfR.length()==1) fR = sfR.charAt(0)-48;
-		else fR = 0;
+		else fR = visibleRoom;
 		if(fR>=rooms) fR=rooms-1;
 		
 		// Formatiere Pos
@@ -1905,6 +2068,19 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 			else if(action.equals("setPlayer")){
 				changePlayerPos();
 			}
+			else if(action.equals("addRoom")){
+				addRoom();
+			}
+			else if(action.equals("removeRoom")){
+				removeRoom();
+			}
+			else if(action.equals("openLevelInfos")){
+				new InfoFrame("level");
+			}
+			else if(action.equals("openRaumDialog")){
+				new InfoFrame("dialog");
+			}
+			
 		}
 		else{
 			// im Editor-Menü
@@ -1931,6 +2107,83 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		repaint();
 		
 	}
-}
+	
+	// Zusätzlicher Frame für Infos
+	private class InfoFrame extends JFrame implements ActionListener{
+		// Konstruktor
+		JPanel infoPanel;
+		JTextArea text;
+		JTextField title;
+		JButton OK;
+		boolean isDialog;
+		
+		private InfoFrame(String command){
+			isDialog = false;
+			
+			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+			setSize(800, 400);
+			setLocationRelativeTo(null); // Fenster in Mitte des Bildschirms setzen
+			setResizable(false);
+			
+			infoPanel = new JPanel();
+			infoPanel.setLayout(null);
+			infoPanel.setBackground(backgroundColor);
+			
+			OK = new JButton("OK");
+			OK.setBounds(650,120,90,30);
+			OK.setActionCommand("OK");
+			OK.addActionListener(this);
+			OK.setVisible(true);
+			
+			title = new JTextField();
+			title.setBounds(20,30,600,30);
+			
+			text = new JTextArea();
+			text.setBounds(20,120,600,200);
+			text.setVisible(true);
+			
+			if(command.equals("dialog")){
+				// Dialoginfobox
+				isDialog = true;
+				setTitle("Dialog in Raum "+visibleRoom);
+				text.setText(dialog[visibleRoom]);
+			}
+			else{
+				// Levelinfobox
+				setTitle("Levelinfos");
+				
+				title.setText(levelName);
+				title.setVisible(true);
+				infoPanel.add(title);
+				
+				text.setText(intro);
+			}
+			
+			infoPanel.add(text);
+			infoPanel.add(OK);
+			add(infoPanel);
+			setVisible(true);
+		}
 
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			String action = e.getActionCommand();
+			if(action.equals("OK")){
+				if(isDialog){
+					dialog[visibleRoom]=text.getText();
+					
+				}
+				else{
+					intro = text.getText();
+					levelName = title.getText();
+				}
+				this.setVisible(false);
+				this.dispose();
+			}
+			
+		}
+		
+		
+	}
+}
 
