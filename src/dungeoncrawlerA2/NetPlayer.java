@@ -68,6 +68,12 @@ public class NetPlayer implements Runnable{
 	
 	private ArrayList<Missile> missiles = new ArrayList<Missile>();
 
+	private ImageIcon ii;
+	
+	private String [] playerPath = {"images/player/player_up_0.png","images/player/player_right_0.png","images/player/player_down_0.png","images/player/player_left_0.png"};
+	private String [] player2Path = {"images/player/player2_up_0.png","images/player/player2_right_0.png","images/player/player2_down_0.png","images/player/player2_left_0.png"};
+	
+	private Image leftimage, rightimage, upimage, downimage;
 	
 	// Konstruktor
 	/**
@@ -80,11 +86,32 @@ public class NetPlayer implements Runnable{
 	 */
 	public NetPlayer(int x, int y, int live, int type, Socket socket){
 		if(type==0){
-			player = "images/player.png";
+			ii = new ImageIcon(this.getClass().getResource(playerPath[0]));
+			upimage = ii.getImage();
+			ii = new ImageIcon(this.getClass().getResource(playerPath[1]));
+			rightimage = ii.getImage();
+			ii = new ImageIcon(this.getClass().getResource(playerPath[2]));
+			downimage = ii.getImage();
+			ii = new ImageIcon(this.getClass().getResource(playerPath[3]));
+			leftimage = ii.getImage();
+			
 		}
 		else if(type == 1){
-			player = "images/player2.png";
+			
+			ii = new ImageIcon(this.getClass().getResource(player2Path[0]));
+			upimage = ii.getImage();
+			ii = new ImageIcon(this.getClass().getResource(player2Path[1]));
+			rightimage = ii.getImage();
+			ii = new ImageIcon(this.getClass().getResource(player2Path[2]));
+			downimage = ii.getImage();
+			ii = new ImageIcon(this.getClass().getResource(player2Path[3]));
+			leftimage = ii.getImage();
 		}
+		
+		// Bild laden plus Informationen
+		image = rightimage;
+		width = image.getWidth(null);
+        height = image.getHeight(null);
 		
 		this.socket = socket;
 		this.chosenMap = 0;
@@ -95,7 +122,7 @@ public class NetPlayer implements Runnable{
 		this.endGame = false;
 		
 		// Bild laden plus Informationen
-		ImageIcon ii = new ImageIcon(this.getClass().getResource(player));
+		
 		image = ii.getImage();
 		width = image.getWidth(null);
         height = image.getHeight(null);
@@ -479,6 +506,15 @@ public class NetPlayer implements Runnable{
 		this.mana = startMana;
 	}
 	
+	/**
+	 * Setze Bild des Spielers
+	 * @param pic Bild
+	 */
+	public void setImage(Image pic) {
+        this.image = pic;
+        width = image.getWidth(null);
+        height = image.getHeight(null);
+    }
 	
 	/**
 	 * Entfernt eine Anzahl an Energie
@@ -546,18 +582,22 @@ public class NetPlayer implements Runnable{
 		
 		if(key == KeyEvent.VK_LEFT){
 			dx = -speed;
+			setImage(leftimage);
 			// dir = 3;
 		}
 		if(key == KeyEvent.VK_RIGHT){
 			dx = speed;
+			setImage(rightimage);
 			// dir = 1;
 		}
 		if(key == KeyEvent.VK_UP){
 			dy = -speed;
+			setImage(upimage);
 			// dir = 0;
 		}
 		if(key == KeyEvent.VK_DOWN){
 			dy = speed;
+			setImage(downimage);
 			// dir = 2;
 		}
 		if(key == KeyEvent.VK_SPACE){

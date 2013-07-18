@@ -847,9 +847,24 @@ public class Game extends JPanel implements ActionListener{
 	 * Schaltet das Men&uuml;e auf ein Netzwerkmen&uuml;e um
 	 */
 	public void initNetworkMenu(){
-		
-		inNetworkMenu = true;
-		
+		try{
+			os.close();
+			serverSocket.close();
+		}
+		catch(Exception E){
+			
+		}
+		inNetworkMenu=true;
+		isServer = isClient = false;
+		inLobby = false;
+		inBattle = inChat = false;
+		firstStart=true;
+		ingame = false;
+		//inNetworkGame = true;
+		won = false;
+		inDialog = inShop = false;
+		chooseBattleMapBox = p1ready=p2ready=false;
+		gameEnded=paused = false;
 	}
 	
 	// Starte Netzwerkspiel als Server
@@ -2283,10 +2298,9 @@ public class Game extends JPanel implements ActionListener{
 		if(isServer) g.drawString(instruct2,100, 100);
 		
 		// Zeichne Bereitschaft der Spieler
-		g.setColor(Color.blue);
+		g.setColor(Color.red);
 		g.drawString(p1r,100, 140); 
 		g.drawString(p2r,100, 160);
-		g.setColor(Color.BLACK);
 		
 		// Zeichne Chat
 		for(int i=0;i<chat.length;i++){
@@ -2436,15 +2450,21 @@ public class Game extends JPanel implements ActionListener{
 				if(player.getLive() <= 0 || gameEnded){ // prüfe ob Spieler noch im Spiel oder Lebenspunkte 0
 					if(inNetworkGame){
 						// Zurück zur Lobby
-						if(!gameEnded && !received)os.println("LOST"); // Sende Lost befehl
+						if(!gameEnded && !received) os.println("LOST"); // Sende Lost befehl
 						else os.println("END");
 						
-						os.close();
-						ingame = false;
-						inNetworkGame = false;
-						inLobby = false;
-						inNetworkMenu=false;
-						timer.stop();
+						if(gameEnded){
+							os.close();
+							ingame = false;
+							inNetworkGame = false;
+							inLobby = false;
+							inNetworkMenu=false;
+							timer.stop();
+						}
+						else{
+							this.initNetGame(client,false);
+						}
+						
 						
 					}
 					else{
@@ -2522,7 +2542,7 @@ public class Game extends JPanel implements ActionListener{
 							 }
 						}
 						// prüfe ob Gegner verloren
-						if(player2.getLost()) this.initNetGame(client,false);
+						if(player2.getLost()&&!inLobby) this.initNetGame(client,false);
 						
 						
 					}
