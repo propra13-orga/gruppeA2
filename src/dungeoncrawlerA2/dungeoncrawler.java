@@ -6,13 +6,20 @@ import javax.swing.JFrame;
 // Menü, Start Game, Exit
 
 // dungeoncrawler: Hauptklasse
+/**
+ * Startet das Programm
+ *
+ */
 public class dungeoncrawler extends JFrame {
 
 	// Fenstergröße
 	private int windowSizeX = 800;	
-	private int windowSizeY = 600;
+	private int windowSizeY = 630;
 	
 	// Konstruktor
+	/**
+	 * Leitet ein neues Spiel ein, Programmstart
+	 */
 	public dungeoncrawler(){
 		
 		// definiere Hauptfenster
@@ -33,6 +40,10 @@ public class dungeoncrawler extends JFrame {
 	
 	
 	
+	/**
+	 * main-Klasse
+	 * @param args nicht belegt
+	 */
 	public static void main(String[] args) {
 		new dungeoncrawler();
 

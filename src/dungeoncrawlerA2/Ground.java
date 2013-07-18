@@ -5,6 +5,10 @@ import java.awt.Rectangle;
 
 import javax.swing.ImageIcon;
 
+/**
+ * Boden
+ *
+ */
 public class Ground extends GameElement{
 
 	 private Image image;
@@ -15,7 +19,13 @@ public class Ground extends GameElement{
 	 private String path; // Bilddateipfad
 	 
 	 // Konstruktor
-	 public Ground(int x, int y, int type) {
+	 /**
+	  * Erstellt neuen Boden an Position x,y
+	 * @param x X-Koordinate
+	 * @param y Y-Koordinate
+	 * @param type Typ des Bodens (Design)
+	 */
+	public Ground(int x, int y, int type) {
 		 
 		 super(x, y); // Aufruf GameElement
 		 
@@ -33,10 +43,18 @@ public class Ground extends GameElement{
 	     this.setImage(image);
 	 }
 	 
-	 public int getType(){
+	 /**
+	  * Gibt Typ des Bodens zur&uuml;ck
+	 * @return Typ
+	 */
+	public int getType(){
 		 return this.type;
 	 }
 	 
+	/**
+	 * Gibt Rectangle (Position, Breite und L&auml;nge des Bildes) f&uuml;r die Kollisionserkennung zur&uuml;ck
+	 * @return Rectangle (Position, Breite und L&auml;nge des Bildes)
+	 */
 	 public Rectangle getBounds(){
 			// Kollisionserkennung
 			return new Rectangle(this.getX(), this.getY(), width, height); 

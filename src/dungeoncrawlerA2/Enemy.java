@@ -5,6 +5,10 @@ import java.awt.Rectangle;
 
 import javax.swing.ImageIcon;
 
+/**
+ * Gegner
+ *
+ */
 public class Enemy extends GameElement{
 
 	private int collisionTollerance = 10; // Toleranz bei Kollision - Gegner muss richtig berührt werden, nicht nur angeschnitten
@@ -31,6 +35,12 @@ public class Enemy extends GameElement{
 	private int speed; // Geschwindigkeit
 	
 	// Konstruktor
+	/**
+	 * Erstellt neuen Gegner vom Typ type an Position x,y
+	 * @param x X Koordinate
+	 * @param y Y Koordinate
+	 * @param type Typ
+	 */
 	public Enemy(int x, int y, int type) {
 		 
 		super(x, y); // Aufruf GameElement
@@ -69,6 +79,9 @@ public class Enemy extends GameElement{
 	    this.setImage(image);
 	}
 	
+	/**
+	 * Bewegt Gegner nach vom Typ abh&auml;ngigen Muster um dx und dy
+	 */
 	public void move(){
 		// Richtung ermitteln
 		// 0 = up, 1 = right, 2 = down, 3 = left
@@ -118,12 +131,19 @@ public class Enemy extends GameElement{
 		this.setY(goBackY+dy);
 	}
 	
+	/**
+	 * L&auml;sst Gegner zur letztbekannten Position zur&uuml;ckspringen (CollisionDetection: stehenbleiben vor soliden Objekten)
+	 */
 	public void resetMovement(){
 		this.setX(goBackX);
 		this.setY(goBackY);
 	}
 	
 	// set methoden
+	/**
+	 * Setzt eine neue Bewegungsrichtung
+	 * @param d Bewegungsrichtung (0 = up, 1 = right, 2 = down, 3 = left)
+	 */
 	public void setDirectionOfMovement(int d){
 		// 0 = up, 1 = right, 2 = down, 3 = left
 		this.dir += d;
@@ -131,10 +151,18 @@ public class Enemy extends GameElement{
 		
 	}
 	
+	/**
+	 * Setze Gegner sichtbar/unsichtbar
+	 * @param visible Sichtbar
+	 */
 	public void setVisible(boolean visible){
 		this.visible = visible;
 	}
 	
+	/**
+	 * &Auml;ndert den Wert der Lebenspunkte um addLive
+	 * @param addLive &Auml;nderung der Lebenspunkte
+	 */
 	public void setLive(int addLive){
 		this.live += addLive;
 		if(this.live==1) this.speed = 1;
@@ -142,30 +170,58 @@ public class Enemy extends GameElement{
 	
 	// get Methoden
 	
+	/**
+	 * Gibt die Anzahl der Lebenspunkte zur&uuml;ck
+	 * @return Anzahl Lebenspunkte
+	 */
 	public int getLive(){
 		return this.live;
 	}
 	
+	/**
+	 * Gibt aktuelle Bewegungsrichtung zur&uuml;ck
+	 * @return Aktuelle Bewegungsrichting
+	 */
 	public int getDirectionOfMovement(){
 		return this.dir;
 	}
 	
+	/**
+	 * Gibt Sichtbarkeit des Gegners zur&uuml;ck
+	 * @return Sichtbarkeit
+	 */
 	public boolean isVisible(){
 		return visible;
 	}
 	 
+	/**
+	 * Gibt Schaden zur&uuml;ck
+	 * @return Schaden
+	 */
 	public int getDamage(){
 		return damage;
 	}
 	
+	/**
+	 * Gibt Elementtyp des Gegners zur&uuml;ck
+	 * @return Element (fire, plasma, ice)
+	 */
 	public String getElement(){
 		return this.element;
 	}
 	
+	/**
+	 * Gibt den Typ des Gegners zurück (f&uuml;r erneutes codieren der Level)
+	 * @return Typ
+	 */
 	public int getType(){
 		 return this.type;
 	 }
 	
+	/**
+	 * Gibt Rectangle (Position, Breite und L&auml;nge des Bildes) f&uuml;r die Kollisionserkennung zur&uuml;ck
+	 * @return Rectangle (Position, Breite und L&auml;nge des Bildes)
+	 */
 	public Rectangle getBounds(){
 		// Kollisionserkennung
 		return new Rectangle(this.getX()+collisionTollerance/2, this.getY()+collisionTollerance/2, width - collisionTollerance, height - collisionTollerance); 

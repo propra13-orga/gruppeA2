@@ -4,6 +4,10 @@ import java.awt.Image;
 import javax.swing.ImageIcon;
 import java.awt.Rectangle;
 
+/**
+ * Wand
+ *
+ */
 public class Wall extends GameElement{
 
 	private Image image;
@@ -14,6 +18,12 @@ public class Wall extends GameElement{
 	private String path; // Bilddateipfad
 	 
 	// Konstruktor
+	/**
+	  * Erstellt neue Wand an Position x,y
+	 * @param x X-Koordinate
+	 * @param y Y-Koordinate
+	 * @param type Typ der Wand(Design)
+	 */
 	public Wall(int x, int y, int type) {
 		 
 		super(x, y); // Aufruf GameElement
@@ -30,11 +40,17 @@ public class Wall extends GameElement{
 	    height = image.getHeight(null);
 	    this.setImage(image);
 	}
-	 
+	 /**
+	  * Gibt Typ der Wand zur&uuml;ck
+	 * @return Typ
+	 */
 	public int getType(){
 		 return this.type;
 	 }
-	
+	/**
+	 * Gibt Rectangle (Position, Breite und L&auml;nge des Bildes) f&uuml;r die Kollisionserkennung zur&uuml;ck
+	 * @return Rectangle (Position, Breite und L&auml;nge des Bildes)
+	 */
 	public Rectangle getBounds(){
 		// Kollisionserkennung
 		return new Rectangle(this.getX(), this.getY(), width, height); 

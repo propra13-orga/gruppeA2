@@ -6,6 +6,10 @@ import java.util.ArrayList;
 
 import javax.swing.ImageIcon;
 
+/**
+ * Endgegner
+ *
+ */
 public class FinalEnemy extends GameElement{
 
 	private int collisionTollerance = 10; // Toleranz bei Kollision - Gegner muss richtig berührt werden, nicht nur angeschnitten
@@ -37,6 +41,12 @@ public class FinalEnemy extends GameElement{
 	private String element;
 	
 	// Konstruktor
+	/**
+	 * Erstellt neuen Endgegner vom Typ type an Position x,y
+	 * @param x X Koordinate
+	 * @param y Y Koordinate
+	 * @param type Typ
+	 */
 	public FinalEnemy(int x, int y, int type) {
 		 
 		super(x, y); // Aufruf GameElement
@@ -86,9 +96,12 @@ public class FinalEnemy extends GameElement{
 	    this.setImage(image);
 	}
 	
+	/**
+	 * Bewegt Gegner nach vom Typ und Position des Spielers abh&auml;ngigen Muster um dx und dy
+	 * @param playerX X Koordinate des Spielers
+	 * @param playerY Y Koordinate des Spielers
+	 */
 	public void move(int playerX, int playerY){
-		
-		// TODO Bewegung verbessern, damit kein stehenbleiben
 		
 		if(saveTimeCounter > 0) saveTimeCounter--; 
 		// Richtung ermitteln
@@ -164,61 +177,102 @@ public class FinalEnemy extends GameElement{
 		this.setY(goBackY+dy);
 	}
 	
+	/**
+	 * L&auml;sst Gegner zur letztbekannten Position zur&uuml;ckspringen (CollisionDetection: stehenbleiben vor soliden Objekten)
+	 */
 	public void resetMovement(){
 		this.setX(goBackX);
 		this.setY(goBackY);
 	}
 	
 	// set methoden
+	/**
+	 * Setzt eine neue Bewegungsrichtung
+	 * @param d Bewegungsrichtung (0 = up, 1 = right, 2 = down, 3 = left)
+	 */
 	public void setDirectionOfMovement(int d){
 		// 0 = up, 1 = right, 2 = down, 3 = left
 		this.dir += d;
 		this.dir = this.dir%4;
 	}
 	
+	/**
+	 * Setzt eine bestimmte Zeit in der der Endgegner sich nicht auf den Player zubewegt
+	 */
 	public void setSave(){
 		// Zeit zum flüchten
 		this.saveTimeCounter = saveTime;
 	}
-	
+	/**
+	 * Setze Gegner sichtbar/unsichtbar
+	 * @param visible Sichtbar
+	 */
 	public void setVisible(boolean visible){
 		this.visible = visible;
 	}
-	
+	/**
+	 * &Auml;ndert den Wert der Lebenspunkte um addLive
+	 * @param addLive &Auml;nderung der Lebenspunkte
+	 */
 	public void setLive(int addLive){
 		this.live += addLive;
 	}
 	
 	// get Methoden
 	
+	/**
+	 * Gibt Liste an geschossenen Missiles zur&uuml;ck
+	 * @return Liste an Missiles
+	 */
 	public ArrayList<Missile> getMissiles(){
 		return missiles;
 	}
-	
+	/**
+	 * Gibt die Anzahl der Lebenspunkte zur&uuml;ck
+	 * @return Anzahl Lebenspunkte
+	 */
 	public int getLive(){
 		return this.live;
 	}
-	
+	/**
+	 * Gibt aktuelle Bewegungsrichtung zur&uuml;ck
+	 * @return Aktuelle Bewegungsrichting
+	 */
 	public int getDirectionOfMovement(){
 		return this.dir;
 	}
-	
+	/**
+	 * Gibt Sichtbarkeit des Gegners zur&uuml;ck
+	 * @return Sichtbarkeit
+	 */
 	public boolean isVisible(){
 		return visible;
 	}
-	 
+	/**
+	 * Gibt Schaden zur&uuml;ck
+	 * @return Schaden
+	 */
 	public int getDamage(){
 		return damage;
 	}
-	
+	/**
+	 * Gibt Elementtyp des Gegners zur&uuml;ck
+	 * @return Element (fire, plasma, ice)
+	 */
 	public String getElement(){
 		return this.element;
 	}
-	
+	/**
+	 * Gibt den Typ des Gegners zurück (f&uuml;r erneutes codieren der Level)
+	 * @return Typ
+	 */
 	public int getType(){
 		 return this.type;
 	 }
-	
+	/**
+	 * Gibt Rectangle (Position, Breite und L&auml;nge des Bildes) f&uuml;r die Kollisionserkennung zur&uuml;ck
+	 * @return Rectangle (Position, Breite und L&auml;nge des Bildes)
+	 */
 	public Rectangle getBounds(){
 		// Kollisionserkennung
 		return new Rectangle(this.getX()+collisionTollerance/2, this.getY()+collisionTollerance/2, width - collisionTollerance, height - collisionTollerance); 

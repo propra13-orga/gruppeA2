@@ -29,6 +29,11 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+
+/**
+ * Leveleditor
+ *
+ */
 public class Leveleditor extends JFrame implements ActionListener, MouseListener{
 	
 	// Editordaten
@@ -146,8 +151,14 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 	int selectedGround, selectedWall, selectedDoor, selectedEnemy, selectedCheckpoint, selectedItem, selectedFinal, selectedNPC;
 	String selectedElement;
 	
+	
+	
 	// Konstruktor
+	/**
+	 * Erzeugt neues Fenster mit dem Leveleditor zum Dungeoncrawler
+	 */
 	public Leveleditor(){
+		
 		// Status setzen
 		levelLoaded = false;
 		editorLoaded = false;
@@ -168,6 +179,9 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		selectedGround = selectedWall = selectedDoor = selectedEnemy = selectedCheckpoint = selectedItem = selectedFinal = selectedNPC = 0;
 	}
 	
+	/**
+	 * Initialisiert die Benutzeroberfl&auml;che des Editors 
+	 */
 	private void startEditor(){
 		
 		edit.setLayout(null); // um Buttons beliebig zu positionieren
@@ -488,6 +502,10 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		checkFinal.setVisible(false);
 	}
 	
+	/**
+	 * L&auml;dt Leveldaten aus einer Textdatei
+	 * @param path Pfad der Textdatei
+	 */
 	private void loadLevel(String path){
 		if(path.equals("")){
 			// neues Level erstellen
@@ -764,6 +782,10 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		}
 	}
 	
+	/**
+	 * Schreibt Leveldaten in eine Textdatei
+	 * @param path Pfad der Datei
+	 */
 	private void saveLevel(String path){
 		File f = new File(path);
 		FileWriter writer;
@@ -830,7 +852,7 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 				// #EXIT
 				writer.write("#EXIT ");
 				for(int k = 0; k<4; k++){
-					if(exitdata[i][k]<0 || exitdata[i][k]>10) st = ""+exitdata[i][k];
+					if(exitdata[i][k]<0 || exitdata[i][k]>=10) st = ""+exitdata[i][k];
 					else st = "0"+exitdata[i][k];
 					writer.write(st+" ");
 				}
@@ -860,6 +882,9 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 	}
 	
 	
+	/**
+	 * Startet Benutzeroberfl&auml;che des Editors 
+	 */
 	private void initWorkspace(){
 		String line = null;
 		String request = "";
@@ -993,6 +1018,10 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 	}
 	
 	// Raum erstellen
+	/**
+	 * Erstellt Raum aus Leveldaten 
+	 * @param roomnumber Raumnummer
+	 */
 	public void initRoom(int roomnumber){
 		int x = 0;
 		int y = 0;
@@ -1175,6 +1204,10 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 	}
 		
 		// Raum zeichnen - aus Game()
+	/**
+	 * Zeichnet den geladenen Raum
+	 * @param g Grafik
+	 */
 	public void buildRoom(Graphics g){
 		room.clear();
 		// Raumelemente einfügen
@@ -1199,6 +1232,9 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		if(visibleRoom==0) g.drawImage(player.getImage(), startX, startY, this);
 	}
 		
+	/* (non-Javadoc)
+	 * @see java.awt.Window#paint(java.awt.Graphics)
+	 */
 	public void paint(Graphics g){
 		super.paint(g);
 		if(levelLoaded){
@@ -1296,6 +1332,9 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		g.dispose();
 	}
 	
+	/**
+	 * F&uuml;gt den Leveldaten einen Raum an letzter Position hinzu
+	 */
 	public void addRoom(){
 		System.out.println("Füge Raum nach "+(rooms-1) +" hinzu.");
 		
@@ -1354,6 +1393,9 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		
 	}
 	
+	/**
+	 * Entfernt den gerade sichtbaren Raum aus den Leveldaten
+	 */
 	public void removeRoom(){
 		System.out.println("Lösche Raum "+visibleRoom+".");
 		int counter = 0;
@@ -1412,6 +1454,9 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		
 	}
 	
+	/**
+	 * Codiert die Leveldaten in richtiger Reihenfolge 
+	 */
 	public void changeData(){
 		int x,y;
 		
@@ -1590,6 +1635,9 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		
 	}
 	
+	/**
+	 * Schreibt die Position des Spielers in die Leveldaten
+	 */
 	public void changePlayerPos(){
 		int pX,pY,pL;
 		String spX,spY,spL;
@@ -1625,6 +1673,9 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 
 	}
 	
+	/**
+	 * Schreibt die Position des Endgegners in die Leveldaten
+	 */
 	public void changeFinalData(){
 		int fX, fY, fR;
 		String sfX,sfY,sfR;
@@ -1680,6 +1731,9 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		finalEnemy = new FinalEnemy(endBossX,endBossY,selectedFinal+49);
 	}
 	
+	/* (non-Javadoc)
+	 * @see java.awt.event.MouseListener#mouseClicked(java.awt.event.MouseEvent)
+	 */
 	public void mouseClicked(MouseEvent e) {
 		int mouseX, mouseY;
 		Rectangle r_mouse;
@@ -1948,24 +2002,40 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		repaint();
 	}
 	
+	/* (non-Javadoc)
+	 * @see java.awt.event.MouseListener#mousePressed(java.awt.event.MouseEvent)
+	 */
 	public void mousePressed(MouseEvent e) {
 		
 	}
 	
+	/* (non-Javadoc)
+	 * @see java.awt.event.MouseListener#mouseEntered(java.awt.event.MouseEvent)
+	 */
 	public void mouseEntered(MouseEvent e) {
 		
 	}
 	
+	/* (non-Javadoc)
+	 * @see java.awt.event.MouseListener#mouseExited(java.awt.event.MouseEvent)
+	 */
 	public void mouseExited(MouseEvent e) {
 		
 	}
 	
+	/* (non-Javadoc)
+	 * @see java.awt.event.MouseListener#mouseReleased(java.awt.event.MouseEvent)
+	 */
 	public void mouseReleased(MouseEvent e) {
 		
 	}
 	
 	
 	// Action Listener
+	/* (non-Javadoc)
+	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+	 */
+	
 	public void actionPerformed(ActionEvent e){
 		String action = e.getActionCommand();
 		
@@ -2109,15 +2179,25 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 	}
 	
 	// Zusätzlicher Frame für Infos
+	/**
+	 * Fenster mit Texte des Levels
+	 *
+	 */
 	private class InfoFrame extends JFrame implements ActionListener{
 		// Konstruktor
+		
 		JPanel infoPanel;
 		JTextArea text;
 		JTextField title;
 		JButton OK;
 		boolean isDialog;
 		
+		/**
+		 * Erstellt neues Fenster in dem entweder Leveltexte oder NPC Dialoge bearbeitet werden k&ouml;nnen
+		 * @param command diaog f&uuml;r Dialogfenster, sonst. f&uuml;r Levelinfos
+		 */
 		private InfoFrame(String command){
+			
 			isDialog = false;
 			
 			setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -2165,6 +2245,9 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 			setVisible(true);
 		}
 
+		/* (non-Javadoc)
+		 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+		 */
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			String action = e.getActionCommand();
@@ -2186,4 +2269,3 @@ public class Leveleditor extends JFrame implements ActionListener, MouseListener
 		
 	}
 }
-

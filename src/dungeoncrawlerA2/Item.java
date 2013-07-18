@@ -5,6 +5,10 @@ import java.awt.Rectangle;
 
 import javax.swing.ImageIcon;
 
+/**
+ * Item (Waffe, Schl&uuml;ssel, Healthpack, Energie, R&uuml;stung)
+ *
+ */
 public class Item extends GameElement{
 	
 	private String path; // Bilddateipfad
@@ -17,6 +21,12 @@ public class Item extends GameElement{
 	private boolean visible;
 	private boolean ItemHasMissiles;
 	
+	/**
+	 * Erstellt Item an Position x,y
+	 * @param x X-Koordinate
+	 * @param y Y-Koordinate
+	 * @param type Typ des Items
+	 */
 	public Item(int x, int y, int type){
 		
 		super(x,y); // Position auf Spielfeld
@@ -108,40 +118,75 @@ public class Item extends GameElement{
 	}
 	
 	// Set Methoden
+	/**
+	 * Setzt Sichtbarkeit des Items
+	 * @param visible Sichtbarkeit
+	 */
 	public void setVisible(boolean visible){
 		this.visible = visible;
 	}
 	
+	/**
+	 * Setzt Anzahl des Items
+	 * @param amount Anzahl
+	 */
 	public void setAmount(int amount){
 		this.amount = amount;
 	}
 	
+	/**
+	 * F&uuml;gt zur anzahl der Items addAmount hinzu
+	 * @param addAmount
+	 */
 	public void addToAmount(int addAmount){
 		this.amount += addAmount;
 		if(this.amount <= 0) this.amount = 0;
 	}
 	
 	// get Methoden
+	/**
+	 * Gibt Sichtbarkeit des Items zur&uuml;ck
+	 * @return Sichtbarkeit
+	 */
 	public boolean isVisible(){
 		return visible;
 	}
 	
+	/**
+	 * Gibt zur&uuml;ck ob das Item Munition besitzt = Waffe
+	 * @return Wert ob Item eine Waffe ist
+	 */
 	public boolean hasMissiles(){
 		return ItemHasMissiles;
 	}
 	
+	/**
+	 * Gibt den Namen des Items zur&uuml;ck
+	 * @return Name des Items
+	 */
 	public String getItemType(){
 		return this.ItemType;
 	}
 	
+	/**
+	 * Gibt Anzahl des Items / Munition zur&uuml;ck
+	 * @return Anzahl des Items
+	 */
 	public int getAmount(){
 		return this.amount;
 	}
 	
+	/**
+	 * Gibt Typ des Items zur&uuml;ck
+	 * @return Typ
+	 */
 	public int getType(){
 		 return this.type;
 	}
-	
+	/**
+	 * Gibt Rectangle (Position, Breite und L&auml;nge des Bildes) f&uuml;r die Kollisionserkennung zur&uuml;ck
+	 * @return Rectangle (Position, Breite und L&auml;nge des Bildes)
+	 */
 	public Rectangle getBounds(){
 		// Kollisionserkennung
 		return new Rectangle(this.getX(), this.getY(), width, height); 

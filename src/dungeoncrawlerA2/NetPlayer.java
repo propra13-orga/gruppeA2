@@ -18,6 +18,10 @@ import javax.swing.ImageIcon;
 // Evtl später auch GameElement
 
 // Player: Spielfigur
+/**
+ * Netzwerkspieler Abbild und Steuerung
+ *
+ */
 public class NetPlayer implements Runnable{
 	
 	private Socket socket;
@@ -64,6 +68,14 @@ public class NetPlayer implements Runnable{
 
 	
 	// Konstruktor
+	/**
+	 * Erstellt neuen Netzwerkspieler an Stelle x,y
+	 * @param x X-Koordinate
+	 * @param y Y-Koordinate
+	 * @param live Lebenspunkte
+	 * @param type Typ 
+	 * @param socket Socket zum Netzwerkspieler
+	 */
 	public NetPlayer(int x, int y, int live, int type, Socket socket){
 		if(type==0){
 			player = "images/player.png";
@@ -106,6 +118,9 @@ public class NetPlayer implements Runnable{
 	}
 	
 	// generelle Bewegung - speziell: siehe "KeyEvent Methoden"
+	/**
+	 * Bewege Netzwerkspieler um dx,dy
+	 */
 	public void move(){
 		goBackX = x;
 		goBackY = y;
@@ -127,11 +142,17 @@ public class NetPlayer implements Runnable{
 		}
 	}
 	
+	/**
+	 * L&auml;sst Spieler zur letztbekannten Position zur&uuml;ckspringen (CollisionDetection: stehenbleiben vor soliden Objekten)
+	 */
 	public void resetMovement(){
 		this.x = goBackX;
 		this.y = goBackY;
 	}
 	
+	/**
+	 * Spieler nutz Magie
+	 */
 	public void useMagic(){
 		if(magicType.equals("immortality")){
 			if(isImmortal()) this.setImmortal(false);
@@ -141,6 +162,9 @@ public class NetPlayer implements Runnable{
 		}
 	}
 	
+	/**
+	 * F&uuml;gt der Raketenliste eine neue hinzu (Schiessen)
+	 */
 	public void fire(){
 		if(activeItem != null){
 			if(activeItem.hasMissiles() && activeItem.getAmount()!=0){
@@ -175,14 +199,25 @@ public class NetPlayer implements Runnable{
 	}
 	
 	// Items
+	/**
+	 * Setze das Aktive Item
+	 * @param item aktives Item
+	 */
 	public void setActiveItem(Item item){
 		this.activeItem = item;
 	}
 	
+	/**
+	 * Gibt aktives Item zur&uuml;ck
+	 * @return aktives Item
+	 */
 	public Item getActiveItem(){
 		return this.activeItem;
 	}
 	
+	/**
+	 * Setze n&auml;chstes Item aus Liste als aktives Item
+	 */
 	public void switchActiveItem(){
 		Item it;
 		
@@ -195,6 +230,10 @@ public class NetPlayer implements Runnable{
 		}
 	}
 	
+	/**
+	 * F&uuml;ge der Itemliste ein Item hinzu
+	 * @param item hinzuzuf&uuml;gendes Item
+	 */
 	public void addItem(Item item){
 		Item it;
 		boolean hasItem  = false;
@@ -212,101 +251,191 @@ public class NetPlayer implements Runnable{
 	}
 	
 	// get Methoden
+	/**
+	 * Gibt zur&uuml;ck ob Netzwerkspieler verloren hat
+	 * @return Netzwerkspieler hat Verloren
+	 */
 	public boolean getLost(){
 		return this.opponentLostTheGame;
 	}
 	
+	/**
+	 * Gibt empfangene Chatnachricht zur&uuml;ck
+	 * @return empfangene Nachricht
+	 */
 	public String getMessage(){
 		return this.message;
 	}
 	
+	/**
+	 * Gibt gew&auml;hltes Level zur&uuml;ck
+	 * @return gew&auml;hltes Level
+	 */
 	public int getChosenMap(){
 		return this.chosenMap;
 	}
 	
+	/**
+	 * Gibt zur&uuml;ck ob Netzwerspieler bereit ist zu spielen
+	 * @return Bereitschaft
+	 */
 	public boolean getReady(){
 		return this.ready;
 	}
 	
+	/**
+	 * Gibt Breite des Bildes zur&uuml;ck
+	 * @return Breite des Bildes
+	 */
 	public int getWidth(){
 		return this.width;
 	}
-	
+	/**
+	 * Gibt H&ouml;he des Bildes zur&uuml;ck
+	 * @return H&ouml;he des Bildes
+	 */
 	public int getHeight(){
 		return this.height;
 	}
 	
+	/**
+	 * Gibt Richtung des Netzwerkspielers zur&uuml;ck
+	 * @return Richtung
+	 */
 	public int getDir(){
 		return this.dir;
 	}
 	
+	/**
+	 * Gibt X-Koordinate zur&uuml;ck
+	 * @return X-Koordinate
+	 */
 	public int getX(){
 		return this.x;
 	}
-	
+	/**
+	 * Gibt Y-Koordinate zur&uuml;ck
+	 * @return Y-Koordinate
+	 */
 	public int getY(){
 		return this.y;
 	}
 	
+	/**
+	 * Gibt Liste der Geschosse zur&uuml;ck
+	 * @return Liste der Geschosse
+	 */
 	public ArrayList<Missile> getMissiles(){
 		return missiles;
 	}
 	
+	/**
+	 * Gibt Anzahl der Lebenspunkte zur&uuml;ck
+	 * @return Anzahl der Lebenspunkte
+	 */
 	public int getLive(){
 		return this.live;
 	}
 	
+	/**
+	 * Gibt Anzahl der R&uuml;stungspunkte zur&uuml;ck
+	 * @return Anzahl der R&uuml;stungspunkte
+	 */
 	public int getArmour(){
 		return this.armour;
 	}
 	
+	/**
+	 * Gibt R&uuml;stungsbezeichnung zur&uuml;ck
+	 * @return R&uuml;stungsbezeichnung
+	 */
 	public String getArmourType(){
 		return this.armourType;
 	}
 	
+	/**
+	 * Gibt Anzahl an Geld zur&uuml;ck
+	 * @return Anzahl an Geld
+	 */
 	public int getMoney(){
 		return this.money;
 	}
 	
+	/**
+	 * Gibt anzahl an Energie zur&uuml;ck
+	 * @return Energie
+	 */
 	public int getMana(){
 		return this.mana;
 	}
 	
+	/**
+	 * Gibt aktuelles Bild zur&uuml;ck
+	 * @return Bild
+	 */
 	public Image getImage(){
 		return this.image;
 	}
-	
+	/**
+	 * Gibt Rectangle (Position, Breite und L&auml;nge des Bildes) f&uuml;r die Kollisionserkennung zur&uuml;ck
+	 * @return Rectangle (Position, Breite und L&auml;nge des Bildes)
+	 */
 	public Rectangle getBounds(){
 		// Kollisionserkennung
 		return new Rectangle(x, y, width, height); 
 	}
 	
+	/**
+	 * Gibt zur&uuml;ck ob Spieler unsterblich ist
+	 * @return Unsterblichkeit 
+	 */
 	public boolean isImmortal(){
 		return this.immortal;
 	}
 	
 	// set Methoden
+	/**
+	 * Setzt die empfangene Nachricht auf leer zur&uuml;ck
+	 */
 	public void resetMessage(){
 		this.message = "";
 	}
 	
+	/**
+	 * Setzt Netzwerkspieler auf Unsterblich
+	 * @param mort Unsterblichkeit an/aus
+	 */
 	public void setImmortal(boolean mort){
 		this.immortal = mort;
 	}
 	
+	/**
+	 * Setzt X-Koordinate des Netzwerkspielers
+	 * @param x X-Koordinate
+	 */
 	public void setX(int x){
 		this.x = x;
 	}
-	
+	/**
+	 * Setzt Y-Koordinate des Netzwerkspielers
+	 * @param y Y-Koordinate
+	 */
 	public void setY(int y){
 		this.y = y;
 	}
 	
+	/**
+	 * Setzt dx/dy auf 0 
+	 */
 	public void hasEnteredShopOrDialog(){
 		// damit Spieler stillsteht 
 		dx=dy=0;
 	}
 	
+	/**
+	 * F&uuml;gt dem Spieler Lebenspunkte hinzu
+	 * @param changeLive Lebenspunkte
+	 */
 	public void setLive(int changeLive){
 		// ändert Anzahl der Lebenspunkte 
 		this.live += changeLive;
@@ -314,34 +443,58 @@ public class NetPlayer implements Runnable{
 		
 	}
 	
+	/**
+	 * F&uuml;gt dem Spieler R&uuml;stungspunkte hinzu
+	 * @param changeArmour R&uuml;stungspunkte
+	 */
 	public void addArmour(int changeArmour){
 		this.armour += changeArmour;
 		if (this.armour<0) this.armour = 0;
 		if(this.armour == 0) this.armourType="none";
 	}
 	
+	/**
+	 * F&uuml;gt dem Spieler Geld hinzu
+	 * @param changeMoney Geld
+	 */
 	public void setMoney(int changeMoney){
 		// ändert Anzahl der Lebenspunkte
 		this.money += changeMoney;
 		if(this.money>999) this.money=999; // bestimme maximale Anzahl an Geld
 	}
 	
+	/**
+	 * setzt Energie auf den Startwert zur&uuml;ck
+	 */
 	public void resetMana(){
 		// ändert Anzahl Mana
 		this.mana = startMana;
 	}
 	
+	
+	/**
+	 * Entfernt eine Anzahl an Energie
+	 * @param rem Energie
+	 */
 	public void removeMana(int rem){
 		this.mana -= rem;
 		if(this.mana<0) this.mana = 0;
 		else if(this.mana > startMana) this.mana = startMana;
 	}
 	
+	/**
+	 * Setze aktuelle R&uuml;stung;
+	 * @param amount Anzahl
+	 * @param type R&uuml;stungsbezeichnung;
+	 */
 	public void setArmour(int amount, String type){
 		this.armourType = type;
 		this.armour = amount;
 	}
 	
+	/**
+	 * Setzt den Spieler auf die Startwerte zur&uuml;ck
+	 */
 	public void resetPlayer(){
 		this.x = this.startX;
 		this.y = this.startY;
@@ -368,6 +521,10 @@ public class NetPlayer implements Runnable{
 	
 	// KeyEvent Methoden - von oben weitergereicht
 	// Key gedrückt
+	/**
+	 * Verarbeitet den Keycode bei gefr&uuml;ckter Taste, steuert den Spieler
+	 * @param key Keycode
+	 */
 	public void keyPressed(int key){
 		
 		if(key == KeyEvent.VK_LEFT){
@@ -398,6 +555,10 @@ public class NetPlayer implements Runnable{
 	}
 	
 	// Key losgelassen
+	/**
+	 * Verarbeitet den Keycode bei losgelassener Taste, steuert den Spieler
+	 * @param key Keycode
+	 */
 	public void keyReleased(int key){
 		
 		if(key == KeyEvent.VK_LEFT){
@@ -414,6 +575,9 @@ public class NetPlayer implements Runnable{
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Runnable#run()
+	 */
 	@Override
 	public void run() {
 		try {
@@ -425,6 +589,10 @@ public class NetPlayer implements Runnable{
 		
 	}
 	
+	/**
+	 * Empf&auml;ngt Daten vom entfernten Spieler und verarbeitet diese
+	 * @throws Exception
+	 */
 	public void getKeycodeOverNetwork() throws Exception{
 		
 		InputStream is = this.socket.getInputStream();

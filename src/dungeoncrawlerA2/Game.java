@@ -31,6 +31,10 @@ import javax.swing.JTextField;
 import javax.swing.Timer;
 
 // Game: Menü, Spielfeld und Spielsteuerung
+/**
+ * Hauptklasse mit allen wichtigen Elementen, steuert Spielverlauf, zeichnet Bildschirm 
+ *
+ */
 public class Game extends JPanel implements ActionListener{
 	
 	// Netzwerkelemente
@@ -183,6 +187,9 @@ public class Game extends JPanel implements ActionListener{
 	// TODO setFont hinzufügen und Schriftarten anpassen
 	
 	// Konstruktor
+	/**
+	 * Startet das Spiel im Hauptmen&uuml;e
+	 */
 	public Game(){
 		// Setze kurzspeicherelemente auf 0, bzw inaktiv
 		level = 0;
@@ -223,6 +230,9 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Menü erstellen
+	/**
+	 * Initialisiert alle wichtigen Buttons und Textfelder im Men&uuml;e
+	 */
 	public void initMenu(){
 		// Zeichne Menüelemente
 		// Lege Standartpositionen für Buttons fest
@@ -286,6 +296,11 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Rückkehr zum Menü und Anzeige von Spielergebnis (Game Over oder You Win)
+	/**
+	 * Zeichnet eine Nachricht (verloren, Anzahl &uuml;briger Versuche) im Men&uuml;
+	 * @param msg Nachricht
+	 * @param g Grafik
+	 */
 	public void paintMessage(String msg, Graphics g){
 		if(!inNetworkMenu){
 			// Im Menü - Mache Buttons wieder sichtbar
@@ -341,6 +356,10 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Startet Spiel
+	/**
+	 * Startet das Spiel in einem gew&auml;hlten Level, erstellt Player
+	 * @param path Pfadname der zu ladenden Leveldatei
+	 */
 	public void initGame(String path){
 		// Buttons ausblenden
 		b1.setVisible(false);
@@ -391,9 +410,12 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// starte Netzwerkspiel -> Battlemap
+	/**
+	 * Startet das Spiel in einem Level im Battlemodus
+	 * @param path Pfadname der zu ladenden Leveldatei
+	 */
 	public void initBattle(String path){
 						
-		// Lade Lobby
 		loadLevel(path);	
 		
 				
@@ -425,6 +447,11 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// starte Netzwerkspiel in Lobby
+	/**
+	 * Startet Netzwerkspiel in Lobby. Beim ersten Start wird ein neuer NetPlayer erstellt, bei nachfolgenden Starts übernommen. 
+	 * @param client Socket zum Netzwerkspieler
+	 * @param firstNetGame Abfrage ob erstes Spiel
+	 */
 	public void initNetGame(Socket client, boolean firstNetGame){
 		// Buttons ausblenden
 		netStartServer.setVisible(false);
@@ -497,6 +524,9 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Statusleiste vorbereiten
+	/**
+	 * L&auml;dt alle Bilder f&uuml;r die Statusleiste
+	 */
 	public void prepareStatusBar(){
 		ImageIcon ii;
 		
@@ -525,6 +555,9 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Startet Netzwerkmenü
+	/**
+	 * Schaltet das Men&uuml;e auf ein Netzwerkmen&uuml;e um
+	 */
 	public void initNetworkMenu(){
 		
 		inNetworkMenu = true;
@@ -532,6 +565,9 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Starte Netzwerkspiel als Server
+	/**
+	 * Erstellt ServerSocket, wartet auf Verbindung, startet Netzwerkspiel wenn verbunden 
+	 */
 	public void startServer(){
 		try {
 			serverSocket = new ServerSocket(port);
@@ -552,6 +588,9 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Starte Netwerkspiel als Client
+	/**
+	 * Erstellt Socket, startet Netzwerkspiel wenn zu anderem Spieler verbunden
+	 */
 	public void startClient(){
 		String IP = "";
 		IP += ip0.getText()+"."+ip1.getText()+"."+ip2.getText()+"."+ip3.getText();
@@ -580,6 +619,9 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Lädt Level aus Textdatei
+	/**Lädt Leveldaten aus einer entsprechenden Level-Textdatei
+	 * @param path Pfadname des zu ladenden Levels
+	 */
 	public void loadLevel(String path){
 		boolean isReadingLevel = false;
 		boolean isReadingIntro = false;
@@ -785,6 +827,10 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Raum erstellen
+	/**
+	 * Erzäugt den f&uuml;r den Spieler sichtbaren Raum aus vorher geladenen Leveldaten
+	 * @param roomnumber Raumnummer des sichtbaren Raums
+	 */
 	public void initRoom(int roomnumber){
 		int x = 0;
 		int y = 0;
@@ -975,6 +1021,10 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Raum zeichnen
+	/**
+	 * Zeichnet den aktuell geladenen Raum mit allen n&ouml;tigen Objekten
+	 * @param g Grafik
+	 */
 	public void buildRoom(Graphics g){
 		ArrayList<GameElement> room = new ArrayList<GameElement>();
 		// Raumelemente einfügen
@@ -1007,6 +1057,9 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Prüfen ob Raum gewechselt
+	/**
+	 * Prüft ob Spieler den Raum verlassen hat und ein neuer geladen werden muss.
+	 */
 	public void checkRoom(){
 		int x = player.getX();
 		int y = player.getY();
@@ -1056,8 +1109,11 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Kollision prüfen
+	/**
+	 * Pr&uuml;ft ob Objekte miteinander Kollidieren und l&auml;sst Objekte stehenbleiben oder eine neue Richtung einschlagen
+	 */
 	public void checkCollision(){
-		// TODO Effizienter gestalten
+		
 		Rectangle r_enemy;
 		Rectangle r_wall;
 		Rectangle r_door;
@@ -1420,6 +1476,13 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// individuellen Schaden berechnen
+	/**
+	 * Berechnet den Schaden, der an einen Spieler oder Gegner verteilt wird in Abh&auml;ngigkeit vom Typ (plasma,fire,ice,none)
+	 * @param weaponElement Typ der Waffe
+	 * @param armourElement Typ der R&uuml;stung
+	 * @param stdDamage Anzahl Schaden
+	 * @return Effektiver Schaden 
+	 */
 	public int calculateDamage(String weaponElement, String armourElement, int stdDamage){
 		// Generell plasma schlägt feuer, feuer schlägt eis, eis schlägt plasma, ohne Rüstung sollte man vorsichtig sein
 		
@@ -1452,6 +1515,12 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// berechne ob Rüstung reduziert wird 
+	/**
+	 * Berechnet wie viel an R&uuml;stungspunkten abgezogen werden
+	 * @param weaponElement Typ der Waffe
+	 * @param armourElement Typ der R&uuml;stung
+	 * @return Anzahl verlorener R&uuml;stungspunkte
+	 */
 	public int calculateArmour(String weaponElement, String armourElement){
 		int armourLoss = 0;
 		
@@ -1484,6 +1553,9 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Paint Methode - zeichnet Bildschirm
+	/* (non-Javadoc)
+	 * @see javax.swing.JComponent#paint(java.awt.Graphics)
+	 */
 	public void paint(Graphics g){
 		super.paint(g);
 		
@@ -1531,6 +1603,10 @@ public class Game extends JPanel implements ActionListener{
 	}
 
 	// Zeichne Texteingabe für Chat
+	/**
+	 * Zeichnet eine Chatbox zum schreiben im Netzwerkmodus in der Lobby
+	 * @param g Grafik
+	 */
 	public void paintChatBox(Graphics g){
 		String cutcmsg;
 		g.setColor(Color.BLACK);
@@ -1547,6 +1623,11 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Chat - füge Zeile hinzu
+	/**
+	 * F&uuml;gt dem Chat im Netzwerkspiel in der Lobby eine Nachricht mit Absender hinzu 
+	 * @param m Nachricht
+	 * @param ownMessage eigene oder fremde Nachricht
+	 */
 	public void chatAdd(String m, boolean ownMessage){
 		String mPlusInfo="";
 		if(isServer){
@@ -1567,6 +1648,11 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Zeichne Dialog
+	/**
+	 * Zeichnet einen Dialog (Text) in eine schwarze Box. Wird f&uuml;r NPCs verwendet.
+	 * @param dialog Dialog der NPC
+	 * @param g Grafik
+	 */
 	public void paintDialog(String dialog, Graphics g){
 		// Nachricht analysieren
 		int dialogY = windowSizeY/2;
@@ -1594,6 +1680,10 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Zeichne Shop
+	/**
+	 * Zeichnet eine Shopliste mit aktivem Element
+	 * @param g Grafik
+	 */
 	public void paintShop(Graphics g){
 		int shopSizeX = windowSizeX-2*shopX;
 		int shopSizeY = windowSizeY-2*shopY;
@@ -1636,6 +1726,10 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Zeichne BattleMap Auswahlbox für Player1
+	/**
+	 * Zeichnet eine Levelauswahlbox im Netzwerkspiel in der Lobby, wenn man der Spieler auf Serverseite ist
+	 * @param g Grafik
+	 */
 	public void paintChooseBox(Graphics g){
 		int boxX = 50;
 		int boxY = 50;
@@ -1669,6 +1763,10 @@ public class Game extends JPanel implements ActionListener{
 	}
 
 	// Zeichne Text und Chat
+	/**
+	 * Zeichnet Informationen und den Chat in die Lobby. 
+	 * @param g Grafik
+	 */
 	public void paintChooseText(Graphics g){
 		String cl = "Battle Map: "+(chosenBattleLevel+1);
 		String instruct = "Press C to open Chat! Press ENTER when ready.";
@@ -1709,6 +1807,10 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Statusleiste zeichnen
+	/**
+	 * Zeichnet die Statusleiste anhand der Daten vom Player
+	 * @param g Grafik
+	 */
 	public void paintStatusBar(Graphics g){
 		// Statusleiste zeichnen - Hintergrund
 		g.drawImage(statusBarBackground, 0, windowSizeY, this);
@@ -1794,6 +1896,9 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Shop betreten
+	/**
+	 * Initialisiert den Shop;
+	 */
 	public void enterShop(){
 		chosenItem = 0;
 		inShop = true;
@@ -1801,12 +1906,19 @@ public class Game extends JPanel implements ActionListener{
 	}
 	
 	// Dialog starten
+	/**
+	 * Initialisiert eine Dialogbox bei NPC
+	 * @param dialog Dialog des NPC
+	 */
 	public void enterDialog(String dialog){
 		inDialog = true;
 		player.hasEnteredShopOrDialog();
 	}
 	
 	// Aktion -> Timer oder Button 
+	/* (non-Javadoc)
+	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+	 */
 	public void actionPerformed(ActionEvent e){
 		int x;
 		String xOut="";
@@ -1971,8 +2083,15 @@ public class Game extends JPanel implements ActionListener{
 	
 	
 	// Steuerung - Weitergabe der Keycodes nach Unten
+	/**
+	 * Wartet auf Tasteneingaben und schickt diese entweder an den Spieler weiter oder, bearbeitet sie selbst.
+	 * 
+	 */
 	private class TAdapter extends KeyAdapter{
 		
+		/* (non-Javadoc)
+		 * @see java.awt.event.KeyAdapter#keyTyped(java.awt.event.KeyEvent)
+		 */
 		public void keyTyped(KeyEvent e){
 			if(inChat){
 				
@@ -1981,6 +2100,9 @@ public class Game extends JPanel implements ActionListener{
 			}
 		}
 		
+		/* (non-Javadoc)
+		 * @see java.awt.event.KeyAdapter#keyReleased(java.awt.event.KeyEvent)
+		 */
 		public void keyReleased(KeyEvent e){
 			if(ingame && inNetworkGame){
 				String key = "R "+e.getKeyCode();
@@ -1990,6 +2112,10 @@ public class Game extends JPanel implements ActionListener{
 			if(ingame && !inShop && !inDialog) player.keyReleased(e);
 			
 		}
+		/*
+		 *  (non-Javadoc)
+		 * @see java.awt.event.KeyAdapter#keyPressed(java.awt.event.KeyEvent)
+		 */
 		public void keyPressed(KeyEvent e){
 			if(ingame && inNetworkGame){
 				String key = "P "+e.getKeyCode();
