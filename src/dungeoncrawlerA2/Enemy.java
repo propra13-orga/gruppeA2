@@ -65,6 +65,24 @@ public class Enemy extends GameElement{
 			live = 4;
 			element = "plasma";
 		} 
+		else if(type==3){
+			// Feuerfieh
+			path =  "images/enemy_03.png";
+			damage = 1; 
+			dir = 1;
+			speed = 1;
+			live = 4;
+			element = "fire";
+		} 
+		else if(type==4){
+			// 
+			path =  "images/enemy_04.png";
+			damage = 1; 
+			dir = 1;
+			speed = 3;
+			live = 7;
+			element = "ice";
+		} 
 		this.steps = 0;
 		
 		this.dx = 0;

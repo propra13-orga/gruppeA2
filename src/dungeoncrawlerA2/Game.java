@@ -447,6 +447,7 @@ public class Game extends JPanel implements ActionListener{
 		loadGame.setVisible(false);
 		loadOwn.setVisible(false);
 		
+		
 		endBossRoom = -1; // setze auf -1, falls kein Endgegner
 		// Lade Level
 		loadLevel(path);
@@ -468,6 +469,7 @@ public class Game extends JPanel implements ActionListener{
 			leftTry = startLeftTry;
 			level=0;
 		}
+				
 		
 		if(activeCheckpointX!=-1 && activeCheckpointY!=-1 && activeCheckpointRoom!=-1 && activeCheckpointLevel == level){
 			// Wenn cp aktiviert
@@ -491,6 +493,9 @@ public class Game extends JPanel implements ActionListener{
 		timer.start();
 	}
 	
+	/**
+	 * Startet neues Spiel aus Save Datei
+	 */
 	public void initSaveGame(){
 		// Speicherdaten
 		boolean isreadingdoor = false;
@@ -1910,6 +1915,10 @@ public class Game extends JPanel implements ActionListener{
 		
 	}
 	
+	/**
+	 * Speicher Spieldaten unter einem gew&auml;hlten Pfad
+	 * @param path Pfad
+	 */
 	public void saveGameToData(String path){
 		int roomcount = doordata.length;
 		File f = new File(path);
@@ -2558,7 +2567,8 @@ public class Game extends JPanel implements ActionListener{
 			String action = e.getActionCommand();
 			if(action.equals("start")){
 				if(level>=levelpath.length) level--; 
-				initGame(levelpath[level]);	// Spiel Starten - Später: vorher aktuelles/gewähltes Level in levelpath laden!
+				if(leftTry<0) level = 0;
+				initGame(levelpath[level]);	// Spiel Starten 
 			}
 			else if(action.equals("level")){
 				new Leveleditor();

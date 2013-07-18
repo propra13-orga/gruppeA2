@@ -30,6 +30,9 @@ public class Wall extends GameElement{
 		 
 		type -= 48; // Von char in int
 		if(type == 1) path =  "images/wall_01.png";
+		if(type == 2) path =  "images/wall_02.png";
+		if(type == 3) path =  "images/wall_03.png";
+		if(type == 4) path =  "images/wall_04.png";
 		// Hier später mehr Optionen
 		
 		this.type = type;

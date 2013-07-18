@@ -32,6 +32,9 @@ public class Ground extends GameElement{
 		 type -= 48; // Von char in int
 		 if(type==1) path =  "images/ground_01.png";
 		 if(type==2) path =  "images/ground_02.png";
+		 if(type==3) path =  "images/ground_03.png";
+		 if(type==4) path =  "images/ground_04.png";
+		 if(type==5) path =  "images/ground_05.png";
 		 // Hier später mehr Optionen
 		 
 		 this.type = type;
