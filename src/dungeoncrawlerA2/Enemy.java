@@ -128,7 +128,7 @@ public class Enemy extends GameElement{
 	    randomNumber = (int) (Math.random() * 10);
 		
 		// Bewegung erstellen
-		if(type==1){
+		if(type==1||type==3){
 			// Ratte
 			steps++;
 			if(steps%(10*randomNumber+50) == 0){

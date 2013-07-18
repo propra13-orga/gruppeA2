@@ -82,10 +82,7 @@ public class Game extends JPanel implements ActionListener{
 	
 	private JButton resetGame;
 	private JButton loadGame;
-	private JButton loadOwn;
-	private JButton saveGame;
-	private JButton endGame;
-	private JButton endPause;
+	
 	
 	private int buttonPosX;
 	private int buttonPosY;
@@ -237,7 +234,7 @@ public class Game extends JPanel implements ActionListener{
 		
 		// Menü vorbereiten
 		b1 = new JButton("Start");
-		b2 = new JButton("Exit");
+		b2 = new JButton("Beenden");
 		b3 = new JButton("Leveleditor");
 		b4 = new JButton("Multiplayer");
 		
@@ -247,10 +244,7 @@ public class Game extends JPanel implements ActionListener{
 		
 		resetGame = new JButton("Reset");
 		loadGame = new JButton("Lade Spiel");
-		loadOwn = new JButton("Lade Level");
-		saveGame = new JButton("Speichern");
-		endGame = new JButton("Beenden");
-		endPause = new JButton("Zurück");
+		
 		
 		ip0 = new JTextField("192");
 		ip1 = new JTextField("168");
@@ -278,10 +272,7 @@ public class Game extends JPanel implements ActionListener{
 		
 		resetGame.setBounds(buttonPosX,buttonPosY+160,200,30);
 		loadGame.setBounds(buttonPosX,buttonPosY+200,200,30);
-		loadOwn.setBounds(buttonPosX,buttonPosY+240,200,30);
-		saveGame.setBounds(buttonPosX,buttonPosY+80,200,30);
-		endGame.setBounds(buttonPosX,buttonPosY+120,200,30);
-		endPause.setBounds(buttonPosX,buttonPosY+40,200,30);
+		
 		
 		netStartServer.setBounds(buttonPosX,buttonPosY+40,200,30);
 		netConnect.setBounds(buttonPosX,buttonPosY+120,200,30);
@@ -299,10 +290,7 @@ public class Game extends JPanel implements ActionListener{
 		
 		resetGame.setActionCommand("resetGame");
 		loadGame.setActionCommand("loadGame");
-		loadOwn.setActionCommand("loadOwn");
-		saveGame.setActionCommand("saveGame");
-		endGame.setActionCommand("endGame");
-		endPause.setActionCommand("endPause");
+		
 		
 		netStartServer.setActionCommand("startServer");
 		netConnect.setActionCommand("connectToServer");
@@ -316,10 +304,7 @@ public class Game extends JPanel implements ActionListener{
 		
 		resetGame.addActionListener(this);
 		loadGame.addActionListener(this);
-		loadOwn.addActionListener(this);
-		saveGame.addActionListener(this);
-		endGame.addActionListener(this);
-		endPause.addActionListener(this);
+		
 		
 		netStartServer.addActionListener(this);
 		netConnect.addActionListener(this);
@@ -332,9 +317,7 @@ public class Game extends JPanel implements ActionListener{
 		ip1.setVisible(false);
 		ip2.setVisible(false);
 		ip3.setVisible(false);
-		saveGame.setVisible(false);
-		endGame.setVisible(false);
-		endPause.setVisible(false);
+		
 		
 		// füge Buttons zum Panel hinzu
 		add(b1);
@@ -350,10 +333,7 @@ public class Game extends JPanel implements ActionListener{
 		add(ip3);
 		add(resetGame);
 		add(loadGame);
-		add(loadOwn);
-		add(saveGame);
-		add(endGame);
-		add(endPause);
+		
 		
 	}
 	
@@ -380,9 +360,7 @@ public class Game extends JPanel implements ActionListener{
 			ip3.setVisible(false);
 			resetGame.setVisible(true);
 			loadGame.setVisible(true);
-			loadOwn.setVisible(true);
-			saveGame.setVisible(false);
-			endGame.setVisible(false);
+			
 		}
 		else if(isServer||isClient){
 			// Netzwerkspiel eingeleitet
@@ -399,9 +377,7 @@ public class Game extends JPanel implements ActionListener{
 			ip3.setVisible(false);
 			resetGame.setVisible(false);
 			loadGame.setVisible(false);
-			loadOwn.setVisible(false);
-			saveGame.setVisible(false);
-			endGame.setVisible(false);
+			
 		}
 		else {
 			// Im Netzwerkmenü - mache Netzwerkbuttons sichtbar
@@ -418,9 +394,7 @@ public class Game extends JPanel implements ActionListener{
 			ip3.setVisible(true);
 			resetGame.setVisible(false);
 			loadGame.setVisible(false);
-			loadOwn.setVisible(false);
-			saveGame.setVisible(false);
-			endGame.setVisible(false);
+			
 		}
 		
 		Font small = new Font("Arial", Font.BOLD, 20);
@@ -445,7 +419,7 @@ public class Game extends JPanel implements ActionListener{
 		b4.setVisible(false);
 		resetGame.setVisible(false);
 		loadGame.setVisible(false);
-		loadOwn.setVisible(false);
+		
 		
 		
 		endBossRoom = -1; // setze auf -1, falls kein Endgegner
@@ -747,7 +721,7 @@ public class Game extends JPanel implements ActionListener{
 		ip3.setVisible(false);
 		resetGame.setVisible(false);
 		loadGame.setVisible(false);
-		loadOwn.setVisible(false);
+		
 		
 		// Chat leeren
 		for(int i=0;i<chat.length;i++) chat[i]="";
@@ -874,19 +848,30 @@ public class Game extends JPanel implements ActionListener{
 	public void startServer(){
 		try {
 			serverSocket = new ServerSocket(port);
-			isServer = true; // Definiere Server
+			
 			
 			System.out.println("Warte auf Verbindung...");
+			serverSocket.setSoTimeout(7777);
 			client = serverSocket.accept(); // wartet bis verbunden
 			
 			
-			System.out.println("Verbindung hergestellt!");
+			if(client.isConnected()){
+				System.out.println("Verbindung hergestellt!");
+				isServer = true; // Definiere Server
+				initNetGame(client,true); // Netzwerkspiel starten
+			}
 			
-			initNetGame(client,true); // Netzwerkspiel starten
 		} 
 		catch (IOException e) {
 			
-			e.printStackTrace();
+			System.out.println("Timeout");
+			try{
+				client.close();
+				serverSocket.close();
+			}
+			catch(Exception ex){
+				
+			}
 		}
 	}
 	
@@ -2605,6 +2590,7 @@ public class Game extends JPanel implements ActionListener{
 			}
 			else if(action.equals("startServer")) startServer();
 			else if(action.equals("connectToServer")) startClient();
+			
 		}
 
 		repaint();	// zeichne Bildschirm neu - erneuter Aufruf von paint()
