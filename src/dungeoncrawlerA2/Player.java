@@ -292,6 +292,11 @@ public class Player{
 	public ArrayList<Missile> getMissiles(){
 		return missiles;
 	}
+	
+	public ArrayList<Item> getItemList(){
+		return this.itemList;
+	}
+	
 	/**
 	 * Gibt Anzahl der Lebenspunkte zur&uuml;ck
 	 * @return Anzahl der Lebenspunkte
@@ -462,6 +467,13 @@ public class Player{
 		// ändert Anzahl Mana
 		this.mana = startMana;
 	}
+	public void setAbsoluteLive(int live){
+		this.live = live;
+	}
+	public void setAbsoluteMana(int mana){
+		this.mana = mana;
+	}
+	
 	/**
 	 * Entfernt eine Anzahl an Energie
 	 * @param rem Energie

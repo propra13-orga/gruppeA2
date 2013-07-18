@@ -59,6 +59,8 @@ public class NetPlayer implements Runnable{
 	
 	private String magicType = "immortality";
 	private boolean immortal;
+	private boolean gamePaused;
+	private boolean endGame;
 	
 	private ArrayList<Item> itemList = new ArrayList<Item>();
 	private Item activeItem;
@@ -89,6 +91,8 @@ public class NetPlayer implements Runnable{
 		this.ready = false;
 		this.message = "";
 		this.opponentLostTheGame = false;
+		this.gamePaused = false;
+		this.endGame = false;
 		
 		// Bild laden plus Informationen
 		ImageIcon ii = new ImageIcon(this.getClass().getResource(player));
@@ -273,6 +277,10 @@ public class NetPlayer implements Runnable{
 	 */
 	public int getChosenMap(){
 		return this.chosenMap;
+	}
+	
+	public boolean getEnd(){
+		return this.endGame;
 	}
 	
 	/**
@@ -513,10 +521,19 @@ public class NetPlayer implements Runnable{
         // Items und sonstige Werte setzen
         this.immortal = false;
         this.activeItem = null;
+        this.endGame = false;
         
         missiles = new ArrayList<Missile>();
     	itemList = new ArrayList<Item>();
         
+	}
+	
+	/**
+	 * Gibt zur&uuml;ck ob das Spiel pausiert wurde.
+	 * @return Pause an/aus
+	 */
+	public boolean getPaused(){
+		return this.gamePaused;
 	}
 	
 	// KeyEvent Methoden - von oben weitergereicht
@@ -551,6 +568,10 @@ public class NetPlayer implements Runnable{
 		}
 		if(key == KeyEvent.VK_SHIFT){
 			switchActiveItem();
+		}
+		if(key == KeyEvent.VK_X){
+			if(gamePaused) this.gamePaused = false;
+			else this.gamePaused = true;
 		}
 	}
 	
@@ -656,6 +677,10 @@ public class NetPlayer implements Runnable{
 			else if(command.equals("LOST")){
 				// Anderer Spieler verloren
 				this.opponentLostTheGame = true;
+			}
+			else if(command.equals("END")){
+				// Anderer Spieler verloren
+				this.endGame = true;
 			}
 			else{
 				// Position abgleichen

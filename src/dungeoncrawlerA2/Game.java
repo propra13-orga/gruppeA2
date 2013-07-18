@@ -12,6 +12,9 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.Rectangle;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -25,6 +28,7 @@ import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.JButton;
 import javax.swing.JTextField;
@@ -75,6 +79,13 @@ public class Game extends JPanel implements ActionListener{
 	private JButton b4; // Multiplayer
 	// Netzwerkmenüelemente
 	private JButton netStartServer, netConnect, back;
+	
+	private JButton resetGame;
+	private JButton loadGame;
+	private JButton loadOwn;
+	private JButton saveGame;
+	private JButton endGame;
+	private JButton endPause;
 	
 	private int buttonPosX;
 	private int buttonPosY;
@@ -172,6 +183,15 @@ public class Game extends JPanel implements ActionListener{
 	private String endBossLocation;
 	private int endBossRoom;
 	
+	// Speicherdaten
+	private String[] doordataSave;
+	private String[] itemSave;
+	private int [] itemAmountSave;
+	private String armTypeSave;
+	private int liveSave, keySave, trySave, armourSave, manaSave, moneySave, Xsave, Ysave, roomsave, levelsave;
+	
+	
+	
 	// Zustandsvariablen & Zeitabhängige Events;
 	private boolean finalAlive;
 	private boolean playerCanGetDamage; 
@@ -182,6 +202,9 @@ public class Game extends JPanel implements ActionListener{
 	
 	private boolean inDialog;
 	private boolean inShop;
+	private boolean paused;
+	private boolean gameEnded;
+	private int selectedPauseCommand;
 	
 	
 	// TODO setFont hinzufügen und Schriftarten anpassen
@@ -207,6 +230,8 @@ public class Game extends JPanel implements ActionListener{
 		inNetworkGame = isServer = isClient = false;
 		chooseBattleMapBox = inChat = p1ready=p2ready=false;
 		delay = 0;
+		paused = false;
+		selectedPauseCommand = 0;
 		
 		timer = new Timer(1000/fps, this); // Timer nach fps einstellen
 		
@@ -219,6 +244,13 @@ public class Game extends JPanel implements ActionListener{
 		netStartServer = new JButton("Server erstellen");
 		netConnect = new JButton("Verbinden");
 		back = new JButton("Hauptmenü");
+		
+		resetGame = new JButton("Reset");
+		loadGame = new JButton("Lade Spiel");
+		loadOwn = new JButton("Lade Level");
+		saveGame = new JButton("Speichern");
+		endGame = new JButton("Beenden");
+		endPause = new JButton("Zurück");
 		
 		ip0 = new JTextField("192");
 		ip1 = new JTextField("168");
@@ -244,6 +276,13 @@ public class Game extends JPanel implements ActionListener{
 		b3.setBounds(buttonPosX,buttonPosY+80,200,30);
 		b2.setBounds(buttonPosX,buttonPosY+120,200,30);
 		
+		resetGame.setBounds(buttonPosX,buttonPosY+160,200,30);
+		loadGame.setBounds(buttonPosX,buttonPosY+200,200,30);
+		loadOwn.setBounds(buttonPosX,buttonPosY+240,200,30);
+		saveGame.setBounds(buttonPosX,buttonPosY+80,200,30);
+		endGame.setBounds(buttonPosX,buttonPosY+120,200,30);
+		endPause.setBounds(buttonPosX,buttonPosY+40,200,30);
+		
 		netStartServer.setBounds(buttonPosX,buttonPosY+40,200,30);
 		netConnect.setBounds(buttonPosX,buttonPosY+120,200,30);
 		back.setBounds(buttonPosX,buttonPosY,200,30);
@@ -258,6 +297,13 @@ public class Game extends JPanel implements ActionListener{
 		b3.setActionCommand("level");
 		b4.setActionCommand("multi");
 		
+		resetGame.setActionCommand("resetGame");
+		loadGame.setActionCommand("loadGame");
+		loadOwn.setActionCommand("loadOwn");
+		saveGame.setActionCommand("saveGame");
+		endGame.setActionCommand("endGame");
+		endPause.setActionCommand("endPause");
+		
 		netStartServer.setActionCommand("startServer");
 		netConnect.setActionCommand("connectToServer");
 		back.setActionCommand("back");
@@ -267,6 +313,13 @@ public class Game extends JPanel implements ActionListener{
 		b2.addActionListener(this);
 		b3.addActionListener(this);
 		b4.addActionListener(this);
+		
+		resetGame.addActionListener(this);
+		loadGame.addActionListener(this);
+		loadOwn.addActionListener(this);
+		saveGame.addActionListener(this);
+		endGame.addActionListener(this);
+		endPause.addActionListener(this);
 		
 		netStartServer.addActionListener(this);
 		netConnect.addActionListener(this);
@@ -279,6 +332,9 @@ public class Game extends JPanel implements ActionListener{
 		ip1.setVisible(false);
 		ip2.setVisible(false);
 		ip3.setVisible(false);
+		saveGame.setVisible(false);
+		endGame.setVisible(false);
+		endPause.setVisible(false);
 		
 		// füge Buttons zum Panel hinzu
 		add(b1);
@@ -292,8 +348,15 @@ public class Game extends JPanel implements ActionListener{
 		add(ip1);
 		add(ip2);
 		add(ip3);
+		add(resetGame);
+		add(loadGame);
+		add(loadOwn);
+		add(saveGame);
+		add(endGame);
+		add(endPause);
 		
 	}
+	
 	
 	// Rückkehr zum Menü und Anzeige von Spielergebnis (Game Over oder You Win)
 	/**
@@ -315,6 +378,11 @@ public class Game extends JPanel implements ActionListener{
 			ip1.setVisible(false);
 			ip2.setVisible(false);
 			ip3.setVisible(false);
+			resetGame.setVisible(true);
+			loadGame.setVisible(true);
+			loadOwn.setVisible(true);
+			saveGame.setVisible(false);
+			endGame.setVisible(false);
 		}
 		else if(isServer||isClient){
 			// Netzwerkspiel eingeleitet
@@ -329,6 +397,11 @@ public class Game extends JPanel implements ActionListener{
 			ip1.setVisible(false);
 			ip2.setVisible(false);
 			ip3.setVisible(false);
+			resetGame.setVisible(false);
+			loadGame.setVisible(false);
+			loadOwn.setVisible(false);
+			saveGame.setVisible(false);
+			endGame.setVisible(false);
 		}
 		else {
 			// Im Netzwerkmenü - mache Netzwerkbuttons sichtbar
@@ -343,7 +416,11 @@ public class Game extends JPanel implements ActionListener{
 			ip1.setVisible(true);
 			ip2.setVisible(true);
 			ip3.setVisible(true);
-		
+			resetGame.setVisible(false);
+			loadGame.setVisible(false);
+			loadOwn.setVisible(false);
+			saveGame.setVisible(false);
+			endGame.setVisible(false);
 		}
 		
 		Font small = new Font("Arial", Font.BOLD, 20);
@@ -366,19 +443,24 @@ public class Game extends JPanel implements ActionListener{
 		b2.setVisible(false);
 		b3.setVisible(false);
 		b4.setVisible(false);
+		resetGame.setVisible(false);
+		loadGame.setVisible(false);
+		loadOwn.setVisible(false);
 		
 		endBossRoom = -1; // setze auf -1, falls kein Endgegner
 		// Lade Level
 		loadLevel(path);
+		selectedPauseCommand = 0;
 		
 		System.out.println("Endgegner: "+endBossLocation);
 		System.out.println("In Raum: "+endBossRoom);
 		
 		// Spielablaufparameter setzen
-		firstStart=false;
+		gameEnded=firstStart=false;
 		ingame = true;
 		won = false;
 		inDialog = inShop = false;
+		paused = false;
 		
 		// Starte Abfrage ob Start von Checkpoint
 		if(leftTry<0){
@@ -405,8 +487,204 @@ public class Game extends JPanel implements ActionListener{
 		
 		// Statusleiste vorbereiten
 		prepareStatusBar();
-		
+		saveGameData();
 		timer.start();
+	}
+	
+	public void initSaveGame(){
+		// Speicherdaten
+		boolean isreadingdoor = false;
+		int roomsSave=0;
+		String[] doordataSave = null;
+		String[] itemSave = null;
+		int [] itemAmountSave = null;
+		String armTypeSave="none";
+		int liveSave, keySave, trySave, armourSave, manaSave, moneySave, Xsave, Ysave, roomsave, levelsave;
+		int z1,z2,z3,z4,itemNumber,count,count2;
+		String levelPath = "";
+		String request = "";
+		String line = "";
+		String data1,data2;
+		System.out.println("Savegame laden");
+		liveSave= keySave= trySave= armourSave= manaSave= moneySave= Xsave= Ysave= roomsave= levelsave=0;
+		
+		 JFileChooser chooser = new JFileChooser();
+	        // Dialog zum Oeffnen von Dateien anzeigen
+	        int value = chooser.showOpenDialog(null);
+	        
+	        if(value == JFileChooser.APPROVE_OPTION)
+	        {
+	             // Ausgabe der ausgewaehlten Datei
+	        	levelPath = chooser.getSelectedFile().getAbsolutePath();
+	            System.out.println("Die zu öffnende Datei ist: " + levelPath);
+	            
+	            
+	        }
+	     count =count2= 0;
+	   if(!levelPath.equals("")){
+		  try{
+			  System.out.println("Lade Datei: "+levelPath);
+				// Reader vorbereiten 
+				FileReader reader = new FileReader(levelPath);
+				BufferedReader in = new BufferedReader(reader);
+				
+				while ((line = in.readLine()) != null){
+					request=" ";
+					z1 = z2 = z3 = z4 = 0;
+					StringTokenizer tokens = new StringTokenizer(line);
+					if(tokens.hasMoreTokens()) request = tokens.nextToken();
+					
+					// Levelnummer einlesen
+					if(request.equals("#NR")){
+						data1 = tokens.nextToken();
+						z1 = data1.charAt(0)-48;	// von char nach int -> -48
+						z2 = data1.charAt(1)-48;
+						levelsave = 10*z1+z2;
+					}
+					if(request.equals("#ROOMNR")){
+						data1 = tokens.nextToken();
+						z1 = data1.charAt(0)-48;	// von char nach int -> -48
+						z2 = data1.charAt(1)-48;
+						roomsave = 10*z1+z2;
+					}
+					if(request.equals("#START")){
+						data1 = tokens.nextToken();
+						data2 = tokens.nextToken();
+						z1 = data1.charAt(0)-48; // hole 100er
+						z2 = data1.charAt(1)-48; // hole 10er
+						Xsave = (data1.charAt(2)-48) + 100*z1 + 10*z2;	//bilde x koordinate
+						z1 = data2.charAt(0)-48; // hole 100er
+						z2 = data2.charAt(1)-48; // hole 10er
+						Ysave = (data2.charAt(2)-48) + 100*z1 + 10*z2;	//bilde y koordinate
+		
+						// Lebenspunkte einlesen
+						data1 = tokens.nextToken();
+						z1 = data1.charAt(0)-48; // hole 10er
+						z2 = data1.charAt(1)-48; // hole 1er
+						liveSave = 10*z1+z2;
+					}
+					if(request.equals("#KEY")){
+						data1 = tokens.nextToken();
+						z1 = data1.charAt(0)-48;	// von char nach int -> -48
+						z2 = data1.charAt(1)-48;
+						keySave = 10*z1+z2;
+					}
+					if(request.equals("#ARMOUR")){
+						data1 = tokens.nextToken();
+						data2 = tokens.nextToken();
+						armTypeSave = data1;
+						armourSave = data2.charAt(0)-48;
+					}
+					if(request.equals("#MONEY")){
+						data1 = tokens.nextToken();
+						z1 = data1.charAt(0)-48;	// von char nach int -> -48
+						z2 = data1.charAt(1)-48;
+						z3 = data1.charAt(2)-48;
+						moneySave = 100*z1+10*z2+z3;
+					}
+					if(request.equals("#MANA")){
+						data1 = tokens.nextToken();
+						z1 = data1.charAt(0)-48;	// von char nach int -> -48
+						z2 = data1.charAt(1)-48;
+						z3 = data1.charAt(2)-48;
+						z4 = data1.charAt(3)-48;
+						manaSave = 1000*z1+100*z2+10*z3+z4;
+					}
+					if(request.equals("#TRY")){
+						data1 = tokens.nextToken();
+						z1 = data1.charAt(0)-48;	// von char nach int -> -48
+						trySave = 10*z1+z2;
+					}
+					if(request.equals("#ITEMNR")){
+						data1 = tokens.nextToken();
+						itemNumber = data1.charAt(0)-48;
+						itemSave = new String[itemNumber];
+						itemAmountSave= new int[itemNumber];
+					}
+					if(request.equals("#ITEM")){
+						data1 = tokens.nextToken();
+						data2 = tokens.nextToken();
+						z1 = data2.charAt(0)-48;	// von char nach int -> -48
+						z2 = data2.charAt(1)-48;
+						z3 = data2.charAt(2)-48;
+						itemSave[count]=data1;
+						itemAmountSave[count] = 100*z1+10*z2+z3;
+						count++;
+					}
+					/*if(isreadingdoor){
+						data1 = tokens.nextToken();
+						if(request.equals("#DOORDATAEND")){
+							isreadingdoor=false;
+						}
+						else{
+							data1="";
+							if(tokens.hasMoreTokens()) data1+=" "+tokens.nextToken();
+							
+							doordataSave[count2] = data1;
+							System.out.println(doordata[count2]);
+							count2++;
+						}
+					}
+					if(request.equals("#DOORDATA")){
+						data1 = tokens.nextToken();
+						z1 = data1.charAt(0)-48;	// von char nach int -> -48
+						z2 = data1.charAt(1)-48;
+						roomsSave = 10*z1+z2;
+						doordataSave = new String[roomsSave];
+						isreadingdoor=true;
+					}*/
+					
+					
+				}
+				
+				   
+				  // Spiel erstellen 
+					
+				//activeCheckpointX!=-1 && activeCheckpointY!=-1 && activeCheckpointRoom!=-1 && activeCheckpointLevel == level
+				
+					this.activeCheckpointX = Xsave;
+					this.activeCheckpointY = Ysave;
+					this.activeCheckpointRoom = roomsave;
+					this.level = levelsave;
+					this.activeCheckpointLevel = this.level;
+					initGame(levelpath[level]);
+					
+					
+					// player.changeKeys(keySave);
+					leftTry = trySave;
+					player.setMoney(moneySave);
+					player.setAbsoluteMana(manaSave);
+					player.setAbsoluteLive(liveSave);
+					player.setArmour(armourSave, armTypeSave);
+					
+					for(int i=0;i<itemSave.length;i++){
+						int type = 11+48;
+						if(itemSave[i].equals("plasmagun")){
+							type = 11+48;
+						}
+						else if(itemSave[i].equals("icegun")){
+							type=12+48;	
+						}
+						else if(itemSave[i].equals("firegun")){
+							type=13+48;
+						}
+						
+						Item it = new Item(0,0,type);
+						it.setAmount(itemAmountSave[i]);
+						player.addItem(it);
+					}
+					saveGameData();
+				
+				
+		  }
+		  catch(Exception e){
+			  
+		  }
+		
+		  
+		  
+	   }
+		
 	}
 	
 	// starte Netzwerkspiel -> Battlemap
@@ -422,6 +700,7 @@ public class Game extends JPanel implements ActionListener{
 		// Spielablaufparameter setzen
 		inLobby = inChat = false;
 		inBattle = true;
+		paused = false;
 						
 		initRoom(0); // ersten Raum aufbauen
 				
@@ -461,6 +740,9 @@ public class Game extends JPanel implements ActionListener{
 		ip1.setVisible(false);
 		ip2.setVisible(false);
 		ip3.setVisible(false);
+		resetGame.setVisible(false);
+		loadGame.setVisible(false);
+		loadOwn.setVisible(false);
 		
 		// Chat leeren
 		for(int i=0;i<chat.length;i++) chat[i]="";
@@ -468,7 +750,7 @@ public class Game extends JPanel implements ActionListener{
 		endBossRoom = -1; // setze auf -1, falls kein Endgegner
 		// Lade Lobby
 		loadLevel("leveldata/lobby.txt");		
-		
+		selectedPauseCommand = 1;
 		// Spielablaufparameter setzen
 		inLobby = true;
 		inBattle = inChat = false;
@@ -478,6 +760,7 @@ public class Game extends JPanel implements ActionListener{
 		won = false;
 		inDialog = inShop = false;
 		chooseBattleMapBox = p1ready=p2ready=false;
+		gameEnded=paused = false;
 				
 		initRoom(0); // ersten Raum der Lobby aufbauen
 		
@@ -737,6 +1020,7 @@ public class Game extends JPanel implements ActionListener{
 					itemdata = new String[rooms];
 					interactdata = new String[rooms];
 					doordata = new String[rooms];
+					doordataSave = new String[rooms];
 					dialog = new String[rooms];
 					for(int i=0;i<dialog.length;i++) dialog[i] = "";
 				}
@@ -1395,6 +1679,7 @@ public class Game extends JPanel implements ActionListener{
 						activeCheckpointY = cp.getY();
 						activeCheckpointRoom = this.room;
 						activeCheckpointLevel = this.level;
+						saveGameData();
 						System.out.println("Checkpoint aktiviert in Raum "+activeCheckpointRoom+" mit Koordinaten "+activeCheckpointX + " "+ activeCheckpointY);
 					}
 				}
@@ -1552,6 +1837,177 @@ public class Game extends JPanel implements ActionListener{
 		return armourLoss;
 	}
 	
+	/**
+	 * F&uuml;hrt ein Kommando aus dem Pausemen&uuml;e aus
+	 * @param Command Kommando (0=Speichern, sonst= beenden)
+	 */
+	public void managePauseCommand(int Command){
+		
+		if(Command == 0){
+			saveGame();
+		}
+		else{
+			paused = false;
+			endGame();
+		}
+	}
+	
+	/**
+	 * Speichert Spielfortschritt in Textdatei
+	 */
+	public void saveGame(){
+		String savepath="";
+		JFileChooser chooser = new JFileChooser();
+		 int value = chooser.showSaveDialog(null);
+		 if(value == JFileChooser.APPROVE_OPTION)
+	     {
+			 // Ausgabe der ausgewaehlten Datei
+			 savepath = chooser.getSelectedFile().getAbsolutePath();
+	         System.out.println("Die zu speichernde Datei ist: " + savepath);
+	         
+	         saveGameToData(savepath);
+	     }
+		
+		
+		paused = false;
+	}
+	
+	/**
+	 * Speichere aktuelle Spieldaten
+	 */
+	public void saveGameData(){
+		
+		ArrayList<Item> itemList = player.getItemList();
+		itemSave = new String[itemList.size()];
+		itemAmountSave = new int[itemList.size()];
+		
+		for(int i = 0; i< itemList.size();i++){
+			Item it = (Item)itemList.get(i);
+			itemSave[i]=it.getItemType();
+			itemAmountSave[i] = it.getAmount();
+		}
+		
+		armTypeSave = player.getArmourType();
+		armourSave = player.getArmour();
+		
+		liveSave = player.getLive();
+		manaSave = player.getMana();
+		moneySave = player.getMoney();
+		
+		trySave=leftTry;
+		keySave = player.getKeys();
+		
+		Xsave=player.getX();;
+		Ysave=player.getY();;
+		roomsave=room;
+		levelsave=level;
+		
+		
+		for(int i=0;i<doordata.length;i++){
+			doordataSave[i] = doordata[i];
+		}
+		
+		
+	}
+	
+	public void saveGameToData(String path){
+		int roomcount = doordata.length;
+		File f = new File(path);
+		FileWriter writer;
+		String st = ""; // Hilfsstring
+		
+		try{
+			writer = new FileWriter(f);
+			writer.write("#SAVEGAME\n");
+			
+			
+			// #NR
+			if(levelsave<10) st = "0"+levelsave;
+			else if(levelsave>99) st = "99";
+			else st = "" + levelsave;
+			writer.write("#NR "+st+"\n");
+			
+			// #ROOMNR
+			if(roomsave<10) st = "0"+roomsave;
+			else if(roomsave>99) st = "99";
+			else st = "" + roomsave;
+			writer.write("#ROOMNR "+st+"\n");
+			
+			// #START
+			if(Xsave<10) st="00"+Xsave + " ";
+			else if (Xsave<100) st="0"+Xsave+ " ";
+			else st=""+Xsave+ " ";
+						
+			if(Ysave<10) st+="00"+Ysave + " ";
+			else if (Ysave<100) st+="0"+Ysave+ " ";
+			else st+=""+Ysave+ " ";
+						
+			if(liveSave<10) st+= "0"+liveSave;
+			else st += liveSave;
+			
+			writer.write("#START "+st+"\n");
+			//#KEY
+			if(keySave<10) st= "0"+keySave;
+			else st = ""+ keySave;
+			writer.write("#KEY "+st+"\n");
+			
+			// ARMOUR, MANA, TRY
+			// #ARMOUR
+			writer.write("#ARMOUR "+ armTypeSave +" "+ armourSave  +"\n");
+			
+			//#MONEY
+			if(moneySave<10) st="00"+moneySave + " ";
+			else if (moneySave<100) st="0"+moneySave+ " ";
+			else st=""+moneySave+ " ";
+			writer.write("#MONEY "+ st  +"\n");
+			
+			//#MANA
+			if(manaSave<10) st="000"+manaSave + " ";
+			else if (manaSave<100) st="00"+manaSave+ " ";
+			else if (manaSave<1000) st="0"+manaSave+ " ";
+			else st=""+manaSave+ " ";
+			writer.write("#MANA "+ st  +"\n");
+			
+			//#TRY
+			writer.write("#TRY "+ trySave  +"\n");
+			
+			writer.write("#ITEMNR "+ itemSave.length  +"\n");
+			for(int i= 0; i<itemSave.length;i++){
+				
+				st=itemSave[i]+" ";
+				
+				if(itemAmountSave[i]<10) st+="00"+itemAmountSave[i] + " ";
+				else if (itemAmountSave[i]<100) st+="0"+itemAmountSave[i]+ " ";
+				else st+=""+itemAmountSave[i]+ " ";
+				writer.write("#ITEM "+ st  +"\n");
+			}
+			
+			if(roomcount<10) st="0"+roomcount;
+			else st=""+roomcount;
+			writer.write("#DOORDATA "+st+"\n");
+			
+			for(int i=0;i<doordataSave.length;i++){
+				if(i<10)writer.write("0"+i+" "+doordataSave[i] +"\n");
+				else writer.write(i+" "+doordataSave[i]+"\n");
+			}
+			writer.write("#DOORDATAEND\n");
+			
+			writer.flush();
+			writer.close();
+			
+		}
+		catch(Exception e){
+			System.out.println("Fehler");
+		}
+	}
+	
+	/**
+	 * Setzt den Parameter um das Spiel zu Beenden und ins Hauptmen&uuml; zur&uuml;ckzukommen
+	 */
+	public void endGame(){
+		gameEnded = true;
+	}
+	
 	// Paint Methode - zeichnet Bildschirm
 	/* (non-Javadoc)
 	 * @see javax.swing.JComponent#paint(java.awt.Graphics)
@@ -1581,6 +2037,8 @@ public class Game extends JPanel implements ActionListener{
 				if(inLobby && !chooseBattleMapBox) paintChooseText(g);
 				if(inLobby && inChat) paintChatBox(g);
 			}
+			if(paused) paintPause(g);
+			
 			
 			
 		}
@@ -1620,6 +2078,28 @@ public class Game extends JPanel implements ActionListener{
 		else cutcmsg = "";
 		// zeichne Text
 		g.drawString(cutcmsg,110, windowSizeY/2+10);
+	}
+	
+	
+	/**
+	 * Zeichnet die Pause Box
+	 * @param g Grafik
+	 */
+	public void paintPause(Graphics g){
+		int pY = 200;
+		int pSizeY = 250;
+		int pX =  windowSizeX/2-150;
+		int pSizeX = 300;
+		
+		
+		// Zeichnen
+		g.setColor(Color.BLACK);
+		g.fillRoundRect(pX, pY, pSizeX , pSizeY, 30, 30); // Kasten für Dialog
+		g.setColor(Color.BLUE);
+		g.fillRect(pX+40, pY+80+(40*selectedPauseCommand), 100, 30);
+		g.setColor(Color.WHITE);
+		if(!inNetworkGame) g.drawString("Speichern", pX+60, pY+100);
+		g.drawString("Beenden", pX+60, pY+140);
 	}
 	
 	// Chat - füge Zeile hinzu
@@ -1920,6 +2400,7 @@ public class Game extends JPanel implements ActionListener{
 	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
 	 */
 	public void actionPerformed(ActionEvent e){
+		boolean received = false;
 		int x;
 		String xOut="";
 		int y;
@@ -1927,26 +2408,40 @@ public class Game extends JPanel implements ActionListener{
 		if(ingame){
 			// im Spiel - wird vom Timer abhängig aufgerufen
 			
-			if(inShop||inDialog){
+			if(inNetworkGame) if(player2.getEnd()){
+				 gameEnded=true;
+				 received = true;
+			}
+			if(inShop||inDialog||(paused&&!inNetworkGame)){
 				// Spiel "anhalten"
+				
 			}
 			else{
+				
 				// prüfe ob Item sichtbar sonst entfernen
 				for(int i = 0; i<items.size(); i++){
 					Item it = (Item)items.get(i);
 					if(it.isVisible()==false) items.remove(i);
 				}
 				
-				if(player.getLive() <= 0){ // prüfe ob Spieler noch im Spiel oder Lebenspunkte 0
+				if(player.getLive() <= 0 || gameEnded){ // prüfe ob Spieler noch im Spiel oder Lebenspunkte 0
 					if(inNetworkGame){
 						// Zurück zur Lobby
-						os.println("LOST"); // Sende Lost befehl
-						this.initNetGame(client,false);
+						if(!gameEnded && !received)os.println("LOST"); // Sende Lost befehl
+						else os.println("END");
+						
+						os.close();
+						ingame = false;
+						inNetworkGame = false;
+						inLobby = false;
+						inNetworkMenu=false;
+						timer.stop();
+						
 					}
 					else{
 						// Spieler stirbt, Spiel beenden
 						ingame = false;
-						leftTry--;
+						if(!gameEnded)leftTry--;
 						timer.stop();
 					}
 				}
@@ -2019,6 +2514,8 @@ public class Game extends JPanel implements ActionListener{
 						}
 						// prüfe ob Gegner verloren
 						if(player2.getLost()) this.initNetGame(client,false);
+						
+						
 					}
 					
 					// Bewege Gegner
@@ -2065,6 +2562,9 @@ public class Game extends JPanel implements ActionListener{
 			}
 			else if(action.equals("level")){
 				new Leveleditor();
+			}
+			else if(action.equals("loadGame")){
+				initSaveGame();
 			}
 			else if(action.equals("multi")){
 				initNetworkMenu();
@@ -2179,7 +2679,25 @@ public class Game extends JPanel implements ActionListener{
 				}
 					
 			}
-			if(ingame && !inShop && !inDialog && !chooseBattleMapBox && !inChat) player.keyPressed(e);
+			if(ingame && e.getKeyCode()==KeyEvent.VK_X){
+				if(paused){
+					 if(!inNetworkGame) paused = false;
+					 else{
+						 paused = false;
+					 }
+				}
+				else paused = true;
+
+			}
+			
+			if(ingame && !inShop && !inDialog && !chooseBattleMapBox && !inChat && !paused) player.keyPressed(e);
+			else if(ingame && paused){
+				if(e.getKeyCode()==KeyEvent.VK_DOWN) selectedPauseCommand = 1;
+				else if(e.getKeyCode()==KeyEvent.VK_UP && !inNetworkGame) selectedPauseCommand = 0;
+				else if(e.getKeyCode()==KeyEvent.VK_ENTER){
+					managePauseCommand(selectedPauseCommand);
+				}
+			}
 			else if(inDialog){
 				if(e.getKeyCode()==KeyEvent.VK_SPACE || e.getKeyCode()==KeyEvent.VK_ENTER) inDialog=false;
 			}
