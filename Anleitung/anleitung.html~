@@ -21,14 +21,28 @@ Sieger ist, wer den anderen Spieler besiegt.<br>
 <br>
 Im Leveleditor kann man eigene Levels erstellen oder schon vorhandene Levels einlesen und bearbeiten.
 
+<h2>Story</h2>
+<br>
+
+Du spielst einen Gefangenen in einem extraterrestrischen Gef&auml;ngnis, der es schafft auszubrechen.<br>
+Da dieses Gef&auml;ngnis nahe dem Planetenmittelpunkt gebaut wurde, musst du dich bis zur Oberfl&auml;che durchk&auml;mpfen.<br>
+
+<br>
+
+
+
 <h2>Steuerung</h2>
 <br>
 
 PFEILTASTEN = Laufen<br>
 LEERTASTE = Schiessen<br>
 STRG = Magie nutzen<br>
-X = Pause<br>
 SHIFT = Waffe wechseln<br>
+X = Pause<br>
+<ul>
+<li>im Pausemen&uuml; kann gespeichert werden (Allerdings nur der Stand beim Checkpoint oder zu Beginn des Levels.)
+</ul>
+
 <br>
 
 <h2>Items</h2>
