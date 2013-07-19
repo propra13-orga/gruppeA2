@@ -572,7 +572,7 @@ public class Game extends JPanel implements ActionListener{
 					if(request.equals("#TRY")){
 						data1 = tokens.nextToken();
 						z1 = data1.charAt(0)-48;	// von char nach int -> -48
-						trySave = 10*z1+z2;
+						trySave = z1;
 					}
 					if(request.equals("#ITEMNR")){
 						data1 = tokens.nextToken();
